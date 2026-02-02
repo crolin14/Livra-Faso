@@ -1,0 +1,511 @@
+{% extends 'base_ultra_modern.html' %}
+{% load static %}
+
+{% block title %}Configuration Système - Admin LivraFaso{% endblock %}
+
+{% block extra_head %}
+<meta name="csrf-token" content="{{ csrf_token }}">
+<style>
+    .config-card {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .config-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+    
+    .toggle-switch {
+        position: relative;
+        width: 60px;
+        height: 34px;
+    }
+    
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 34px;
+    }
+    
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+    
+    input:checked + .slider {
+        background-color: #2196F3;
+    }
+    
+    input:checked + .slider:before {
+        transform: translateX(26px);
+    }
+    
+    .config-section {
+        border-left: 4px solid #3b82f6;
+        padding-left: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Configuration Système</h1>
+            <p class="text-gray-600 mt-2">Paramètres et configuration de la plateforme</p>
+        </div>
+        <div class="flex space-x-3">
+            <a href="{% url 'admin_dashboard:dashboard' %}" class="btn-outline">
+                <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>
+                Retour Dashboard
+            </a>
+            <button onclick="saveAllSettings()" class="btn-primary">
+                <i data-lucide="save" class="w-4 h-4 mr-2"></i>
+                Sauvegarder
+            </button>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Left Column -->
+        <div class="lg:col-span-2 space-y-8">
+            
+            <!-- General Settings -->
+            <div class="config-card rounded-xl p-6">
+                <div class="config-section mb-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">Paramètres Généraux</h2>
+                </div>
+                
+                <div class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nom de l'application</label>
+                            <input type="text" value="LivraFaso" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Version</label>
+                            <input type="text" value="2.1.0" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                        <textarea rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">Plateforme de livraison rapide et fiable au Burkina Faso</textarea>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Email de contact</label>
+                            <input type="email" value="contact@livrafaso.bf" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Téléphone support</label>
+                            <input type="tel" value="+226 XX XX XX XX" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pricing Configuration -->
+            <div class="config-card rounded-xl p-6">
+                <div class="config-section mb-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">Configuration Tarifaire</h2>
+                </div>
+                
+                <div class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Prix de base (FCFA)</label>
+                            <input type="number" value="500" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Prix par km (FCFA)</label>
+                            <input type="number" value="100" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Commission (%)</label>
+                            <input type="number" value="15" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Frais urgence (%)</label>
+                            <input type="number" value="25" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Distance max gratuite (km)</label>
+                            <input type="number" value="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Settings -->
+            <div class="config-card rounded-xl p-6">
+                <div class="config-section mb-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">Paramètres de Paiement</h2>
+                </div>
+                
+                <div class="space-y-6">
+                    <div class="flex items-center justify-between p-4 bg-white/50 rounded-lg">
+                        <div>
+                            <h3 class="font-medium text-gray-900">Orange Money</h3>
+                            <p class="text-sm text-gray-600">Activer les paiements Orange Money</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="flex items-center justify-between p-4 bg-white/50 rounded-lg">
+                        <div>
+                            <h3 class="font-medium text-gray-900">Moov Money</h3>
+                            <p class="text-sm text-gray-600">Activer les paiements Moov Money</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="flex items-center justify-between p-4 bg-white/50 rounded-lg">
+                        <div>
+                            <h3 class="font-medium text-gray-900">Wave</h3>
+                            <p class="text-sm text-gray-600">Activer les paiements Wave</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="flex items-center justify-between p-4 bg-white/50 rounded-lg">
+                        <div>
+                            <h3 class="font-medium text-gray-900">Paiement à la livraison</h3>
+                            <p class="text-sm text-gray-600">Autoriser le paiement en espèces</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notification Settings -->
+            <div class="config-card rounded-xl p-6">
+                <div class="config-section mb-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">Notifications</h2>
+                </div>
+                
+                <div class="space-y-6">
+                    <div class="flex items-center justify-between p-4 bg-white/50 rounded-lg">
+                        <div>
+                            <h3 class="font-medium text-gray-900">Notifications SMS</h3>
+                            <p class="text-sm text-gray-600">Envoyer des SMS pour les mises à jour</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="flex items-center justify-between p-4 bg-white/50 rounded-lg">
+                        <div>
+                            <h3 class="font-medium text-gray-900">Notifications Email</h3>
+                            <p class="text-sm text-gray-600">Envoyer des emails de notification</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="flex items-center justify-between p-4 bg-white/50 rounded-lg">
+                        <div>
+                            <h3 class="font-medium text-gray-900">Notifications Push</h3>
+                            <p class="text-sm text-gray-600">Notifications push mobiles</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="space-y-8">
+            
+            <!-- System Status -->
+            <div class="config-card rounded-xl p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-6">État du Système</h2>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-600">Mode Debug</span>
+                        <span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">OFF</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-600">Cache</span>
+                        <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">ACTIF</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-600">Base de données</span>
+                        <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">CONNECTÉE</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-600">API Géolocalisation</span>
+                        <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">OPÉRATIONNELLE</span>
+                    </div>
+                </div>
+                
+                <div class="mt-6 pt-6 border-t border-gray-200">
+                    <button onclick="runSystemCheck()" class="w-full btn-outline">
+                        <i data-lucide="activity" class="w-4 h-4 mr-2"></i>
+                        Vérifier le Système
+                    </button>
+                </div>
+            </div>
+
+            <!-- Maintenance Mode -->
+            <div class="config-card rounded-xl p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-6">Mode Maintenance</h2>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between p-4 bg-white/50 rounded-lg">
+                        <div>
+                            <h3 class="font-medium text-gray-900">Maintenance</h3>
+                            <p class="text-sm text-gray-600">Activer le mode maintenance</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="maintenanceMode">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Message de maintenance</label>
+                        <textarea rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500" placeholder="Maintenance programmée en cours..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Backup & Security -->
+            <div class="config-card rounded-xl p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-6">Sauvegarde & Sécurité</h2>
+                <div class="space-y-4">
+                    <div class="text-sm text-gray-600">
+                        <p>Dernière sauvegarde: {{ last_backup|date:"d/m/Y H:i" }}</p>
+                        <p>Taille: 2.3 GB</p>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <button onclick="createBackup()" class="w-full btn-outline">
+                            <i data-lucide="database" class="w-4 h-4 mr-2"></i>
+                            Créer une Sauvegarde
+                        </button>
+                        
+                        <button onclick="downloadLogs()" class="w-full btn-outline">
+                            <i data-lucide="download" class="w-4 h-4 mr-2"></i>
+                            Télécharger les Logs
+                        </button>
+                        
+                        <button onclick="clearCache()" class="w-full btn-outline">
+                            <i data-lucide="trash-2" class="w-4 h-4 mr-2"></i>
+                            Vider le Cache
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API Configuration -->
+            <div class="config-card rounded-xl p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-6">Configuration API</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Limite de requêtes/min</label>
+                        <input type="number" value="1000" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
+                    </div>
+                    
+                    <div class="flex items-center justify-between p-4 bg-white/50 rounded-lg">
+                        <div>
+                            <h3 class="font-medium text-gray-900">API Publique</h3>
+                            <p class="text-sm text-gray-600">Autoriser l'accès API externe</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <button onclick="regenerateApiKey()" class="w-full btn-outline">
+                        <i data-lucide="key" class="w-4 h-4 mr-2"></i>
+                        Régénérer Clé API
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    lucide.createIcons();
+});
+
+function saveAllSettings() {
+    // Collect all form data
+    const formData = new FormData();
+    
+    // Add all input values
+    document.querySelectorAll('input, textarea, select').forEach(input => {
+        if (input.type === 'checkbox') {
+            formData.append(input.name || input.id, input.checked);
+        } else {
+            formData.append(input.name || input.id, input.value);
+        }
+    });
+    
+    // Send to server
+    fetch('/admin/config/save/', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Configuration sauvegardée avec succès', 'success');
+        } else {
+            showNotification('Erreur lors de la sauvegarde', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Erreur lors de la sauvegarde', 'error');
+    });
+}
+
+function runSystemCheck() {
+    showNotification('Vérification du système en cours...', 'info');
+    
+    fetch('/admin/system/check/')
+    .then(response => response.json())
+    .then(data => {
+        if (data.healthy) {
+            showNotification('Système opérationnel', 'success');
+        } else {
+            showNotification('Problèmes détectés: ' + data.issues.join(', '), 'warning');
+        }
+    });
+}
+
+function createBackup() {
+    if (confirm('Créer une sauvegarde complète du système ?')) {
+        showNotification('Création de la sauvegarde en cours...', 'info');
+        
+        fetch('/admin/backup/create/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Sauvegarde créée avec succès', 'success');
+            } else {
+                showNotification('Erreur lors de la création de la sauvegarde', 'error');
+            }
+        });
+    }
+}
+
+function downloadLogs() {
+    window.location.href = '/admin/logs/download/';
+}
+
+function clearCache() {
+    if (confirm('Vider le cache système ?')) {
+        fetch('/admin/cache/clear/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Cache vidé avec succès', 'success');
+            } else {
+                showNotification('Erreur lors du vidage du cache', 'error');
+            }
+        });
+    }
+}
+
+function regenerateApiKey() {
+    if (confirm('Régénérer la clé API ? Cela invalidera l\'ancienne clé.')) {
+        fetch('/admin/api/regenerate-key/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Nouvelle clé API générée', 'success');
+            } else {
+                showNotification('Erreur lors de la génération', 'error');
+            }
+        });
+    }
+}
+
+function showNotification(message, type) {
+    // Simple notification system
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 p-4 rounded-lg text-white z-50 ${
+        type === 'success' ? 'bg-green-500' :
+        type === 'error' ? 'bg-red-500' :
+        type === 'warning' ? 'bg-yellow-500' :
+        'bg-blue-500'
+    }`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,559 @@
+{% extends 'base_ultra_modern.html' %}
+{% load static %}
+
+{% block title %}Logs de Sécurité - Admin LivraFaso{% endblock %}
+
+{% block extra_head %}
+<style>
+    .log-card {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .log-entry {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
+    }
+    
+    .log-entry:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .log-level-info { border-left: 4px solid #3b82f6; }
+    .log-level-warning { border-left: 4px solid #f59e0b; }
+    .log-level-error { border-left: 4px solid #ef4444; }
+    .log-level-critical { border-left: 4px solid #dc2626; }
+    .log-level-success { border-left: 4px solid #10b981; }
+    
+    .severity-badge {
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .severity-info { background: rgba(59, 130, 246, 0.2); color: #1d4ed8; }
+    .severity-warning { background: rgba(245, 158, 11, 0.2); color: #d97706; }
+    .severity-error { background: rgba(239, 68, 68, 0.2); color: #dc2626; }
+    .severity-critical { background: rgba(220, 38, 38, 0.2); color: #991b1b; }
+    .severity-success { background: rgba(16, 185, 129, 0.2); color: #047857; }
+    
+    .filter-active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .search-highlight {
+        background-color: yellow;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Logs de Sécurité</h1>
+            <p class="text-gray-600 mt-2">Surveillance et audit des événements de sécurité</p>
+        </div>
+        <div class="flex space-x-3">
+            <a href="{% url 'admin_dashboard:dashboard' %}" class="btn-outline">
+                <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>
+                Retour Dashboard
+            </a>
+            <button onclick="exportLogs()" class="btn-primary">
+                <i data-lucide="download" class="w-4 h-4 mr-2"></i>
+                Exporter Logs
+            </button>
+        </div>
+    </div>
+
+    <!-- Security Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="log-card rounded-xl p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-600 text-sm font-medium">Événements Critiques</p>
+                    <p class="text-2xl font-bold text-red-600">{{ security_stats.critical_events }}</p>
+                    <p class="text-xs text-gray-500 mt-1">Dernières 24h</p>
+                </div>
+                <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                    <i data-lucide="alert-triangle" class="w-5 h-5 text-red-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="log-card rounded-xl p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-600 text-sm font-medium">Tentatives de Connexion</p>
+                    <p class="text-2xl font-bold text-blue-600">{{ security_stats.login_attempts }}</p>
+                    <p class="text-xs text-gray-500 mt-1">Dernières 24h</p>
+                </div>
+                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <i data-lucide="log-in" class="w-5 h-5 text-blue-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="log-card rounded-xl p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-600 text-sm font-medium">Erreurs API</p>
+                    <p class="text-2xl font-bold text-yellow-600">{{ security_stats.api_errors }}</p>
+                    <p class="text-xs text-gray-500 mt-1">Dernières 24h</p>
+                </div>
+                <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+                    <i data-lucide="alert-circle" class="w-5 h-5 text-yellow-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="log-card rounded-xl p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-600 text-sm font-medium">Score Sécurité</p>
+                    <p class="text-2xl font-bold text-green-600">{{ security_stats.security_score }}%</p>
+                    <p class="text-xs text-gray-500 mt-1">Évaluation globale</p>
+                </div>
+                <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                    <i data-lucide="shield-check" class="w-5 h-5 text-green-600"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters and Search -->
+    <div class="log-card rounded-xl p-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Recherche</label>
+                <div class="relative">
+                    <input type="text" id="searchInput" placeholder="Rechercher dans les logs..." 
+                           class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
+                    <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3 top-3"></i>
+                </div>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Niveau</label>
+                <select id="levelFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
+                    <option value="">Tous niveaux</option>
+                    <option value="info">Info</option>
+                    <option value="warning">Warning</option>
+                    <option value="error">Error</option>
+                    <option value="critical">Critical</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Catégorie</label>
+                <select id="categoryFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
+                    <option value="">Toutes catégories</option>
+                    <option value="auth">Authentification</option>
+                    <option value="api">API</option>
+                    <option value="database">Base de données</option>
+                    <option value="security">Sécurité</option>
+                    <option value="system">Système</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                <input type="date" id="dateFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
+            </div>
+            
+            <div class="flex items-end">
+                <button onclick="applyFilters()" class="btn-primary w-full">
+                    <i data-lucide="filter" class="w-4 h-4 mr-2"></i>
+                    Filtrer
+                </button>
+            </div>
+        </div>
+        
+        <!-- Quick Filters -->
+        <div class="flex flex-wrap gap-2 mt-4">
+            <button onclick="quickFilter('critical')" class="px-3 py-1 text-sm rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors" id="filter-critical">
+                Critiques
+            </button>
+            <button onclick="quickFilter('error')" class="px-3 py-1 text-sm rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors" id="filter-error">
+                Erreurs
+            </button>
+            <button onclick="quickFilter('auth')" class="px-3 py-1 text-sm rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors" id="filter-auth">
+                Authentification
+            </button>
+            <button onclick="quickFilter('today')" class="px-3 py-1 text-sm rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors" id="filter-today">
+                Aujourd'hui
+            </button>
+            <button onclick="clearFilters()" class="px-3 py-1 text-sm rounded-lg border border-red-300 text-red-600 hover:bg-red-50 transition-colors">
+                Effacer filtres
+            </button>
+        </div>
+    </div>
+
+    <!-- Real-time Status -->
+    <div class="log-card rounded-xl p-4 mb-6">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <div class="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                <span class="text-sm font-medium text-gray-700">Surveillance en temps réel</span>
+            </div>
+            <div class="text-sm text-gray-500">
+                Dernière mise à jour: <span id="lastUpdate">{{ current_time|date:"H:i:s" }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logs List -->
+    <div class="space-y-3" id="logsList">
+        {% for log in security_logs %}
+        <div class="log-entry log-level-{{ log.level }} rounded-xl p-4" data-level="{{ log.level }}" data-category="{{ log.category }}" data-date="{{ log.timestamp|date:'Y-m-d' }}">
+            <div class="flex items-start justify-between">
+                <div class="flex-1">
+                    <div class="flex items-center space-x-3 mb-2">
+                        <span class="severity-badge severity-{{ log.level }}">{{ log.level|upper }}</span>
+                        <span class="text-sm text-gray-600">{{ log.category|capfirst }}</span>
+                        <span class="text-sm text-gray-500">{{ log.timestamp|date:"d/m/Y H:i:s" }}</span>
+                        {% if log.ip_address %}
+                        <span class="text-sm text-gray-500">IP: {{ log.ip_address }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    <h3 class="font-medium text-gray-900 mb-1">{{ log.title }}</h3>
+                    <p class="text-gray-700 text-sm mb-2">{{ log.message }}</p>
+                    
+                    {% if log.user %}
+                    <div class="flex items-center space-x-2 text-sm text-gray-600">
+                        <i data-lucide="user" class="w-4 h-4"></i>
+                        <span>Utilisateur: {{ log.user.username }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if log.details %}
+                    <details class="mt-2">
+                        <summary class="text-sm text-blue-600 cursor-pointer hover:text-blue-800">Détails techniques</summary>
+                        <pre class="mt-2 p-3 bg-gray-100 rounded-lg text-xs overflow-x-auto">{{ log.details }}</pre>
+                    </details>
+                    {% endif %}
+                </div>
+                
+                <div class="flex space-x-2 ml-4">
+                    {% if log.level == 'critical' or log.level == 'error' %}
+                    <button onclick="markAsResolved({{ log.id }})" class="text-green-600 hover:text-green-800" title="Marquer comme résolu">
+                        <i data-lucide="check-circle" class="w-4 h-4"></i>
+                    </button>
+                    {% endif %}
+                    <button onclick="viewLogDetails({{ log.id }})" class="text-blue-600 hover:text-blue-800" title="Voir détails">
+                        <i data-lucide="eye" class="w-4 h-4"></i>
+                    </button>
+                    <button onclick="exportSingleLog({{ log.id }})" class="text-gray-600 hover:text-gray-800" title="Exporter">
+                        <i data-lucide="download" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="text-center py-12">
+            <i data-lucide="shield" class="w-16 h-16 text-gray-300 mx-auto mb-4"></i>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">Aucun log trouvé</h3>
+            <p class="text-gray-500">Aucun événement de sécurité ne correspond aux critères de recherche.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Load More Button -->
+    {% if has_more_logs %}
+    <div class="text-center mt-8">
+        <button onclick="loadMoreLogs()" class="btn-outline" id="loadMoreBtn">
+            <i data-lucide="chevron-down" class="w-4 h-4 mr-2"></i>
+            Charger plus de logs
+        </button>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Log Detail Modal -->
+<div id="logDetailModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-xl max-w-4xl w-full max-h-screen overflow-y-auto">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-bold text-gray-900">Détails du Log</h2>
+                    <button onclick="closeLogModal()" class="text-gray-400 hover:text-gray-600">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                </div>
+                <div id="logDetailContent">
+                    <!-- Log details will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    lucide.createIcons();
+    startRealTimeUpdates();
+});
+
+let currentPage = 1;
+let isLoading = false;
+
+function applyFilters() {
+    const search = document.getElementById('searchInput').value;
+    const level = document.getElementById('levelFilter').value;
+    const category = document.getElementById('categoryFilter').value;
+    const date = document.getElementById('dateFilter').value;
+    
+    const params = new URLSearchParams();
+    if (search) params.append('search', search);
+    if (level) params.append('level', level);
+    if (category) params.append('category', category);
+    if (date) params.append('date', date);
+    
+    window.location.href = '?' + params.toString();
+}
+
+function quickFilter(type) {
+    // Remove active class from all quick filters
+    document.querySelectorAll('[id^="filter-"]').forEach(btn => {
+        btn.classList.remove('filter-active');
+    });
+    
+    // Add active class to clicked filter
+    document.getElementById('filter-' + type).classList.add('filter-active');
+    
+    const logs = document.querySelectorAll('.log-entry');
+    
+    logs.forEach(log => {
+        let show = false;
+        
+        switch(type) {
+            case 'critical':
+                show = log.dataset.level === 'critical';
+                break;
+            case 'error':
+                show = log.dataset.level === 'error';
+                break;
+            case 'auth':
+                show = log.dataset.category === 'auth';
+                break;
+            case 'today':
+                const today = new Date().toISOString().split('T')[0];
+                show = log.dataset.date === today;
+                break;
+        }
+        
+        log.style.display = show ? 'block' : 'none';
+    });
+}
+
+function clearFilters() {
+    // Clear all form inputs
+    document.getElementById('searchInput').value = '';
+    document.getElementById('levelFilter').value = '';
+    document.getElementById('categoryFilter').value = '';
+    document.getElementById('dateFilter').value = '';
+    
+    // Remove active class from quick filters
+    document.querySelectorAll('[id^="filter-"]').forEach(btn => {
+        btn.classList.remove('filter-active');
+    });
+    
+    // Show all logs
+    document.querySelectorAll('.log-entry').forEach(log => {
+        log.style.display = 'block';
+    });
+}
+
+function markAsResolved(logId) {
+    if (confirm('Marquer ce log comme résolu ?')) {
+        fetch(`/admin/security-logs/${logId}/resolve/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Erreur lors de la résolution du log');
+            }
+        });
+    }
+}
+
+function viewLogDetails(logId) {
+    fetch(`/admin/security-logs/${logId}/details/`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('logDetailContent').innerHTML = data.html;
+            document.getElementById('logDetailModal').classList.remove('hidden');
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Erreur lors du chargement des détails');
+        });
+}
+
+function closeLogModal() {
+    document.getElementById('logDetailModal').classList.add('hidden');
+}
+
+function exportLogs() {
+    const params = new URLSearchParams(window.location.search);
+    params.append('export', 'true');
+    window.location.href = '/admin/security-logs/export/?' + params.toString();
+}
+
+function exportSingleLog(logId) {
+    window.location.href = `/admin/security-logs/${logId}/export/`;
+}
+
+function loadMoreLogs() {
+    if (isLoading) return;
+    
+    isLoading = true;
+    currentPage++;
+    
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    loadMoreBtn.innerHTML = '<i data-lucide="loader" class="w-4 h-4 mr-2 animate-spin"></i>Chargement...';
+    
+    const params = new URLSearchParams(window.location.search);
+    params.append('page', currentPage);
+    
+    fetch('/admin/security-logs/?' + params.toString())
+        .then(response => response.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newLogs = doc.querySelectorAll('.log-entry');
+            
+            const logsList = document.getElementById('logsList');
+            newLogs.forEach(log => {
+                logsList.appendChild(log);
+            });
+            
+            // Check if there are more logs
+            const hasMore = doc.querySelector('#loadMoreBtn');
+            if (!hasMore) {
+                loadMoreBtn.style.display = 'none';
+            } else {
+                loadMoreBtn.innerHTML = '<i data-lucide="chevron-down" class="w-4 h-4 mr-2"></i>Charger plus de logs';
+            }
+            
+            isLoading = false;
+            lucide.createIcons();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            loadMoreBtn.innerHTML = '<i data-lucide="chevron-down" class="w-4 h-4 mr-2"></i>Charger plus de logs';
+            isLoading = false;
+        });
+}
+
+function startRealTimeUpdates() {
+    setInterval(() => {
+        const now = new Date();
+        document.getElementById('lastUpdate').textContent = now.toLocaleTimeString();
+        
+        // Check for new logs
+        fetch('/admin/security-logs/check-new/')
+            .then(response => response.json())
+            .then(data => {
+                if (data.has_new) {
+                    // Show notification for new logs
+                    showNotification(`${data.count} nouveaux logs de sécurité`, 'info');
+                }
+            })
+            .catch(error => console.error('Error checking for new logs:', error));
+    }, 30000); // Update every 30 seconds
+}
+
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 p-4 rounded-lg text-white z-50 ${
+        type === 'success' ? 'bg-green-500' :
+        type === 'error' ? 'bg-red-500' :
+        type === 'warning' ? 'bg-yellow-500' :
+        'bg-blue-500'
+    }`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 5000);
+}
+
+// Real-time search
+document.getElementById('searchInput').addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const logs = document.querySelectorAll('.log-entry');
+    
+    logs.forEach(log => {
+        const text = log.textContent.toLowerCase();
+        const isVisible = text.includes(searchTerm);
+        log.style.display = isVisible ? 'block' : 'none';
+        
+        // Highlight search terms
+        if (searchTerm && isVisible) {
+            highlightSearchTerm(log, searchTerm);
+        } else {
+            removeHighlight(log);
+        }
+    });
+});
+
+function highlightSearchTerm(element, term) {
+    const walker = document.createTreeWalker(
+        element,
+        NodeFilter.SHOW_TEXT,
+        null,
+        false
+    );
+    
+    const textNodes = [];
+    let node;
+    while (node = walker.nextNode()) {
+        textNodes.push(node);
+    }
+    
+    textNodes.forEach(textNode => {
+        const parent = textNode.parentNode;
+        if (parent.classList.contains('search-highlight')) return;
+        
+        const text = textNode.textContent;
+        const regex = new RegExp(`(${term})`, 'gi');
+        if (regex.test(text)) {
+            const highlightedHTML = text.replace(regex, '<span class="search-highlight">$1</span>');
+            const wrapper = document.createElement('span');
+            wrapper.innerHTML = highlightedHTML;
+            parent.replaceChild(wrapper, textNode);
+        }
+    });
+}
+
+function removeHighlight(element) {
+    const highlights = element.querySelectorAll('.search-highlight');
+    highlights.forEach(highlight => {
+        const parent = highlight.parentNode;
+        parent.replaceChild(document.createTextNode(highlight.textContent), highlight);
+        parent.normalize();
+    });
+}
+</script>
+{% endblock %}

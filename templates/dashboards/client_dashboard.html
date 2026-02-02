@@ -1,0 +1,473 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Dashboard Client - LivraFaso{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chart-container {
+        position: relative;
+        height: 300px;
+    }
+    .mission-card:hover {
+        transform: translateY(-2px);
+        transition: all 0.3s ease;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="card mb-8">
+        <div class="gradient-header">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="heading-2">Dashboard Client</h1>
+                    <p>Gérez vos livraisons et suivez vos commandes</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-2">
+                        <i data-lucide="wallet" class="w-5 h-5 text-yellow-400"></i>
+                        <span class="text-sm">{{ user.wallet_balance|default:"0" }} FCFA</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-sm">{{ user.get_full_name|default:user.username }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="stats-grid mb-8">
+        <div class="stat-card cursor-pointer hover:scale-105 transition-transform" onclick="openNewDeliveryModal()">
+            <div class="stat-icon bg-blue-500">
+                <i data-lucide="truck" class="w-6 h-6 text-white"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-label">Nouvelle Livraison</div>
+                <div class="stat-meta">Envoyer un colis rapidement</div>
+            </div>
+        </div>
+        
+        <div class="stat-card cursor-pointer hover:scale-105 transition-transform" onclick="openShoppingModal()">
+            <div class="stat-icon bg-green-500">
+                <i data-lucide="shopping-cart" class="w-6 h-6 text-white"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-label">Faire mes Courses</div>
+                <div class="stat-meta">Commander vos articles</div>
+            </div>
+        </div>
+        
+        <div class="stat-card cursor-pointer hover:scale-105 transition-transform" onclick="openPackageModal()">
+            <div class="stat-icon bg-purple-500">
+                <i data-lucide="package" class="w-6 h-6 text-white"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-label">Envoyer un Colis</div>
+                <div class="stat-meta">Expédition sécurisée</div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon bg-orange-500">
+                <i data-lucide="star" class="w-6 h-6 text-white"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">{{ user.average_rating|default:"N/A" }}</div>
+                <div class="stat-label">Note Moyenne</div>
+                <div class="stat-meta">Votre satisfaction</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Mes Livraisons -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Missions List -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i data-lucide="list" class="w-5 h-5"></i>
+                        Mes Livraisons
+                    </h3>
+                    <div class="flex space-x-2">
+                        <button onclick="filterMissions('all')" class="btn btn-sm btn-primary">
+                            Toutes
+                        </button>
+                        <button onclick="filterMissions('pending')" class="btn btn-sm btn-warning">
+                            En cours
+                        </button>
+                        <button onclick="filterMissions('completed')" class="btn btn-sm btn-success">
+                            Terminées
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+
+                    <div id="missions-list" class="space-y-4">
+                        {% for mission in missions %}
+                        <div class="mission-card bg-white/10 rounded-lg p-4 border border-white/20" data-status="{{ mission.status }}">
+                            <div class="flex justify-between items-start mb-3">
+                                <div>
+                                    <h4 class="font-semibold text-slate-900">{{ mission.title|default:"Livraison" }}</h4>
+                                    <p class="body-small text-slate-600">{{ mission.pickup_address|default:"Adresse de récupération" }} → {{ mission.delivery_address|default:"Adresse de livraison" }}</p>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="badge 
+                                        {% if mission.status == 'en_attente' %}badge-warning
+                                        {% elif mission.status == 'en_cours' %}badge-primary
+                                        {% elif mission.status == 'livree' %}badge-success
+                                        {% else %}badge-secondary{% endif %}">
+                                        {{ mission.get_status_display|default:mission.status }}
+                                    </span>
+                                    <button onclick="openMissionChat({{ mission.id }})" class="btn btn-sm btn-ghost">
+                                        <i data-lucide="message-circle" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center space-x-4 text-sm text-slate-600">
+                                    <span><i data-lucide="calendar" class="w-4 h-4 mr-1"></i>{{ mission.created_at|date:"d/m/Y H:i" }}</span>
+                                    <span><i data-lucide="banknote" class="w-4 h-4 mr-1"></i>{{ mission.price|default:"0" }} FCFA</span>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button onclick="trackMission({{ mission.id }})" class="btn btn-sm btn-primary">
+                                        <i data-lucide="map-pin" class="w-4 h-4 mr-1"></i>Suivre
+                                    </button>
+                                    {% if mission.status == 'livree' %}
+                                    <button onclick="rateMission({{ mission.id }})" class="btn btn-sm btn-warning">
+                                        <i data-lucide="star" class="w-4 h-4 mr-1"></i>Noter
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-center py-8">
+                            <i data-lucide="inbox" class="w-12 h-12 text-slate-400 mx-auto mb-4"></i>
+                            <p class="text-slate-500 mb-4">Aucune livraison pour le moment</p>
+                            <button onclick="openNewDeliveryModal()" class="btn btn-primary">
+                                Créer ma première livraison
+                            </button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="space-y-6">
+            <!-- Statistiques Rapides -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+                        Mes Statistiques
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-600">Livraisons totales</span>
+                            <span class="font-semibold text-slate-900">{{ stats.total_missions|default:0 }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-600">Ce mois</span>
+                            <span class="font-semibold text-slate-900">{{ stats.monthly_missions|default:0 }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-600">Économies réalisées</span>
+                            <span class="font-semibold text-green-600">{{ stats.total_savings|default:0 }} FCFA</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-600">Dépenses totales</span>
+                            <span class="font-semibold text-slate-900">{{ stats.total_spent|default:0 }} FCFA</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions Rapides -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i data-lucide="zap" class="w-5 h-5"></i>
+                        Actions Rapides
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="space-y-2">
+                        <button onclick="window.location.href='/client/history/'" class="w-full text-left p-3 hover:bg-slate-50 rounded-lg flex items-center transition-colors">
+                            <i data-lucide="history" class="w-5 h-5 mr-3 text-blue-500"></i>
+                            <span class="text-slate-700">Historique & Reçus</span>
+                        </button>
+                        <button onclick="window.location.href='/client/profile/'" class="w-full text-left p-3 hover:bg-slate-50 rounded-lg flex items-center transition-colors">
+                            <i data-lucide="user" class="w-5 h-5 mr-3 text-green-500"></i>
+                            <span class="text-slate-700">Mon Profil</span>
+                        </button>
+                        <button onclick="window.location.href='/client/addresses/'" class="w-full text-left p-3 hover:bg-slate-50 rounded-lg flex items-center transition-colors">
+                            <i data-lucide="map-pin" class="w-5 h-5 mr-3 text-purple-500"></i>
+                            <span class="text-slate-700">Mes Adresses</span>
+                        </button>
+                        <button onclick="window.location.href='/client/payments/'" class="w-full text-left p-3 hover:bg-slate-50 rounded-lg flex items-center transition-colors">
+                            <i data-lucide="credit-card" class="w-5 h-5 mr-3 text-orange-500"></i>
+                            <span class="text-slate-700">Moyens de Paiement</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chat Widget -->
+<div class="fixed bottom-6 right-6 z-50">
+    <button id="chat-toggle" onclick="toggleChat()" 
+            class="w-14 h-14 bg-blue-500 hover:bg-blue-600 rounded-full flex items-center justify-center text-white shadow-lg transition-colors">
+        <i data-lucide="message-circle" class="w-6 h-6"></i>
+    </button>
+    <div id="chat-panel" class="hidden glassmorphism rounded-xl w-80 h-96 mb-4 flex flex-col">
+        <div class="p-4 border-b border-white/20 text-white">
+            <h4 class="font-semibold">Chat Mission #<span id="current-mission-id">--</span></h4>
+            <button onclick="closeChat()" class="absolute top-4 right-4 text-white/60 hover:text-white">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+        <div id="chat-messages" class="flex-1 p-4 overflow-y-auto text-white text-sm">
+            <!-- Messages will be loaded here -->
+        </div>
+        <div class="p-4 border-t border-white/20">
+            <div class="flex space-x-2">
+                <input type="text" id="chat-input" placeholder="Tapez votre message..." 
+                       class="flex-1 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/60 focus:outline-none focus:border-blue-400">
+                <button onclick="sendMessage()" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg text-white">
+                    <i data-lucide="send" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nouvelle Livraison -->
+<div id="new-delivery-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+        <h3 class="text-xl font-bold mb-4 text-slate-900">Nouvelle Livraison</h3>
+        <form id="new-delivery-form">
+            {% csrf_token %}
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2 text-slate-700">Adresse de récupération</label>
+                    <input type="text" name="pickup_address" required 
+                           class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2 text-slate-700">Adresse de livraison</label>
+                    <input type="text" name="delivery_address" required 
+                           class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2 text-slate-700">Description du colis</label>
+                    <textarea name="description" rows="3" 
+                              class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2 text-slate-700">Mode de paiement</label>
+                    <select name="payment_method" required 
+                            class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500">
+                        <option value="">Choisir...</option>
+                        <option value="orange_money">Orange Money</option>
+                        <option value="moov_money">Moov Money</option>
+                        <option value="wave">Wave</option>
+                        <option value="card">Carte Bancaire</option>
+                    </select>
+                </div>
+                <div id="price-estimate" class="p-3 bg-blue-50 rounded-lg">
+                    <span class="text-sm text-slate-700">Prix estimé: <strong id="estimated-price">-- FCFA</strong></span>
+                </div>
+            </div>
+            <div class="flex space-x-3 mt-6">
+                <button type="button" onclick="closeModal('new-delivery-modal')" 
+                        class="flex-1 px-4 py-2 bg-slate-500 hover:bg-slate-600 text-white rounded-lg transition-colors">
+                    Annuler
+                </button>
+                <button type="submit" class="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors">
+                    Créer la livraison
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Variables globales
+    let map;
+    let currentMissionId = null;
+    let chatSocket = null;
+
+    // Initialisation
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeMap();
+        initializeWebSocket();
+        loadMissions();
+        lucide.createIcons();
+    });
+
+    // Initialisation de la carte
+    function initializeMap() {
+        // Placeholder pour la carte
+        console.log('Carte initialisée');
+    }
+
+    // WebSocket pour chat temps réel
+    function initializeWebSocket() {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        try {
+            chatSocket = new WebSocket(`${protocol}//${window.location.host}/ws/client/notifications/`);
+            
+            chatSocket.onmessage = function(e) {
+                const data = JSON.parse(e.data);
+                handleWebSocketMessage(data);
+            };
+        } catch (error) {
+            console.log('WebSocket non disponible:', error);
+        }
+    }
+
+    // Gestion des messages WebSocket
+    function handleWebSocketMessage(data) {
+        if (data.type === 'mission_update') {
+            updateMissionStatus(data.mission_id, data.status);
+        } else if (data.type === 'chat_message') {
+            displayChatMessage(data.message);
+        }
+    }
+
+    // Fonctions des modals
+    function openNewDeliveryModal() {
+        document.getElementById('new-delivery-modal').classList.remove('hidden');
+    }
+
+    function openShoppingModal() {
+        window.location.href = '/client/shopping/';
+    }
+
+    function openPackageModal() {
+        openNewDeliveryModal();
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).classList.add('hidden');
+    }
+
+    // Gestion du chat
+    function toggleChat() {
+        const panel = document.getElementById('chat-panel');
+        panel.classList.toggle('hidden');
+    }
+
+    function closeChat() {
+        document.getElementById('chat-panel').classList.add('hidden');
+    }
+
+    function openMissionChat(missionId) {
+        currentMissionId = missionId;
+        document.getElementById('current-mission-id').textContent = missionId;
+        document.getElementById('chat-panel').classList.remove('hidden');
+        loadChatMessages(missionId);
+    }
+
+    function sendMessage() {
+        const input = document.getElementById('chat-input');
+        const message = input.value.trim();
+        
+        if (message && currentMissionId && chatSocket) {
+            chatSocket.send(JSON.stringify({
+                'type': 'chat_message',
+                'mission_id': currentMissionId,
+                'message': message
+            }));
+            input.value = '';
+        }
+    }
+
+    // Filtrage des missions
+    function filterMissions(status) {
+        const cards = document.querySelectorAll('.mission-card');
+        cards.forEach(card => {
+            if (status === 'all' || card.dataset.status === status) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+
+    // Suivi de mission
+    function trackMission(missionId) {
+        window.location.href = `/client/missions/${missionId}/track/`;
+    }
+
+    // Notation de mission
+    function rateMission(missionId) {
+        window.location.href = `/client/missions/${missionId}/rate/`;
+    }
+
+    // Chargement des missions
+    function loadMissions() {
+        // Placeholder pour le chargement des missions
+        console.log('Missions chargées');
+    }
+
+    // Soumission du formulaire de nouvelle livraison
+    document.getElementById('new-delivery-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        
+        fetch('/api/client/missions/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                closeModal('new-delivery-modal');
+                loadMissions();
+                alert('Livraison créée avec succès!');
+            } else {
+                alert('Erreur: ' + (data.error || 'Erreur inconnue'));
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            alert('Erreur lors de la création de la livraison');
+        });
+    });
+
+    // Estimation de prix en temps réel
+    document.querySelectorAll('input[name="pickup_address"], input[name="delivery_address"]').forEach(input => {
+        input.addEventListener('input', function() {
+            const pickup = document.querySelector('input[name="pickup_address"]').value;
+            const delivery = document.querySelector('input[name="delivery_address"]').value;
+            
+            if (pickup && delivery) {
+                // Calcul simple basé sur la distance estimée
+                const estimatedPrice = Math.floor(Math.random() * 2000) + 1000;
+                document.getElementById('estimated-price').textContent = estimatedPrice + ' FCFA';
+            }
+        });
+    });
+</script>
+{% endblock %}

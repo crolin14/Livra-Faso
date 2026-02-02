@@ -1,0 +1,158 @@
+{% extends "base_ultra_modern.html" %}
+{% load static %}
+
+{% block title %}Simuler Position - LivraFaso{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-2xl mx-auto">
+        <div class="bg-white shadow-xl rounded-2xl overflow-hidden">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-green-600 to-blue-600 px-8 py-6">
+                <h1 class="text-3xl font-bold text-white">Mettre à jour ma position</h1>
+                <p class="text-green-100">Simulez votre position pour les missions</p>
+            </div>
+
+            <!-- Content -->
+            <div class="p-8">
+                <form method="post" class="space-y-6">
+                    {% csrf_token %}
+                    
+                    <!-- Messages -->
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} bg-{{ message.tags }}-50 border border-{{ message.tags }}-200 text-{{ message.tags }}-800 px-4 py-3 rounded-lg">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <div class="space-y-6">
+                        <div>
+                            <label for="latitude" class="block text-sm font-medium text-gray-700 mb-2">
+                                <i data-lucide="map-pin" class="w-4 h-4 inline mr-2"></i>
+                                Latitude
+                            </label>
+                            <input type="number" 
+                                   name="latitude" 
+                                   id="latitude" 
+                                   step="0.000001"
+                                   placeholder="12.3714"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                   required>
+                            <p class="text-sm text-gray-500 mt-1">Exemple: 12.3714 (Ouagadougou)</p>
+                        </div>
+
+                        <div>
+                            <label for="longitude" class="block text-sm font-medium text-gray-700 mb-2">
+                                <i data-lucide="map-pin" class="w-4 h-4 inline mr-2"></i>
+                                Longitude
+                            </label>
+                            <input type="number" 
+                                   name="longitude" 
+                                   id="longitude" 
+                                   step="0.000001"
+                                   placeholder="-1.5197"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                   required>
+                            <p class="text-sm text-gray-500 mt-1">Exemple: -1.5197 (Ouagadougou)</p>
+                        </div>
+
+                        <!-- Positions prédéfinies -->
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h3 class="text-lg font-medium text-gray-900 mb-3">Positions prédéfinies</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <button type="button" 
+                                        onclick="setLocation(12.3714, -1.5197)"
+                                        class="text-left p-3 bg-white rounded-lg border hover:border-green-500 transition-colors">
+                                    <div class="font-medium">Ouagadougou Centre</div>
+                                    <div class="text-sm text-gray-500">12.3714, -1.5197</div>
+                                </button>
+                                
+                                <button type="button" 
+                                        onclick="setLocation(12.3886, -1.5275)"
+                                        class="text-left p-3 bg-white rounded-lg border hover:border-green-500 transition-colors">
+                                    <div class="font-medium">Zone du Bois</div>
+                                    <div class="text-sm text-gray-500">12.3886, -1.5275</div>
+                                </button>
+                                
+                                <button type="button" 
+                                        onclick="setLocation(12.3542, -1.5347)"
+                                        class="text-left p-3 bg-white rounded-lg border hover:border-green-500 transition-colors">
+                                    <div class="font-medium">Gounghin</div>
+                                    <div class="text-sm text-gray-500">12.3542, -1.5347</div>
+                                </button>
+                                
+                                <button type="button" 
+                                        onclick="setLocation(12.4019, -1.4758)"
+                                        class="text-left p-3 bg-white rounded-lg border hover:border-green-500 transition-colors">
+                                    <div class="font-medium">Pissy</div>
+                                    <div class="text-sm text-gray-500">12.4019, -1.4758</div>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Position actuelle -->
+                        <div class="bg-blue-50 rounded-lg p-4">
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">Position actuelle</h3>
+                            {% if user.latitude and user.longitude %}
+                                <p class="text-sm text-gray-600">
+                                    <i data-lucide="map-pin" class="w-4 h-4 inline mr-1"></i>
+                                    Latitude: {{ user.latitude }}, Longitude: {{ user.longitude }}
+                                </p>
+                            {% else %}
+                                <p class="text-sm text-gray-500">Aucune position enregistrée</p>
+                            {% endif %}
+                            
+                            <button type="button" 
+                                    onclick="getCurrentLocation()"
+                                    class="mt-2 inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                                <i data-lucide="crosshair" class="w-4 h-4 mr-2"></i>
+                                Utiliser ma position actuelle
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex flex-wrap gap-4 pt-6 border-t border-gray-200">
+                        <button type="submit" 
+                                class="inline-flex items-center px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors">
+                            <i data-lucide="save" class="w-4 h-4 mr-2"></i>
+                            Mettre à jour ma position
+                        </button>
+                        
+                        <a href="{% url 'users:profile' %}" 
+                           class="inline-flex items-center px-6 py-3 bg-gray-600 text-white font-medium rounded-lg hover:bg-gray-700 transition-colors">
+                            <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>
+                            Retour au profil
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<script>
+    lucide.createIcons();
+    
+    function setLocation(lat, lng) {
+        document.getElementById('latitude').value = lat;
+        document.getElementById('longitude').value = lng;
+    }
+    
+    function getCurrentLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                document.getElementById('latitude').value = position.coords.latitude;
+                document.getElementById('longitude').value = position.coords.longitude;
+            }, function(error) {
+                alert('Erreur lors de la récupération de votre position: ' + error.message);
+            });
+        } else {
+            alert('La géolocalisation n\'est pas supportée par ce navigateur.');
+        }
+    }
+</script>
+{% endblock %}

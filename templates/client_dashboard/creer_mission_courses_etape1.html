@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Créer Mission Courses - Étape 1{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="card mb-8">
+        <div class="gradient-header text-center">
+            <h1 class="heading-1 mb-2">Créer une Mission de Courses</h1>
+            <p class="text-lg opacity-90">Étape 1/3 : Informations générales</p>
+        </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between mb-2">
+            <span class="text-sm font-medium text-slate-600">Progression</span>
+            <span class="text-sm font-medium text-slate-600">33%</span>
+        </div>
+        <div class="w-full bg-slate-200 rounded-full h-2">
+            <div class="bg-blue-600 h-2 rounded-full" style="width: 33%"></div>
+        </div>
+    </div>
+
+    <!-- Formulaire -->
+    <div class="card">
+        <div class="card-body">
+            <form method="POST" id="mission-form">
+                {% csrf_token %}
+                
+                <div class="space-y-6">
+                    <!-- Titre -->
+                    <div>
+                        <label for="{{ form.titre.id_for_label }}" class="block text-sm font-medium text-slate-700 mb-2">
+                            Titre de la mission *
+                        </label>
+                        {{ form.titre }}
+                        {% if form.titre.errors %}
+                            <p class="text-red-600 text-sm mt-1">{{ form.titre.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Description -->
+                    <div>
+                        <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-slate-700 mb-2">
+                            Description
+                        </label>
+                        {{ form.description }}
+                    </div>
+
+                    <!-- Type de délai -->
+                    <div>
+                        <label for="{{ form.delai_type.id_for_label }}" class="block text-sm font-medium text-slate-700 mb-2">
+                            Type de délai maximum *
+                        </label>
+                        {{ form.delai_type }}
+                        <p class="text-sm text-slate-500 mt-1">Choisissez comment définir le délai maximum</p>
+                    </div>
+
+                    <!-- Heure limite (si type = heure_limite) -->
+                    <div id="heure-limite-group" style="display: none;">
+                        <label for="{{ form.heure_limite.id_for_label }}" class="block text-sm font-medium text-slate-700 mb-2">
+                            Heure limite *
+                        </label>
+                        {{ form.heure_limite }}
+                        {% if form.heure_limite.errors %}
+                            <p class="text-red-600 text-sm mt-1">{{ form.heure_limite.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Durée maximum (si type = duree_max_minutes) -->
+                    <div id="duree-max-group">
+                        <label for="{{ form.duree_max_minutes.id_for_label }}" class="block text-sm font-medium text-slate-700 mb-2">
+                            Durée maximum (en minutes) *
+                        </label>
+                        {{ form.duree_max_minutes }}
+                        <p class="text-sm text-slate-500 mt-1">Ex: 120 pour 2 heures. Minimum: 30 minutes</p>
+                        {% if form.duree_max_minutes.errors %}
+                            <p class="text-red-600 text-sm mt-1">{{ form.duree_max_minutes.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    {% if form.non_field_errors %}
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                            {% for error in form.non_field_errors %}
+                                <p class="text-red-600 text-sm">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="flex justify-end space-x-4 mt-8">
+                    <a href="{% url 'client_dashboard:mes_livraisons' %}" class="btn btn-secondary">
+                        Annuler
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        Suivant
+                        <i data-lucide="arrow-right" class="w-4 h-4 ml-2"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    lucide.createIcons();
+    
+    const delaiType = document.getElementById('{{ form.delai_type.id_for_label }}');
+    const heureLimiteGroup = document.getElementById('heure-limite-group');
+    const dureeMaxGroup = document.getElementById('duree-max-group');
+    
+    function toggleDelaiFields() {
+        if (delaiType.value === 'heure_limite') {
+            heureLimiteGroup.style.display = 'block';
+            dureeMaxGroup.style.display = 'none';
+            document.getElementById('{{ form.duree_max_minutes.id_for_label }}').required = false;
+            document.getElementById('{{ form.heure_limite.id_for_label }}').required = true;
+        } else {
+            heureLimiteGroup.style.display = 'none';
+            dureeMaxGroup.style.display = 'block';
+            document.getElementById('{{ form.heure_limite.id_for_label }}').required = false;
+            document.getElementById('{{ form.duree_max_minutes.id_for_label }}').required = true;
+        }
+    }
+    
+    delaiType.addEventListener('change', toggleDelaiFields);
+    toggleDelaiFields(); // Initialiser
+});
+</script>
+{% endblock %}
+

@@ -1,0 +1,864 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Faire mes Courses - LivraFaso{% endblock %}
+
+{% block extra_css %}
+<style>
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.liste-card {
+    @apply p-6 bg-white border border-slate-200 rounded-lg hover:shadow-md transition-all duration-300 ease-in-out transform hover:-translate-y-1;
+    animation: fadeIn 0.3s ease-out forwards;
+}
+
+.liste-card:hover {
+    @apply border-primary-100 shadow-lg;
+}
+
+/* Amélioration des cartes de template */
+.template-card {
+    @apply p-4 border rounded-lg transition-all duration-200 cursor-pointer hover:border-primary-500 hover:shadow-md;
+}
+
+.template-card:hover {
+    transform: translateY(-2px);
+}
+
+/* Styles pour les badges */
+.badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+.badge-success {
+    @apply bg-green-100 text-green-800;
+}
+
+.badge-warning {
+    @apply bg-yellow-100 text-yellow-800;
+}
+
+/* Animation pour le chargement */
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.loading {
+    animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Amélioration du formulaire */
+.form-group {
+    @apply mb-6;
+}
+
+.form-label {
+    @apply block text-sm font-medium text-slate-700 mb-2;
+}
+
+.form-input, .form-textarea {
+    @apply block w-full px-4 py-2.5 border border-slate-300 rounded-lg shadow-sm placeholder-slate-400 
+           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 
+           transition duration-200 ease-in-out text-slate-700;
+}
+
+.form-input:focus, .form-textarea:focus {
+    @apply ring-2 ring-primary-200;
+}
+
+/* Styles pour les boutons */
+.btn {
+    @apply inline-flex items-center justify-center px-5 py-2.5 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+}
+
+.btn-primary {
+    @apply bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500;
+}
+
+.btn-secondary {
+    @apply bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 focus:ring-slate-200;
+}
+
+/* Styles pour la modale */
+.modal {
+    @apply fixed inset-0 z-50 overflow-y-auto hidden;
+}
+
+.modal.active {
+    @apply flex items-center justify-center min-h-screen p-4 text-center sm:block;
+}
+
+.modal-backdrop {
+    @apply fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity;
+}
+
+.modal-content {
+    @apply inline-block w-full max-w-md p-0 overflow-hidden text-left align-middle 
+           bg-white rounded-2xl shadow-xl transform transition-all sm:my-8 sm:align-middle;
+    animation: modalFadeIn 0.3s ease-out;
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modal-header {
+    @apply px-6 py-5 border-b border-slate-100 flex items-center justify-between;
+}
+
+.modal-title {
+    @apply text-xl font-semibold text-slate-900;
+}
+
+.modal-body {
+    @apply px-6 py-4;
+}
+
+.modal-footer {
+    @apply px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end space-x-3 rounded-b-2xl;
+}
+
+/* Animation pour les messages */
+@keyframes slideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+.message {
+    animation: slideInRight 0.3s ease-out forwards;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialisation des tooltips
+    tippy('[data-tippy-content]', {
+        theme: 'light',
+        animation: 'scale',
+        duration: 200,
+    });
+
+    // Gestion du formulaire de nouvelle liste
+    const newListForm = document.getElementById('newListForm');
+    if (newListForm) {
+        newListForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(newListForm);
+            const submitBtn = newListForm.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.innerHTML;
+            
+            try {
+                // Désactiver le bouton pendant la soumission
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i data-lucide="loader" class="w-4 h-4 animate-spin mr-2"></i> Création...';
+                
+                // Envoyer la requête au serveur
+                const response = await fetch('{% url "client_dashboard:faire_courses" %}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFTOKEN': '{{ csrf_token }}'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showNotification('success', data.message || 'Liste créée avec succès !');
+                    // Recharger la page après un court délai
+                    setTimeout(() => window.location.href = data.redirect_url || '.', 1500);
+                } else {
+                    throw new Error(data.error || 'Une erreur est survenue');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                showNotification('error', error.message || 'Erreur lors de la création de la liste');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
+            }
+        });
+    }
+
+    // Fonction pour basculer le statut favori d'une liste
+    window.toggleFavorite = async function(listeId, button) {
+        try {
+            const icon = button.querySelector('i');
+            const isFavorite = icon.classList.contains('text-yellow-400');
+            
+            const response = await fetch(`/api/listes/${listeId}/favori/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFTTOKEN': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    is_favorite: !isFavorite
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                if (data.is_favorite) {
+                    icon.classList.add('text-yellow-400', 'fill-current');
+                    button.setAttribute('data-tippy-content', 'Retirer des favoris');
+                    showNotification('success', 'Liste ajoutée aux favoris');
+                } else {
+                    icon.classList.remove('text-yellow-400', 'fill-current');
+                    button.setAttribute('data-tippy-content', 'Mettre en favori');
+                    showNotification('info', 'Liste retirée des favoris');
+                }
+                // Mettre à jour l'icône Lucide
+                lucide.createIcons();
+            } else {
+                throw new Error(data.error || 'Erreur lors de la mise à jour');
+            }
+        } catch (error) {
+            console.error('Erreur:', error);
+            showNotification('error', error.message || 'Erreur lors de la mise à jour');
+        }
+    };
+
+    // Fonction pour partager une liste
+    window.shareList = async function(listeId) {
+        try {
+            if (navigator.share) {
+                await navigator.share({
+                    title: 'Ma liste de courses',
+                    text: 'Découvrez ma liste de courses sur LivraFaso',
+                    url: `${window.location.origin}{% url 'client_dashboard:detail_liste_courses' 0 %}`.replace('/0/', `/${listeId}/`)
+                });
+            } else {
+                // Fallback pour les navigateurs qui ne supportent pas l'API Web Share
+                const url = `${window.location.origin}{% url 'client_dashboard:detail_liste_courses' 0 %}`.replace('/0/', `/${listeId}/`);
+                await navigator.clipboard.writeText(url);
+                showNotification('success', 'Lien copié dans le presse-papiers');
+            }
+        } catch (error) {
+            if (error.name !== 'AbortError') {
+                console.error('Erreur de partage:', error);
+                showNotification('error', 'Erreur lors du partage');
+            }
+        }
+    };
+
+    // Fonction pour afficher des notifications
+    window.showNotification = function(type, message) {
+        const notifications = document.getElementById('notifications');
+        if (!notifications) return;
+        
+        const notification = document.createElement('div');
+        notification.className = `notification ${type} animate-fadeIn`;
+        
+        let icon = '';
+        switch(type) {
+            case 'success':
+                icon = '<i data-lucide="check-circle" class="w-5 h-5 text-green-500"></i>';
+                break;
+            case 'error':
+                icon = '<i data-lucide="alert-circle" class="w-5 h-5 text-red-500"></i>';
+                break;
+            case 'warning':
+                icon = '<i data-lucide="alert-triangle" class="w-5 h-5 text-yellow-500"></i>';
+                break;
+            default:
+                icon = '<i data-lucide="info" class="w-5 h-5 text-blue-500"></i>';
+        }
+        
+        notification.innerHTML = `
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    ${icon}
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-slate-900">${message}</p>
+                </div>
+                <div class="ml-4 flex-shrink-0 flex">
+                    <button class="text-slate-400 hover:text-slate-500 focus:outline-none" onclick="this.parentElement.parentElement.remove()">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        notifications.appendChild(notification);
+        lucide.createIcons();
+        
+        // Supprimer la notification après 5 secondes
+        setTimeout(() => {
+            notification.classList.add('animate-fadeOut');
+            setTimeout(() => notification.remove(), 300);
+        }, 5000);
+    };
+
+    // Gestion du menu de tri
+    const sortMenuButton = document.getElementById('sortMenuButton');
+    const sortMenu = document.getElementById('sortMenu');
+    
+    if (sortMenuButton && sortMenu) {
+        sortMenuButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            sortMenu.classList.toggle('hidden');
+        });
+        
+        document.addEventListener('click', () => {
+            sortMenu.classList.add('hidden');
+        });
+    }
+});
+
+// Fonction pour ouvrir la modale de création de liste
+window.openNewListModal = function() {
+    const modal = document.getElementById('newListModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+        
+        // Mettre le focus sur le premier champ du formulaire
+        const input = modal.querySelector('input[name="nom"]');
+        if (input) input.focus();
+    }
+};
+
+// Fonction pour fermer la modale
+window.closeNewListModal = function() {
+    const modal = document.getElementById('newListModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+    }
+};
+
+// Fermer la modale avec la touche Échap
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeNewListModal();
+    }
+});
+</script>
+
+<!-- Styles pour les notifications -->
+<style>
+#notifications {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 50;
+    width: 100%;
+    max-width: 24rem;
+    pointer-events: none;
+}
+
+.notification {
+    @apply bg-white rounded-lg shadow-lg p-4 mb-2 border border-slate-200 pointer-events-auto;
+    animation-duration: 0.3s;
+    animation-fill-mode: both;
+}
+
+.notification.animate-fadeIn {
+    animation-name: fadeInUp;
+}
+
+.notification.animate-fadeOut {
+    animation-name: fadeOutDown;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translate3d(0, 100%, 0);
+    }
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+@keyframes fadeOutDown {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+        transform: translate3d(0, 100%, 0);
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- En-tête -->
+    <div class="card mb-8 overflow-hidden">
+        <div class="gradient-header">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between p-6">
+                <div>
+                    <h1 class="text-2xl font-bold text-white">Faire mes Courses</h1>
+                    <p class="mt-1 text-blue-100">Gérez vos listes de courses et vos commandes</p>
+                </div>
+                <div class="mt-4 md:mt-0">
+                    <button onclick="openNewListModal()" class="btn-primary group">
+                        <i data-lucide="plus" class="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform"></i>
+                        Nouvelle liste
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Colonne principale -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Section: Courses de la semaine -->
+            <div class="card overflow-hidden">
+                <div class="card-header bg-gradient-to-r from-blue-50 to-indigo-50">
+                    <h2 class="card-title text-blue-800">
+                        <i data-lucide="calendar-days" class="w-5 h-5 text-blue-600"></i>
+                        <span>Courses de la semaine</span>
+                        <span class="ml-2 badge badge-primary">Nouveau</span>
+                    </h2>
+                    <button class="text-blue-600 hover:text-blue-700 transition-colors">
+                        <i data-lucide="more-horizontal" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <div class="card-body">
+                    {% if listes_semaine %}
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {% for liste in listes_semaine|slice:":4" %}
+                            <div class="semaine-card">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <h3 class="font-medium text-slate-900">{{ liste.nom }}</h3>
+                                        <p class="text-sm text-slate-600 mt-1">
+                                            <span class="font-medium">{{ liste.articles.count }}</span> articles • 
+                                            <span class="font-medium">{{ liste.total_estimated_price|default:"0"|floatformat:0 }} FCFA</span>
+                                        </p>
+                                    </div>
+                                    <a href="{% url 'client_dashboard:detail_liste_courses' liste.id %}" 
+                                       class="text-blue-600 hover:text-blue-700 transition-colors">
+                                        <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                                    </a>
+                                </div>
+                                <div class="mt-3 pt-3 border-t border-blue-100 flex justify-between items-center">
+                                    <span class="text-xs text-slate-500">
+                                        <i data-lucide="clock" class="w-3 h-3 inline-block mr-1"></i>
+                                        {{ liste.updated_at|timesince }}
+                                    </span>
+                                    {% if liste.is_favorite %}
+                                        <i data-lucide="star" class="w-4 h-4 text-yellow-400 fill-current"></i>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% if listes_semaine.count > 4 %}
+                        <div class="mt-4 text-center">
+                            <a href="#" class="text-sm text-blue-600 hover:text-blue-700 font-medium inline-flex items-center">
+                                Voir toutes les listes de la semaine ({{ listes_semaine.count }})
+                                <i data-lucide="chevron-right" class="w-4 h-4 ml-1"></i>
+                            </a>
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-8 text-slate-500">
+                            <i data-lucide="calendar-x" class="w-10 h-10 mx-auto text-slate-300 mb-3"></i>
+                            <p class="text-slate-600">Aucune liste créée cette semaine</p>
+                            <button onclick="openNewListModal()" class="mt-3 text-sm text-blue-600 hover:text-blue-700 font-medium">
+                                Créer votre première liste
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Section: Mes listes -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i data-lucide="shopping-cart" class="w-5 h-5"></i>
+                        Mes Listes de Courses
+                    </h2>
+                    <div class="flex space-x-2">
+                        <button class="btn-icon hover:bg-slate-100" data-tippy-content="Actualiser">
+                            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                        </button>
+                        <div class="relative">
+                            <button id="sortMenuButton" class="btn-icon hover:bg-slate-100" data-tippy-content="Trier">
+                                <i data-lucide="arrow-up-down" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if mes_listes %}
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {% for liste in mes_listes %}
+                            <div class="liste-card">
+                                <div class="flex items-start justify-between mb-4">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                                            <i data-lucide="shopping-bag" class="w-6 h-6 text-green-600"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="font-semibold text-slate-900">{{ liste.nom }}</h3>
+                                            <p class="text-sm text-slate-600">{{ liste.updated_at|date:"d/m/Y" }}</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex items-center space-x-2">
+                                        {% if liste.is_favorite %}
+                                        <i data-lucide="heart" class="w-5 h-5 text-red-500"></i>
+                                        {% endif %}
+                                        {% if liste.is_template %}
+                                        <span class="badge badge-info">Template</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <div class="space-y-3">
+                                    <div class="flex items-center justify-between text-sm">
+                                        <span class="text-slate-600">Articles:</span>
+                                        <span class="font-medium">{{ liste.total_items }}</span>
+                                    </div>
+                                    
+                                    {% if liste.budget_max %}
+                                    <div class="flex items-center justify-between text-sm">
+                                        <span class="text-slate-600">Budget max:</span>
+                                        <span class="font-medium text-green-600">{{ liste.budget_max|floatformat:0 }} FCFA</span>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <div class="flex items-center justify-between text-sm">
+                                        <span class="text-slate-600">Estimation:</span>
+                                        <span class="font-medium">{{ liste.total_estimated_price|floatformat:0 }} FCFA</span>
+                                    </div>
+                                </div>
+                                
+                                {% if liste.description %}
+                                <p class="text-sm text-slate-600 mt-3 line-clamp-2">{{ liste.description }}</p>
+                                {% endif %}
+                                
+                                <div class="flex items-center space-x-2 mt-4 pt-4 border-t border-slate-200">
+                                    <a href="{% url 'client_dashboard:detail_liste_courses' liste.id %}" class="btn btn-primary btn-sm flex-1">
+                                        <i data-lucide="edit" class="w-4 h-4 mr-1"></i>
+                                        Modifier
+                                    </a>
+                                    
+                                    <button onclick="orderList({{ liste.id }})" class="btn btn-secondary btn-sm flex-1">
+                                        <i data-lucide="truck" class="w-4 h-4 mr-1"></i>
+                                        Commander
+                                    </button>
+                                    
+                                    <button onclick="toggleFavorite({{ liste.id }})" class="btn btn-outline btn-sm">
+                                        <i data-lucide="heart" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-16 px-6 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 hover:border-primary-300 transition-colors duration-200">
+                            <div class="mx-auto w-24 h-24 bg-primary-50 rounded-full flex items-center justify-center mb-6">
+                                <i data-lucide="shopping-cart" class="w-12 h-12 text-primary-600"></i>
+                            </div>
+                            <h3 class="text-2xl font-semibold text-slate-900 mb-3">Aucune liste de courses</h3>
+                            <p class="text-slate-600 mb-8 max-w-md mx-auto">Créez votre première liste de courses pour faciliter vos achats et gagner du temps</p>
+                            <button onclick="openNewListModal()" class="btn btn-primary hover:shadow-lg hover:shadow-primary-100 hover:-translate-y-0.5 transition-all duration-200 px-8 py-3 text-base">
+                                <i data-lucide="plus" class="w-5 h-5 mr-2"></i>
+                                Créer une liste
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="space-y-6">
+            <!-- Templates populaires -->
+            <div class="card overflow-hidden">
+                <div class="bg-gradient-to-r from-primary-50 to-blue-50 px-6 py-5">
+                    <h3 class="text-lg font-semibold text-slate-900 flex items-center">
+                        <i data-lucide="zap" class="w-5 h-5 text-primary-600 mr-2"></i>
+                        Modèles populaires
+                    </h3>
+                    <p class="text-sm text-slate-500 mt-1">Gagnez du temps avec nos modèles prédéfinis</p>
+                </div>
+                <div class="p-5">
+                    <div class="space-y-3">
+                        <div class="template-card group" onclick="useTemplate('epicerie')">
+                            <div class="flex items-center space-x-4 p-4">
+                                <div class="flex-shrink-0 w-12 h-12 bg-primary-50 rounded-xl flex items-center justify-center group-hover:bg-primary-100 transition-colors duration-200">
+                                    <i data-lucide="shopping-basket" class="w-6 h-6 text-primary-600"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="font-semibold text-slate-900 group-hover:text-primary-600 transition-colors duration-200">Épicerie de base</h4>
+                                    <p class="text-sm text-slate-500 truncate">Articles essentiels pour le quotidien</p>
+                                </div>
+                                <div class="flex-shrink-0">
+                                    <i data-lucide="chevron-right" class="w-5 h-5 text-slate-400 group-hover:text-primary-500 transition-colors duration-200"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="template-card group" onclick="useTemplate('semaine')">
+                            <div class="flex items-center space-x-4 p-4">
+                                <div class="flex-shrink-0 w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center group-hover:bg-green-100 transition-colors duration-200">
+                                    <i data-lucide="calendar" class="w-6 h-6 text-green-600"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="font-semibold text-slate-900 group-hover:text-green-600 transition-colors duration-200">Courses de la semaine</h4>
+                                    <p class="text-sm text-slate-500 truncate">Pour toute la famille</p>
+                                </div>
+                                <div class="flex-shrink-0">
+                                    <i data-lucide="chevron-right" class="w-5 h-5 text-slate-400 group-hover:text-green-500 transition-colors duration-200"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="template-card group" onclick="useTemplate('soiree')">
+                            <div class="flex items-center space-x-4 p-4">
+                                <div class="flex-shrink-0 w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center group-hover:bg-purple-100 transition-colors duration-200">
+                                    <i data-lucide="glass-2" class="w-6 h-6 text-purple-600"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="font-semibold text-slate-900 group-hover:text-purple-600 transition-colors duration-200">Soirée entre amis</h4>
+                                    <p class="text-sm text-slate-500 truncate">Apéritifs et boissons</p>
+                                </div>
+                                <div class="flex-shrink-0">
+                                    <i data-lucide="chevron-right" class="w-5 h-5 text-slate-400 group-hover:text-purple-500 transition-colors duration-200"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 text-center">
+                        <button class="text-sm font-medium text-primary-600 hover:text-primary-700 flex items-center justify-center w-full py-2 hover:bg-slate-50 rounded-lg transition-colors duration-200">
+                            Voir tous les modèles
+                            <i data-lucide="arrow-right" class="w-4 h-4 ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conseils -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i data-lucide="lightbulb" class="w-5 h-5"></i>
+                        Conseils Pratiques
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="space-y-4">
+                        <div class="flex items-start space-x-3">
+                            <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <i data-lucide="camera" class="w-3 h-3 text-blue-600"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-slate-900 text-sm">Ajoutez des photos</h4>
+                                <p class="text-xs text-slate-600">Facilitez le travail du livreur avec des images des produits</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start space-x-3">
+                            <div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <i data-lucide="dollar-sign" class="w-3 h-3 text-green-600"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-slate-900 text-sm">Fixez un budget</h4>
+                                <p class="text-xs text-slate-600">Évitez les mauvaises surprises en définissant un budget maximum</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start space-x-3">
+                            <div class="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <i data-lucide="clock" class="w-3 h-3 text-purple-600"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-slate-900 text-sm">Planifiez à l'avance</h4>
+                                <p class="text-xs text-slate-600">Créez vos listes récurrentes comme templates</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistiques -->
+            <div class="card overflow-hidden">
+                <div class="bg-gradient-to-r from-slate-900 to-slate-800 px-6 py-5 text-white">
+                    <h3 class="text-lg font-semibold flex items-center">
+                        <i data-lucide="bar-chart-2" class="w-5 h-5 text-primary-300 mr-2"></i>
+                        Mes Statistiques
+                    </h3>
+                    <p class="text-slate-300 text-sm mt-1">Votre activité en un coup d'œil</p>
+                </div>
+                <div class="p-5 bg-gradient-to-br from-slate-800 to-slate-900 text-white">
+                    <div class="space-y-5">
+                        <div class="flex items-center justify-between p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-lg bg-primary-500/10 flex items-center justify-center">
+                                    <i data-lucide="list" class="w-5 h-5 text-primary-400"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-slate-300">Listes créées</p>
+                                    <p class="text-xl font-bold">{{ stats.total_listes|default:'0' }}</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm text-green-400 font-medium">+12%</div>
+                                <div class="text-xs text-slate-400">ce mois-ci</div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center">
+                                    <i data-lucide="shopping-bag" class="w-5 h-5 text-green-400"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-slate-300">Articles achetés</p>
+                                    <p class="text-xl font-bold">{{ stats.total_articles|default:'0' }}</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm text-green-400 font-medium">+24%</div>
+                                <div class="text-xs text-slate-400">ce mois-ci</div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                                    <i data-lucide="wallet" class="w-5 h-5 text-amber-400"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-slate-300">Dépenses totales</p>
+                                    <p class="text-xl font-bold">{{ stats.total_depenses|default:'0' }} <span class="text-sm font-normal text-slate-400">FCFA</span></p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm text-red-400 font-medium">-8%</div>
+                                <div class="text-xs text-slate-400">ce mois-ci</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 pt-5 border-t border-slate-700">
+                        <a href="#" class="flex items-center justify-center text-sm font-medium text-primary-400 hover:text-primary-300 transition-colors duration-200">
+                            Voir le détail des statistiques
+                            <i data-lucide="arrow-right" class="w-4 h-4 ml-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Notifications -->
+<div id="notifications" class="fixed top-4 right-4 z-50 w-80 space-y-2"></div>
+
+<!-- Header avec menu mobile -->
+<div class="lg:hidden bg-white shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center py-3">
+            <h1 class="text-xl font-bold text-slate-900">Faire mes Courses</h1>
+            <button id="mobileMenuButton" class="text-slate-500 hover:text-slate-700">
+                <i data-lucide="menu" class="w-6 h-6"></i>
+            </button>
+        </div>
+        <div id="mobileMenu" class="hidden pb-3 space-y-2">
+            <button onclick="openNewListModal()" class="w-full flex items-center justify-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
+                <i data-lucide="plus" class="w-5 h-5 mr-2"></i>
+                Nouvelle Liste
+            </button>
+        </div>
+    </div>
+</div>
+    </div>
+
+<!-- Indicateur de chargement -->
+<div id="loadingIndicator" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+    <div class="bg-white p-6 rounded-xl shadow-xl flex flex-col items-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500 mb-4"></div>
+        <p class="text-slate-700 font-medium">Traitement en cours...</p>
+    </div>
+</div>
+
+<!-- Modale Nouvelle Liste -->
+<div id="newListModal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+            <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+        </div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <div class="px-6 py-5 border-b border-slate-200">
+                <h3 class="text-lg font-semibold text-slate-900">Nouvelle Liste de Courses</h3>
+            </div>
+            <div class="px-6 py-4">
+                <form id="newListForm" method="post" class="space-y-4">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="nom" class="form-label">Nom de la liste <span class="text-red-500">*</span></label>
+                        <input type="text" id="nom" name="nom" class="form-input" placeholder="Ex: Courses de la semaine" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea id="description" name="description" rows="3" class="form-textarea" placeholder="Décrivez votre liste de courses..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="budget_max" class="form-label">Budget maximum (FCFA)</label>
+                        <input type="number" id="budget_max" name="budget_max" class="form-input" placeholder="Ex: 25000" min="0">
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <input type="checkbox" id="is_favorite" name="is_favorite" class="form-checkbox">
+                            <label for="is_favorite" class="ml-2 text-sm text-slate-700">Favori</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="is_template" name="is_template" class="form-checkbox">
+                            <label for="is_template" class="ml-2 text-sm text-slate-700">Enregistrer comme modèle</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-end space-x-3">
+                <button type="button" onclick="closeNewListModal()" class="btn btn-secondary">
+                    Annuler
+                </button>
+                <button type="submit" form="newListForm" class="btn btn-primary">
+                    <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
+                    Créer la liste
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.liste-card {
+    @apply p-6 bg-white border border-slate-200 rounded-lg hover:shadow-md transition-shadow;
+}
+
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+</style>
+{% endblock %}
+

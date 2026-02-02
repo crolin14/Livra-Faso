@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mes Tickets de Support - LivraFaso{% endblock %}
+
+{% block extra_css %}
+<style>
+.ticket-priority-high { border-left: 4px solid #ef4444; }
+.ticket-priority-medium { border-left: 4px solid #f59e0b; }
+.ticket-priority-low { border-left: 4px solid #10b981; }
+.ticket-status-open { background-color: #fef3c7; color: #92400e; }
+.ticket-status-in_progress { background-color: #dbeafe; color: #1e40af; }
+.ticket-status-resolved { background-color: #d1fae5; color: #065f46; }
+.ticket-status-closed { background-color: #f3f4f6; color: #374151; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Support Header -->
+<div class="bg-gradient-to-r from-primary-600 via-blue-600 to-purple-600 text-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div class="text-center">
+            <div class="flex items-center justify-center mb-6">
+                <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
+                    <i data-lucide="ticket" class="w-12 h-12 text-white"></i>
+                </div>
+            </div>
+            <h1 class="text-4xl lg:text-5xl font-display font-bold mb-4">
+                Mes Tickets de Support
+            </h1>
+            <p class="text-xl text-blue-100 max-w-2xl mx-auto">
+                Gérez vos demandes de support et suivez leur progression
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+    <!-- Actions principales -->
+    <div class="mb-8 flex flex-col lg:flex-row gap-6 justify-between items-start lg:items-center">
+        <a href="{% url 'support:create_ticket' %}" class="btn-primary">
+            <i data-lucide="plus" class="w-5 h-5 mr-2"></i>
+            Nouveau Ticket
+        </a>
+        
+        <!-- Filtres -->
+        <div class="flex flex-wrap gap-3">
+            <div class="relative">
+                <i data-lucide="filter" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400"></i>
+                <select id="statusFilter" class="form-select pl-10">
+                    <option value="">Tous les statuts</option>
+                    {% for status_key, status_label in status_choices %}
+                        <option value="{{ status_key }}" {% if current_status == status_key %}selected{% endif %}>
+                            {{ status_label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="relative">
+                <i data-lucide="folder" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400"></i>
+                <select id="categoryFilter" class="form-select pl-10">
+                    <option value="">Toutes les catégories</option>
+                    {% for category in categories %}
+                        <option value="{{ category.id }}" {% if current_category == category.id|stringformat:"s" %}selected{% endif %}>
+                            {{ category.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des tickets -->
+    {% if tickets %}
+        <div class="space-y-6">
+            {% for ticket in tickets %}
+                <div class="bg-white rounded-2xl shadow-xl border border-gray-200 ticket-priority-{{ ticket.priority }} hover:shadow-2xl transition-all duration-300" data-aos="fade-up" data-aos-delay="{{ forloop.counter0|add:100 }}">
+                    <div class="p-8">
+                        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                            <!-- Informations principales -->
+                            <div class="flex-1">
+                                <div class="flex items-center gap-3 mb-4">
+                                    <h3 class="text-xl font-bold text-gray-900">
+                                        <a href="{% url 'support:ticket_detail' ticket.id %}" 
+                                           class="hover:text-primary-600 transition-colors">
+                                            #{{ ticket.ticket_number }}
+                                        </a>
+                                    </h3>
+                                    <span class="badge badge-{{ ticket.status }}">
+                                        {{ ticket.get_status_display }}
+                                    </span>
+                                    <span class="badge badge-priority-{{ ticket.priority }}">
+                                        {{ ticket.get_priority_display }}
+                                    </span>
+                                </div>
+                                
+                                <p class="text-gray-900 font-semibold mb-2 text-lg">{{ ticket.title }}</p>
+                                <p class="text-gray-600 mb-4">{{ ticket.description|truncatewords:20 }}</p>
+                                
+                                <div class="flex flex-wrap items-center gap-6 text-sm text-gray-500">
+                                    <span class="flex items-center">
+                                        <div class="bg-blue-100 w-6 h-6 rounded-lg flex items-center justify-center mr-2">
+                                            <i data-lucide="tag" class="w-3 h-3 text-blue-600"></i>
+                                        </div>
+                                        {{ ticket.category.name }}
+                                    </span>
+                                    <span class="flex items-center">
+                                        <div class="bg-green-100 w-6 h-6 rounded-lg flex items-center justify-center mr-2">
+                                            <i data-lucide="calendar" class="w-3 h-3 text-green-600"></i>
+                                        </div>
+                                        {{ ticket.created_at|date:"d/m/Y H:i" }}
+                                    </span>
+                                    {% if ticket.assigned_to %}
+                                        <span class="flex items-center">
+                                            <div class="bg-purple-100 w-6 h-6 rounded-lg flex items-center justify-center mr-2">
+                                                <i data-lucide="user" class="w-3 h-3 text-purple-600"></i>
+                                            </div>
+                                            {{ ticket.assigned_to.get_full_name }}
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Actions -->
+                            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                                <a href="{% url 'support:ticket_detail' ticket.id %}" class="btn-outline">
+                                    <i data-lucide="eye" class="w-4 h-4 mr-2"></i>
+                                    Voir Détails
+                                </a>
+                                
+                                {% if ticket.status == 'resolved' and not ticket.satisfaction_rating %}
+                                    <span class="bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-800 px-4 py-2 rounded-xl text-sm font-medium border border-yellow-200">
+                                        <i data-lucide="star" class="w-4 h-4 mr-1 inline"></i>
+                                        Évaluation en attente
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if tickets.has_other_pages %}
+            <div class="mt-8 flex justify-center">
+                <nav class="flex items-center space-x-2">
+                    {% if tickets.has_previous %}
+                        <a href="?page={{ tickets.previous_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}" 
+                           class="px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50">
+                            Précédent
+                        </a>
+                    {% endif %}
+                    
+                    <span class="px-3 py-2 text-sm text-gray-700">
+                        Page {{ tickets.number }} sur {{ tickets.paginator.num_pages }}
+                    </span>
+                    
+                    {% if tickets.has_next %}
+                        <a href="?page={{ tickets.next_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}" 
+                           class="px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50">
+                            Suivant
+                        </a>
+                    {% endif %}
+                </nav>
+            </div>
+        {% endif %}
+    {% else %}
+        <!-- État vide -->
+        <div class="text-center py-20">
+            <div class="mx-auto w-32 h-32 bg-gradient-to-br from-gray-100 to-gray-200 rounded-3xl flex items-center justify-center mb-8">
+                <i data-lucide="help-circle" class="w-16 h-16 text-gray-400"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-900 mb-4">Aucun ticket trouvé</h3>
+            <p class="text-gray-600 mb-8 max-w-md mx-auto">Vous n'avez pas encore créé de ticket de support. Créez votre premier ticket pour obtenir de l'aide.</p>
+            <a href="{% url 'support:create_ticket' %}" class="btn-primary">
+                <i data-lucide="plus" class="w-5 h-5 mr-2"></i>
+                Créer mon premier ticket
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Filtres
+    const statusFilter = document.getElementById('statusFilter');
+    const categoryFilter = document.getElementById('categoryFilter');
+    
+    function updateFilters() {
+        const params = new URLSearchParams();
+        
+        if (statusFilter.value) params.set('status', statusFilter.value);
+        if (categoryFilter.value) params.set('category', categoryFilter.value);
+        
+        window.location.search = params.toString();
+    }
+    
+    statusFilter.addEventListener('change', updateFilters);
+    categoryFilter.addEventListener('change', updateFilters);
+    
+    // Initialiser Lucide icons
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+});
+</script>
+{% endblock %}

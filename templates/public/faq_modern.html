@@ -1,0 +1,463 @@
+{% extends 'base_ultra_modern.html' %}
+{% load static %}
+
+{% block title %}FAQ - Questions Fréquentes - LivraFaso{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<section class="bg-gradient-to-br from-primary-50 via-blue-50 to-indigo-50 py-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center" data-aos="fade-up">
+            <h1 class="text-4xl lg:text-6xl font-display font-bold text-gray-900 mb-6">
+                Questions <span class="bg-gradient-to-r from-primary-600 to-blue-600 bg-clip-text text-transparent">Fréquentes</span>
+            </h1>
+            <p class="text-xl lg:text-2xl text-gray-600 max-w-3xl mx-auto">
+                Trouvez rapidement les réponses à toutes vos questions sur LivraFaso
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- Search Bar -->
+<section class="py-8 bg-white border-b border-gray-100">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="relative" data-aos="fade-up">
+            <input type="text" id="faq-search" placeholder="Rechercher une question..." 
+                class="w-full px-6 py-4 pl-12 text-lg border border-gray-300 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent shadow-sm">
+            <i data-lucide="search" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-6 h-6 text-gray-400"></i>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ Categories -->
+<section class="py-8 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-wrap justify-center gap-4" data-aos="fade-up">
+            <button class="faq-category-btn active" data-category="all">
+                <i data-lucide="grid-3x3" class="w-4 h-4 mr-2"></i>
+                Toutes
+            </button>
+            <button class="faq-category-btn" data-category="general">
+                <i data-lucide="info" class="w-4 h-4 mr-2"></i>
+                Général
+            </button>
+            <button class="faq-category-btn" data-category="entreprise">
+                <i data-lucide="building-2" class="w-4 h-4 mr-2"></i>
+                Entreprises
+            </button>
+            <button class="faq-category-btn" data-category="livreur">
+                <i data-lucide="truck" class="w-4 h-4 mr-2"></i>
+                Livreurs
+            </button>
+            <button class="faq-category-btn" data-category="paiement">
+                <i data-lucide="credit-card" class="w-4 h-4 mr-2"></i>
+                Paiements
+            </button>
+            <button class="faq-category-btn" data-category="support">
+                <i data-lucide="help-circle" class="w-4 h-4 mr-2"></i>
+                Support
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ Content -->
+<section class="py-12">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="space-y-4" id="faq-container">
+            <!-- General Questions -->
+            <div class="faq-item" data-category="general" data-aos="fade-up">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <button class="faq-question w-full px-6 py-5 text-left flex items-center justify-between hover:bg-gray-50 transition-colors">
+                        <span class="font-semibold text-gray-900 pr-4">Comment fonctionne LivraFaso ?</span>
+                        <i data-lucide="chevron-down" class="w-5 h-5 text-gray-500 transform transition-transform flex-shrink-0"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-5">
+                        <p class="text-gray-600 leading-relaxed">
+                            LivraFaso est une plateforme qui met en relation les entreprises ayant besoin de services de livraison 
+                            avec des livreurs qualifiés. Les entreprises créent des missions de livraison, les livreurs postulent, 
+                            et une fois sélectionnés, ils effectuent la livraison avec un suivi en temps réel.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item" data-category="general" data-aos="fade-up" data-aos-delay="50">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <button class="faq-question w-full px-6 py-5 text-left flex items-center justify-between hover:bg-gray-50 transition-colors">
+                        <span class="font-semibold text-gray-900 pr-4">Dans quelles villes LivraFaso est-il disponible ?</span>
+                        <i data-lucide="chevron-down" class="w-5 h-5 text-gray-500 transform transition-transform flex-shrink-0"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-5">
+                        <p class="text-gray-600 leading-relaxed">
+                            LivraFaso est actuellement disponible à Ouagadougou et Bobo-Dioulasso. Nous prévoyons d'étendre 
+                            nos services à d'autres villes du Burkina Faso dans les prochains mois.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enterprise Questions -->
+            <div class="faq-item" data-category="entreprise" data-aos="fade-up" data-aos-delay="100">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <button class="faq-question w-full px-6 py-5 text-left flex items-center justify-between hover:bg-gray-50 transition-colors">
+                        <span class="font-semibold text-gray-900 pr-4">Comment créer une mission de livraison ?</span>
+                        <i data-lucide="chevron-down" class="w-5 h-5 text-gray-500 transform transition-transform flex-shrink-0"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-5">
+                        <p class="text-gray-600 leading-relaxed mb-3">
+                            Pour créer une mission de livraison, suivez ces étapes simples :
+                        </p>
+                        <ol class="list-decimal list-inside text-gray-600 space-y-2">
+                            <li>Connectez-vous à votre compte entreprise</li>
+                            <li>Cliquez sur "Créer une mission"</li>
+                            <li>Remplissez les informations de base (titre, description, priorité)</li>
+                            <li>Ajoutez les adresses de collecte et de livraison</li>
+                            <li>Précisez les détails du colis</li>
+                            <li>Confirmez et publiez votre mission</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item" data-category="entreprise" data-aos="fade-up" data-aos-delay="150">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <button class="faq-question w-full px-6 py-5 text-left flex items-center justify-between hover:bg-gray-50 transition-colors">
+                        <span class="font-semibold text-gray-900 pr-4">Comment sont calculés les prix de livraison ?</span>
+                        <i data-lucide="chevron-down" class="w-5 h-5 text-gray-500 transform transition-transform flex-shrink-0"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-5">
+                        <p class="text-gray-600 leading-relaxed">
+                            Le prix de livraison est calculé en fonction de plusieurs facteurs : la distance entre les points 
+                            de collecte et de livraison, la priorité de la mission (normale, urgente, express), le poids et 
+                            les dimensions du colis, ainsi que l'heure de la demande. Un calculateur automatique vous donne 
+                            une estimation précise avant la confirmation.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item" data-category="entreprise" data-aos="fade-up" data-aos-delay="200">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <button class="faq-question w-full px-6 py-5 text-left flex items-center justify-between hover:bg-gray-50 transition-colors">
+                        <span class="font-semibold text-gray-900 pr-4">Puis-je suivre ma livraison en temps réel ?</span>
+                        <i data-lucide="chevron-down" class="w-5 h-5 text-gray-500 transform transition-transform flex-shrink-0"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-5">
+                        <p class="text-gray-600 leading-relaxed">
+                            Oui, absolument ! Une fois votre mission acceptée par un livreur, vous pouvez suivre sa progression 
+                            en temps réel via notre plateforme. Vous recevrez également des notifications SMS/WhatsApp aux 
+                            étapes importantes : collecte, en route, livraison effectuée.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Livreur Questions -->
+            <div class="faq-item" data-category="livreur" data-aos="fade-up" data-aos-delay="250">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <button class="faq-question w-full px-6 py-5 text-left flex items-center justify-between hover:bg-gray-50 transition-colors">
+                        <span class="font-semibold text-gray-900 pr-4">Comment devenir livreur partenaire ?</span>
+                        <i data-lucide="chevron-down" class="w-5 h-5 text-gray-500 transform transition-transform flex-shrink-0"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-5">
+                        <p class="text-gray-600 leading-relaxed mb-3">
+                            Pour devenir livreur partenaire LivraFaso :
+                        </p>
+                        <ul class="list-disc list-inside text-gray-600 space-y-2">
+                            <li>Créez un compte livreur sur notre plateforme</li>
+                            <li>Complétez votre profil avec vos informations personnelles</li>
+                            <li>Ajoutez les détails de votre véhicule (moto, vélo, voiture)</li>
+                            <li>Soumettez les documents requis (permis, assurance, pièce d'identité)</li>
+                            <li>Attendez la validation de votre dossier (24-48h)</li>
+                            <li>Commencez à accepter des missions !</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item" data-category="livreur" data-aos="fade-up" data-aos-delay="300">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <button class="faq-question w-full px-6 py-5 text-left flex items-center justify-between hover:bg-gray-50 transition-colors">
+                        <span class="font-semibold text-gray-900 pr-4">Comment sont rémunérés les livreurs ?</span>
+                        <i data-lucide="chevron-down" class="w-5 h-5 text-gray-500 transform transition-transform flex-shrink-0"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-5">
+                        <p class="text-gray-600 leading-relaxed">
+                            Les livreurs reçoivent 70% du prix de chaque mission effectuée. Le paiement est effectué 
+                            automatiquement après confirmation de livraison, directement sur votre compte Mobile Money 
+                            ou par virement bancaire selon vos préférences. Vous pouvez également recevoir des pourboires 
+                            des clients satisfaits.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item" data-category="livreur" data-aos="fade-up" data-aos-delay="350">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <button class="faq-question w-full px-6 py-5 text-left flex items-center justify-between hover:bg-gray-50 transition-colors">
+                        <span class="font-semibold text-gray-900 pr-4">Puis-je choisir mes missions ?</span>
+                        <i data-lucide="chevron-down" class="w-5 h-5 text-gray-500 transform transition-transform flex-shrink-0"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-5">
+                        <p class="text-gray-600 leading-relaxed">
+                            Oui, vous avez le contrôle total sur les missions que vous acceptez. Vous pouvez voir toutes 
+                            les missions disponibles, filtrer par distance, prix ou priorité, et postuler uniquement à 
+                            celles qui vous intéressent. Vous n'êtes jamais obligé d'accepter une mission.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Questions -->
+            <div class="faq-item" data-category="paiement" data-aos="fade-up" data-aos-delay="400">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <button class="faq-question w-full px-6 py-5 text-left flex items-center justify-between hover:bg-gray-50 transition-colors">
+                        <span class="font-semibold text-gray-900 pr-4">Quels moyens de paiement acceptez-vous ?</span>
+                        <i data-lucide="chevron-down" class="w-5 h-5 text-gray-500 transform transition-transform flex-shrink-0"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-5">
+                        <p class="text-gray-600 leading-relaxed mb-3">
+                            Nous acceptons plusieurs moyens de paiement pour votre convenance :
+                        </p>
+                        <ul class="list-disc list-inside text-gray-600 space-y-2">
+                            <li><strong>Mobile Money :</strong> Orange Money, Moov Money, Telecel Money</li>
+                            <li><strong>Cartes bancaires :</strong> Visa, Mastercard</li>
+                            <li><strong>Paiement à la livraison :</strong> Espèces (avec supplément de 5%)</li>
+                            <li><strong>Virement bancaire :</strong> Pour les entreprises avec facturation</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item" data-category="paiement" data-aos="fade-up" data-aos-delay="450">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <button class="faq-question w-full px-6 py-5 text-left flex items-center justify-between hover:bg-gray-50 transition-colors">
+                        <span class="font-semibold text-gray-900 pr-4">Quand suis-je facturé pour une livraison ?</span>
+                        <i data-lucide="chevron-down" class="w-5 h-5 text-gray-500 transform transition-transform flex-shrink-0"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-5">
+                        <p class="text-gray-600 leading-relaxed">
+                            Le paiement est prélevé automatiquement une fois que votre mission est acceptée par un livreur. 
+                            En cas d'annulation avant la collecte, vous êtes remboursé intégralement. Si l'annulation 
+                            intervient après la collecte, des frais de 20% peuvent s'appliquer.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Support Questions -->
+            <div class="faq-item" data-category="support" data-aos="fade-up" data-aos-delay="500">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <button class="faq-question w-full px-6 py-5 text-left flex items-center justify-between hover:bg-gray-50 transition-colors">
+                        <span class="font-semibold text-gray-900 pr-4">Comment contacter le support client ?</span>
+                        <i data-lucide="chevron-down" class="w-5 h-5 text-gray-500 transform transition-transform flex-shrink-0"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-5">
+                        <p class="text-gray-600 leading-relaxed mb-3">
+                            Notre équipe support est disponible pour vous aider :
+                        </p>
+                        <ul class="list-disc list-inside text-gray-600 space-y-2">
+                            <li><strong>Chat en ligne :</strong> Disponible dans votre espace client</li>
+                            <li><strong>Téléphone :</strong> +226 25 12 34 56 (8h-18h, Lun-Ven)</li>
+                            <li><strong>Email :</strong> support@livrafaso.bf</li>
+                            <li><strong>WhatsApp :</strong> +226 70 12 34 56</li>
+                            <li><strong>Urgences 24/7 :</strong> +226 70 00 00 00</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item" data-category="support" data-aos="fade-up" data-aos-delay="550">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <button class="faq-question w-full px-6 py-5 text-left flex items-center justify-between hover:bg-gray-50 transition-colors">
+                        <span class="font-semibold text-gray-900 pr-4">Que faire si ma livraison est en retard ?</span>
+                        <i data-lucide="chevron-down" class="w-5 h-5 text-gray-500 transform transition-transform flex-shrink-0"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-5">
+                        <p class="text-gray-600 leading-relaxed">
+                            Si votre livraison dépasse le délai prévu de plus de 30 minutes, contactez immédiatement 
+                            notre support. Nous interviendrons auprès du livreur et vous tiendrons informé. En cas de 
+                            retard significatif imputable au livreur, vous bénéficierez d'une réduction sur votre 
+                            prochaine livraison.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="faq-item" data-category="general" data-aos="fade-up" data-aos-delay="600">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <button class="faq-question w-full px-6 py-5 text-left flex items-center justify-between hover:bg-gray-50 transition-colors">
+                        <span class="font-semibold text-gray-900 pr-4">LivraFaso est-il sécurisé ?</span>
+                        <i data-lucide="chevron-down" class="w-5 h-5 text-gray-500 transform transition-transform flex-shrink-0"></i>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-5">
+                        <p class="text-gray-600 leading-relaxed">
+                            Absolument ! Nous prenons la sécurité très au sérieux. Tous nos livreurs sont vérifiés 
+                            (vérification d'identité, antécédents), nos paiements sont sécurisés par cryptage SSL, 
+                            et nous offrons une assurance sur tous les colis transportés. De plus, le suivi GPS 
+                            permet de localiser votre colis à tout moment.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- No Results Message -->
+        <div id="no-results" class="hidden text-center py-12">
+            <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i data-lucide="search-x" class="w-12 h-12 text-gray-400"></i>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">Aucun résultat trouvé</h3>
+            <p class="text-gray-600 mb-6">
+                Essayez avec d'autres mots-clés ou parcourez toutes les questions.
+            </p>
+            <button onclick="clearSearch()" class="btn-primary">
+                <i data-lucide="refresh-cw" class="w-4 h-4 mr-2"></i>
+                Voir toutes les questions
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- Contact CTA -->
+<section class="py-20 bg-gradient-to-r from-primary-600 via-blue-600 to-purple-600 text-white">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div data-aos="fade-up">
+            <h2 class="text-3xl lg:text-4xl font-display font-bold mb-6">
+                Vous ne trouvez pas votre réponse ?
+            </h2>
+            <p class="text-xl mb-8 opacity-90">
+                Notre équipe support est là pour vous aider. Contactez-nous et nous vous répondrons rapidement.
+            </p>
+            
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="{% url 'public:contact' %}" class="bg-white text-primary-600 hover:bg-gray-100 px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg">
+                    <i data-lucide="mail" class="w-5 h-5 mr-2 inline"></i>
+                    Nous contacter
+                </a>
+                <a href="tel:+22625123456" class="border-2 border-white text-white hover:bg-white hover:text-primary-600 px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105">
+                    <i data-lucide="phone" class="w-5 h-5 mr-2 inline"></i>
+                    Appeler maintenant
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('faq-search');
+    const categoryBtns = document.querySelectorAll('.faq-category-btn');
+    const faqItems = document.querySelectorAll('.faq-item');
+    const faqContainer = document.getElementById('faq-container');
+    const noResults = document.getElementById('no-results');
+
+    // FAQ accordion functionality
+    document.querySelectorAll('.faq-question').forEach(question => {
+        question.addEventListener('click', function() {
+            const faqItem = this.closest('.faq-item');
+            const answer = faqItem.querySelector('.faq-answer');
+            const icon = this.querySelector('i[data-lucide="chevron-down"]');
+            
+            // Toggle current item
+            const isOpen = !answer.classList.contains('hidden');
+            
+            if (isOpen) {
+                answer.classList.add('hidden');
+                icon.classList.remove('rotate-180');
+            } else {
+                answer.classList.remove('hidden');
+                icon.classList.add('rotate-180');
+            }
+        });
+    });
+
+    // Category filtering
+    categoryBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const category = this.dataset.category;
+            
+            // Update active button
+            categoryBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Filter FAQ items
+            filterFAQs(category, searchInput.value);
+        });
+    });
+
+    // Search functionality
+    searchInput.addEventListener('input', function() {
+        const activeCategory = document.querySelector('.faq-category-btn.active').dataset.category;
+        filterFAQs(activeCategory, this.value);
+    });
+
+    function filterFAQs(category, searchTerm) {
+        let visibleCount = 0;
+        
+        faqItems.forEach(item => {
+            const itemCategory = item.dataset.category;
+            const questionText = item.querySelector('.faq-question span').textContent.toLowerCase();
+            const answerText = item.querySelector('.faq-answer').textContent.toLowerCase();
+            
+            const matchesCategory = category === 'all' || itemCategory === category;
+            const matchesSearch = searchTerm === '' || 
+                questionText.includes(searchTerm.toLowerCase()) || 
+                answerText.includes(searchTerm.toLowerCase());
+            
+            if (matchesCategory && matchesSearch) {
+                item.style.display = 'block';
+                visibleCount++;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+
+        // Show/hide no results message
+        if (visibleCount === 0) {
+            faqContainer.style.display = 'none';
+            noResults.classList.remove('hidden');
+        } else {
+            faqContainer.style.display = 'block';
+            noResults.classList.add('hidden');
+        }
+    }
+
+    // Clear search function
+    window.clearSearch = function() {
+        searchInput.value = '';
+        document.querySelector('.faq-category-btn[data-category="all"]').click();
+    };
+});
+</script>
+
+<style>
+.faq-category-btn {
+    @apply px-4 py-2 rounded-xl border border-gray-300 text-gray-600 hover:bg-primary-50 hover:border-primary-300 hover:text-primary-700 transition-all duration-300 flex items-center font-medium;
+}
+
+.faq-category-btn.active {
+    @apply bg-primary-600 border-primary-600 text-white;
+}
+
+.faq-question:hover i {
+    @apply text-primary-600;
+}
+
+.faq-answer {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        max-height: 500px;
+    }
+}
+</style>
+{% endblock %}

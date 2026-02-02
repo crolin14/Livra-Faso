@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ title|default:"Mes Missions" }} - LivraFaso{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="card mb-8">
+        <div class="gradient-header">
+            <h1 class="heading-2">{{ title|default:"Missions Disponibles" }}</h1>
+            <p>Découvrez les missions de livraison disponibles et postulez à celles qui vous intéressent</p>
+        </div>
+    </div>
+
+    <!-- Filtres et actions -->
+    <div class="filters-bar mb-8">
+        <div class="filters-grid">
+            <div>
+                <label class="form-label">Toutes les priorités</label>
+                <select class="form-select">
+                    <option>Toutes les priorités</option>
+                    <option>Haute</option>
+                    <option>Moyenne</option>
+                    <option>Basse</option>
+                </select>
+            </div>
+            <div>
+                <label class="form-label">Toutes les distances</label>
+                <select class="form-select">
+                    <option>Toutes les distances</option>
+                    <option>< 5 km</option>
+                    <option>5-10 km</option>
+                    <option>> 10 km</option>
+                </select>
+            </div>
+            <div>
+                <label class="form-label">Tous les prix</label>
+                <select class="form-select">
+                    <option>Tous les prix</option>
+                    <option>< 1000 FCFA</option>
+                    <option>1000-5000 FCFA</option>
+                    <option>> 5000 FCFA</option>
+                </select>
+            </div>
+            <div class="flex items-end">
+                <button class="btn btn-outline w-full">
+                    <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                    Actualiser
+                </button>
+            </div>
+        </div>
+        
+        <div class="flex justify-between items-center mt-6">
+            <p class="body-medium">{{ missions|length }} mission{{ missions|length|pluralize }} trouvée{{ missions|length|pluralize }}</p>
+            {% if user.user_type == 'entreprise' %}
+            <a href="{% url 'missions:create' %}" class="btn btn-primary">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                Nouvelle Mission
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Liste des missions -->
+    {% if missions %}
+        <div class="space-y-6">
+            {% for mission in missions %}
+                <div class="mission-card">
+                    <div class="mission-header">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-12 h-12 bg-gradient-primary rounded-full flex items-center justify-center">
+                                    <i data-lucide="package" class="w-6 h-6 text-white"></i>
+                                </div>
+                                <div>
+                                    <h3 class="mission-title">{{ mission.title|default:"Mission de livraison" }}</h3>
+                                    <div class="mission-meta">
+                                        <span>{{ mission.created_at|date:"d M Y" }}</span>
+                                        <span>•</span>
+                                        <span>{{ mission.get_priority_display|default:"Normale" }}</span>
+                                        <span>•</span>
+                                        <span>{{ mission.candidats.count }} candidat{{ mission.candidats.count|pluralize }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="text-right">
+                                <div class="mission-price">{{ mission.price|floatformat:0 }} FCFA</div>
+                                <p class="body-small">Prix de la mission</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mission-body">
+                        <div class="mission-locations">
+                            <div class="location-item">
+                                <i data-lucide="circle" class="location-icon text-primary-500"></i>
+                                <div>
+                                    <p class="body-small text-slate-500">Collecte</p>
+                                    <p class="location-text">{{ mission.pickup_address|truncatechars:40 }}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-center">
+                                <i data-lucide="arrow-right" class="w-5 h-5 text-slate-400"></i>
+                            </div>
+                            
+                            <div class="location-item">
+                                <i data-lucide="map-pin" class="location-icon text-green-500"></i>
+                                <div>
+                                    <p class="body-small text-slate-500">Livraison</p>
+                                    <p class="location-text">{{ mission.delivery_address|truncatechars:40 }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-3 gap-4 mb-4">
+                            <div class="text-center">
+                                <p class="body-small text-slate-500">Distance</p>
+                                <p class="font-medium">--- km</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="body-small text-slate-500">Durée</p>
+                                <p class="font-medium">--- min</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="body-small text-slate-500">Candidats</p>
+                                <p class="font-medium">{{ mission.candidats.count }}</p>
+                            </div>
+                        </div>
+                        
+                        {% if mission.description %}
+                        <p class="body-medium text-slate-600">{{ mission.description|truncatechars:120 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mission-footer">
+                        <div class="flex items-center space-x-2">
+                            {% if mission.status == 'en_attente' %}
+                                <span class="badge badge-warning">En attente</span>
+                            {% elif mission.status == 'acceptee' %}
+                                <span class="badge badge-info">Acceptée</span>
+                            {% elif mission.status == 'en_cours' %}
+                                <span class="badge badge-success">En cours</span>
+                            {% elif mission.status == 'livree' %}
+                                <span class="badge badge-secondary">Livrée</span>
+                            {% endif %}
+                            
+                            {% if mission.priority == 'haute' %}
+                                <span class="badge badge-danger">Priorité haute</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="flex space-x-3">
+                            <a href="{% url 'missions:detail' mission.id %}" class="btn btn-outline btn-sm">
+                                <i data-lucide="eye" class="w-4 h-4"></i>
+                                Voir détails
+                            </a>
+                            
+                            {% if user.user_type == 'livreur' and mission.status == 'en_attente' %}
+                            <button class="btn btn-primary btn-sm">
+                                <i data-lucide="check" class="w-4 h-4"></i>
+                                Candidature envoyée
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+    {% else %}
+        <div class="card text-center p-12">
+            <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i data-lucide="package" class="w-8 h-8 text-slate-400"></i>
+            </div>
+            <h3 class="heading-3 mb-4">Aucune mission disponible</h3>
+            <p class="body-large text-slate-500 mb-8">
+                {% if user.user_type == 'entreprise' %}
+                    Vous n'avez pas encore créé de mission.
+                {% else %}
+                    Aucune mission n'est disponible pour le moment. Revenez plus tard !
+                {% endif %}
+            </p>
+            {% if user.user_type == 'entreprise' %}
+            <a href="{% url 'missions:create' %}" class="btn btn-primary btn-lg">
+                <i data-lucide="plus" class="w-5 h-5"></i>
+                Créer ma première mission
+            </a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

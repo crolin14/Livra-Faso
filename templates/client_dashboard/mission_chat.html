@@ -1,0 +1,375 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Chat Mission #{{ mission.id }} - LivraFaso{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chat-container {
+        @apply h-screen flex flex-col bg-gray-50;
+    }
+    .chat-header {
+        @apply bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between;
+    }
+    .chat-messages {
+        @apply flex-1 overflow-y-auto p-4 space-y-4;
+        max-height: calc(100vh - 200px);
+    }
+    .message {
+        @apply flex items-start space-x-3 max-w-xs;
+    }
+    .message.own {
+        @apply ml-auto flex-row-reverse space-x-reverse;
+    }
+    .message-bubble {
+        @apply px-4 py-2 rounded-2xl max-w-sm break-words;
+    }
+    .message-bubble.own {
+        @apply bg-blue-600 text-white;
+    }
+    .message-bubble.other {
+        @apply bg-white border border-gray-200;
+    }
+    .message-time {
+        @apply text-xs text-gray-500 mt-1;
+    }
+    .chat-input {
+        @apply bg-white border-t border-gray-200 p-4;
+    }
+    .typing-indicator {
+        @apply flex items-center space-x-2 text-gray-500 text-sm;
+    }
+    .online-status {
+        @apply w-3 h-3 rounded-full;
+    }
+    .online-status.online {
+        @apply bg-green-500;
+    }
+    .online-status.offline {
+        @apply bg-gray-300;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="chat-container">
+    <!-- Header du chat -->
+    <div class="chat-header">
+        <div class="flex items-center space-x-4">
+            <a href="{% url 'client_dashboard:mes_livraisons' %}" class="text-gray-600 hover:text-gray-800">
+                <i data-lucide="arrow-left" class="w-5 h-5"></i>
+            </a>
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <i data-lucide="package" class="w-5 h-5 text-blue-600"></i>
+                </div>
+                <div>
+                    <h1 class="font-semibold text-gray-900">{{ mission.title }}</h1>
+                    <div class="flex items-center space-x-2">
+                        {% if mission.livreur %}
+                            <span class="text-sm text-gray-600">avec {{ mission.livreur.get_full_name }}</span>
+                            <div class="online-status offline" id="livreur-status"></div>
+                        {% else %}
+                            <span class="text-sm text-gray-500">En attente d'un livreur</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex items-center space-x-2">
+            <span class="badge badge-{{ mission.status }}">{{ mission.get_status_display }}</span>
+            <button onclick="toggleMissionDetails()" class="text-gray-600 hover:text-gray-800">
+                <i data-lucide="info" class="w-5 h-5"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    <div class="chat-messages" id="chat-messages">
+        {% for message in messages %}
+        <div class="message {% if message.sender == current_user %}own{% endif %}">
+            {% if message.sender != current_user %}
+            <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-xs font-medium">
+                {{ message.sender.first_name|first|default:message.sender.username|first }}
+            </div>
+            {% endif %}
+            
+            <div class="flex flex-col">
+                <div class="message-bubble {% if message.sender == current_user %}own{% else %}other{% endif %}">
+                    {{ message.content }}
+                </div>
+                <div class="message-time {% if message.sender == current_user %}text-right{% endif %}">
+                    {{ message.timestamp|date:"H:i" }}
+                    {% if message.sender == current_user and message.is_read %}
+                        <i data-lucide="check-check" class="w-3 h-3 inline text-blue-500"></i>
+                    {% endif %}
+                </div>
+            </div>
+            
+            {% if message.sender == current_user %}
+            <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-xs font-medium text-blue-600">
+                {{ current_user.first_name|first|default:current_user.username|first }}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+        
+        <!-- Indicateur de frappe -->
+        <div class="typing-indicator hidden" id="typing-indicator">
+            <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+                <div class="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></div>
+            </div>
+            <span>Le livreur est en train d'écrire...</span>
+        </div>
+    </div>
+
+    <!-- Zone de saisie -->
+    <div class="chat-input">
+        <form id="message-form" class="flex items-center space-x-3">
+            {% csrf_token %}
+            <button type="button" class="text-gray-500 hover:text-gray-700">
+                <i data-lucide="paperclip" class="w-5 h-5"></i>
+            </button>
+            
+            <div class="flex-1 relative">
+                <input 
+                    type="text" 
+                    id="message-input" 
+                    placeholder="Tapez votre message..." 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    autocomplete="off"
+                >
+            </div>
+            
+            <button type="submit" class="bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <i data-lucide="send" class="w-5 h-5"></i>
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal détails mission -->
+<div id="mission-details-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-xl max-w-md w-full p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold">Détails de la mission</h3>
+                <button onclick="toggleMissionDetails()" class="text-gray-500 hover:text-gray-700">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="text-sm font-medium text-gray-700">Adresse de départ</label>
+                    <p class="text-gray-900">{{ mission.pickup_address }}</p>
+                </div>
+                
+                <div>
+                    <label class="text-sm font-medium text-gray-700">Adresse de livraison</label>
+                    <p class="text-gray-900">{{ mission.delivery_address }}</p>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-sm font-medium text-gray-700">Prix estimé</label>
+                        <p class="text-gray-900">{{ mission.estimated_price|floatformat:0 }} FCFA</p>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-700">Statut</label>
+                        <span class="badge badge-{{ mission.status }}">{{ mission.get_status_display }}</span>
+                    </div>
+                </div>
+                
+                {% if mission.description %}
+                <div>
+                    <label class="text-sm font-medium text-gray-700">Description</label>
+                    <p class="text-gray-900">{{ mission.description }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialiser Lucide icons
+    lucide.createIcons();
+
+    // Variables globales
+    const missionId = {{ mission.id }};
+    const currentUserId = {{ current_user.id }};
+    const chatMessages = document.getElementById('chat-messages');
+    const messageForm = document.getElementById('message-form');
+    const messageInput = document.getElementById('message-input');
+    const typingIndicator = document.getElementById('typing-indicator');
+    
+    let chatSocket = null;
+    let typingTimer = null;
+    let isTyping = false;
+
+    // Initialiser la connexion WebSocket
+    function initWebSocket() {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/ws/chat/${missionId}/`;
+        
+        chatSocket = new WebSocket(wsUrl);
+        
+        chatSocket.onopen = function(e) {
+            console.log('Chat WebSocket connecté');
+        };
+        
+        chatSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            displayMessage(data.message, data.sender, false);
+        };
+        
+        chatSocket.onclose = function(e) {
+            console.log('Chat WebSocket fermé');
+            // Tentative de reconnexion après 3 secondes
+            setTimeout(initWebSocket, 3000);
+        };
+        
+        chatSocket.onerror = function(e) {
+            console.error('Erreur WebSocket:', e);
+        };
+    }
+
+    // Afficher un message dans le chat
+    function displayMessage(content, senderName, isOwn) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${isOwn ? 'own' : ''}`;
+        
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        
+        messageDiv.innerHTML = `
+            ${!isOwn ? `
+                <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-xs font-medium">
+                    ${senderName.charAt(0).toUpperCase()}
+                </div>
+            ` : ''}
+            
+            <div class="flex flex-col">
+                <div class="message-bubble ${isOwn ? 'own' : 'other'}">
+                    ${content}
+                </div>
+                <div class="message-time ${isOwn ? 'text-right' : ''}">
+                    ${timeString}
+                </div>
+            </div>
+            
+            ${isOwn ? `
+                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-xs font-medium text-blue-600">
+                    {{ current_user.first_name|first|default:current_user.username|first }}
+                </div>
+            ` : ''}
+        `;
+        
+        chatMessages.appendChild(messageDiv);
+        scrollToBottom();
+        
+        // Réinitialiser les icônes Lucide
+        lucide.createIcons();
+    }
+
+    // Faire défiler vers le bas
+    function scrollToBottom() {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // Envoyer un message
+    function sendMessage(content) {
+        if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+            chatSocket.send(JSON.stringify({
+                'message': content,
+                'sender': currentUserId
+            }));
+            
+            // Afficher le message immédiatement côté expéditeur
+            displayMessage(content, '{{ current_user.get_full_name|default:current_user.username }}', true);
+        }
+    }
+
+    // Gestionnaire de soumission du formulaire
+    messageForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const message = messageInput.value.trim();
+        if (message) {
+            sendMessage(message);
+            messageInput.value = '';
+        }
+    });
+
+    // Détection de frappe
+    messageInput.addEventListener('input', function() {
+        if (!isTyping) {
+            isTyping = true;
+            // Envoyer signal de début de frappe
+        }
+        
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(() => {
+            isTyping = false;
+            // Envoyer signal de fin de frappe
+        }, 1000);
+    });
+
+    // Fonctions pour le modal
+    function toggleMissionDetails() {
+        const modal = document.getElementById('mission-details-modal');
+        modal.classList.toggle('hidden');
+    }
+
+    // Fermer le modal en cliquant à l'extérieur
+    document.getElementById('mission-details-modal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            toggleMissionDetails();
+        }
+    });
+
+    // Vérifier périodiquement le statut du chat
+    function checkChatStatus() {
+        fetch(`/client/api/chat-status/${missionId}/`, {
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Mettre à jour le statut en ligne des participants
+                const livreurStatus = document.getElementById('livreur-status');
+                if (livreurStatus && data.participants.length > 0) {
+                    const livreur = data.participants[0];
+                    livreurStatus.className = `online-status ${livreur.is_online ? 'online' : 'offline'}`;
+                }
+            }
+        })
+        .catch(error => console.error('Erreur vérification statut chat:', error));
+    }
+
+    // Initialisation
+    document.addEventListener('DOMContentLoaded', function() {
+        initWebSocket();
+        scrollToBottom();
+        
+        // Vérifier le statut toutes les 30 secondes
+        setInterval(checkChatStatus, 30000);
+        
+        // Focus sur le champ de saisie
+        messageInput.focus();
+    });
+
+    // Nettoyage à la fermeture de la page
+    window.addEventListener('beforeunload', function() {
+        if (chatSocket) {
+            chatSocket.close();
+        }
+    });
+</script>
+{% endblock %}

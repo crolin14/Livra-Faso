@@ -1,0 +1,541 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ liste.nom }} - LivraFaso{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="card mb-8">
+        <div class="gradient-header">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="heading-1 mb-2">{{ liste.nom }}</h1>
+                    <p class="text-lg opacity-90">
+                        {% if liste.description %}{{ liste.description }}{% else %}Gérez votre liste de courses{% endif %}
+                    </p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button onclick="orderList()" class="btn btn-secondary">
+                        <i data-lucide="truck" class="w-5 h-5 mr-2"></i>
+                        Commander
+                    </button>
+                    <a href="{% url 'client_dashboard:faire_courses' %}" class="btn btn-outline">
+                        <i data-lucide="arrow-left" class="w-5 h-5 mr-2"></i>
+                        Retour
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Liste des articles -->
+        <div class="lg:col-span-2">
+            <div class="card">
+                <div class="card-header">
+                    <div class="flex items-center justify-between">
+                        <h2 class="card-title">
+                            <i data-lucide="list" class="w-5 h-5"></i>
+                            Articles ({{ articles.count }})
+                        </h2>
+                        <button onclick="openAddArticleModal()" class="btn btn-primary btn-sm">
+                            <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
+                            Ajouter
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if articles %}
+                        <div class="space-y-4">
+                            {% for article in articles %}
+                            <div class="article-item">
+                                <div class="flex items-start space-x-4">
+                                    <!-- Photo -->
+                                    <div class="w-16 h-16 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        {% if article.photo %}
+                                            <img src="{{ article.photo.url }}" alt="{{ article.nom }}" class="w-full h-full object-cover rounded-lg">
+                                        {% else %}
+                                            <i data-lucide="image" class="w-6 h-6 text-slate-400"></i>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <!-- Informations -->
+                                    <div class="flex-1">
+                                        <div class="flex items-start justify-between">
+                                            <div>
+                                                <h3 class="font-semibold text-slate-900">{{ article.nom }}</h3>
+                                                <p class="text-sm text-slate-600">Quantité: {{ article.quantite }}</p>
+                                                {% if article.notes %}
+                                                <p class="text-sm text-slate-500 mt-1">{{ article.notes }}</p>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <div class="flex items-center space-x-3">
+                                                {% if article.prix_estime %}
+                                                <span class="font-medium text-slate-900">{{ article.prix_estime|floatformat:0 }} FCFA</span>
+                                                {% endif %}
+                                                
+                                                <div class="flex items-center space-x-1">
+                                                    <button onclick="editArticle({{ article.id }})" class="btn btn-outline btn-sm">
+                                                        <i data-lucide="edit" class="w-4 h-4"></i>
+                                                    </button>
+                                                    <button onclick="deleteArticle({{ article.id }})" class="btn btn-danger btn-sm">
+                                                        <i data-lucide="trash" class="w-4 h-4"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Statut -->
+                                        <div class="flex items-center mt-3">
+                                            <label class="flex items-center">
+                                                <input type="checkbox" {% if article.is_completed %}checked{% endif %} 
+                                                       onchange="toggleArticleStatus({{ article.id }})" class="mr-2">
+                                                <span class="text-sm text-slate-600">
+                                                    {% if article.is_completed %}Trouvé{% else %}À chercher{% endif %}
+                                                </span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-12">
+                            <i data-lucide="shopping-bag" class="w-24 h-24 text-slate-300 mx-auto mb-6"></i>
+                            <h3 class="text-xl font-medium text-slate-900 mb-2">Liste vide</h3>
+                            <p class="text-slate-600 mb-6">Commencez par ajouter des articles à votre liste</p>
+                            <button onclick="openAddArticleModal()" class="btn btn-primary">
+                                <i data-lucide="plus" class="w-5 h-5 mr-2"></i>
+                                Ajouter un Article
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="space-y-6">
+            <!-- Résumé -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i data-lucide="calculator" class="w-5 h-5"></i>
+                        Résumé
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-slate-600">Total articles</span>
+                            <span class="font-medium text-slate-900">{{ articles.count }}</span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-slate-600">Articles trouvés</span>
+                            <span class="font-medium text-green-600">{{ articles|length }}</span>
+                        </div>
+                        
+                        {% if liste.budget_max %}
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-slate-600">Budget max</span>
+                            <span class="font-medium text-blue-600">{{ liste.budget_max|floatformat:0 }} FCFA</span>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="flex items-center justify-between pt-3 border-t border-slate-200">
+                            <span class="font-medium text-slate-900">Estimation totale</span>
+                            <span class="font-bold text-lg text-slate-900">{{ liste.total_estimated_price|floatformat:0 }} FCFA</span>
+                        </div>
+                        
+                        {% if liste.budget_max and liste.total_estimated_price > liste.budget_max %}
+                        <div class="p-3 bg-red-50 rounded-lg">
+                            <div class="flex items-center">
+                                <i data-lucide="alert-triangle" class="w-5 h-5 text-red-600 mr-2"></i>
+                                <span class="text-sm text-red-800">Budget dépassé</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i data-lucide="settings" class="w-5 h-5"></i>
+                        Actions
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="space-y-3">
+                        <button onclick="orderList()" class="btn btn-primary w-full">
+                            <i data-lucide="truck" class="w-4 h-4 mr-2"></i>
+                            Commander cette Liste
+                        </button>
+                        
+                        <button onclick="saveAsTemplate()" class="btn btn-secondary w-full">
+                            <i data-lucide="bookmark" class="w-4 h-4 mr-2"></i>
+                            Sauver comme Template
+                        </button>
+                        
+                        <button onclick="duplicateList()" class="btn btn-outline w-full">
+                            <i data-lucide="copy" class="w-4 h-4 mr-2"></i>
+                            Dupliquer la Liste
+                        </button>
+                        
+                        <button onclick="shareList()" class="btn btn-outline w-full">
+                            <i data-lucide="share" class="w-4 h-4 mr-2"></i>
+                            Partager
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Suggestions -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i data-lucide="lightbulb" class="w-5 h-5"></i>
+                        Suggestions
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="space-y-3">
+                        <button onclick="addSuggestion('Pain')" class="suggestion-btn">
+                            <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
+                            Pain
+                        </button>
+                        <button onclick="addSuggestion('Lait')" class="suggestion-btn">
+                            <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
+                            Lait
+                        </button>
+                        <button onclick="addSuggestion('Œufs')" class="suggestion-btn">
+                            <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
+                            Œufs
+                        </button>
+                        <button onclick="addSuggestion('Riz')" class="suggestion-btn">
+                            <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
+                            Riz
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal ajouter article -->
+<div id="addArticleModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">Ajouter un Article</h3>
+            <button type="button" class="modal-close" onclick="closeAddArticleModal()">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form method="post" enctype="multipart/form-data" id="addArticleForm">
+                {% csrf_token %}
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">Nom de l'article *</label>
+                        <input type="text" name="nom" class="input" placeholder="Ex: Tomates" required>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Quantité</label>
+                            <input type="text" name="quantite" class="input" placeholder="Ex: 2 kg" value="1">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Prix estimé (FCFA)</label>
+                            <input type="number" name="prix_estime" class="input" placeholder="Ex: 1500">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">Notes</label>
+                        <textarea name="notes" rows="2" class="input" placeholder="Marque préférée, instructions spéciales..."></textarea>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">Photo (optionnel)</label>
+                        <input type="file" name="photo" accept="image/*" class="input">
+                        <p class="text-xs text-slate-500 mt-1">Ajoutez une photo pour aider le livreur</p>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button type="button" onclick="closeAddArticleModal()" class="btn btn-secondary">
+                        Annuler
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
+                        Ajouter l'Article
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.article-item {
+    padding: 1rem;
+    background-color: #f8fafc;
+    border-radius: 0.5rem;
+    transition: background-color 0.3s;
+}
+.article-item:hover {
+    background-color: #f1f5f9;
+}
+
+.suggestion-btn {
+    width: 100%;
+    text-align: left;
+    padding: 0.5rem;
+    font-size: 0.875rem;
+    color: #475569;
+    border-radius: 0.5rem;
+    transition: background-color 0.3s;
+    display: flex;
+    align-items: center;
+}
+.suggestion-btn:hover {
+    background-color: #f1f5f9;
+}
+
+/* Styles pour la modale (CSS Pur) */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(15, 23, 42, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    z-index: 50;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.modal.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-content {
+    background-color: white;
+    border-radius: 0.75rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0,
+            0, 0.04);
+    width: 100%;
+    max-width: 32rem; /* equivalent to max-w-lg */
+    transform: scale(0.95);
+    transition: transform 0.3s ease-in-out;
+}
+
+.modal.active .modal-content {
+    transform: scale(1);
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.modal-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.modal-close {
+    color: #94a3b8;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+.modal-close:hover {
+    color: #475569;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+/* Redéfinition du style .input pour être sûr qu'il est appliqué */
+.modal .input {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    background-color: white;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+.modal .input::placeholder {
+    color: #94a3b8;
+}
+.modal .input:focus {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 1px #3b82f6;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    lucide.createIcons();
+});
+
+function openAddArticleModal() {
+    document.getElementById('addArticleModal').classList.add('active');
+}
+
+function closeAddArticleModal() {
+    document.getElementById('addArticleModal').classList.remove('active');
+    document.getElementById('addArticleForm').reset();
+}
+
+function addSuggestion(nom) {
+    document.querySelector('[name="nom"]').value = nom;
+    openAddArticleModal();
+}
+
+function toggleArticleStatus(articleId) {
+    fetch(`/api/client/articles/${articleId}/toggle-status/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (!result.success) {
+            alert('Erreur: ' + result.error);
+            location.reload();
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        location.reload();
+    });
+}
+
+function editArticle(articleId) {
+    // Implémenter l'édition d'article
+    alert('Fonctionnalité d\'édition en développement');
+}
+
+function deleteArticle(articleId) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cet article ?')) {
+        fetch(`/api/client/articles/${articleId}/delete/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                location.reload();
+            } else {
+                alert('Erreur lors de la suppression: ' + result.error);
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            alert('Erreur de connexion');
+        });
+    }
+}
+
+function orderList() {
+    if (confirm('Voulez-vous commander cette liste de courses ?')) {
+        window.location.href = `{% url 'client_dashboard:nouvelle_livraison' %}?liste_courses={{ liste.id }}&type=courses`;
+    }
+}
+
+function saveAsTemplate() {
+    if (confirm('Sauvegarder cette liste comme template réutilisable ?')) {
+        fetch(`/api/client/listes/{{ liste.id }}/save-as-template/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                alert('Liste sauvegardée comme template !');
+            } else {
+                alert('Erreur: ' + result.error);
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            alert('Erreur de connexion');
+        });
+    }
+}
+
+function duplicateList() {
+    if (confirm('Créer une copie de cette liste ?')) {
+        fetch(`/api/client/listes/{{ liste.id }}/duplicate/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                window.location.href = `{% url 'client_dashboard:detail_liste_courses' 0 %}`.replace('0', result.liste_id);
+            } else {
+                alert('Erreur lors de la duplication: ' + result.error);
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            alert('Erreur de connexion');
+        });
+    }
+}
+
+function shareList() {
+    // Copier le lien dans le presse-papier
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
+        alert('Lien copié dans le presse-papier !');
+    }).catch(() => {
+        alert('Impossible de copier le lien');
+    });
+}
+
+// Fermer modal en cliquant à l'extérieur
+document.addEventListener('click', function(e) {
+    const modal = document.getElementById('addArticleModal');
+    if (e.target === modal) {
+        closeAddArticleModal();
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Exécuter Mission Courses{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="card mb-6">
+        <div class="card-header">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="card-title">{{ mission.titre }}</h1>
+                    <p class="text-slate-600 mt-1">Étape {{ mission.etape_actuelle }} sur {{ mission.nombre_etapes }}</p>
+                </div>
+                <span class="badge badge-{{ mission.status }}">{{ mission.get_status_display }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timeline des étapes -->
+    <div class="card mb-6">
+        <div class="card-header">
+            <h2 class="card-title">
+                <i data-lucide="list-ordered" class="w-5 h-4"></i>
+                Progression
+            </h2>
+        </div>
+        <div class="card-body">
+            <div class="space-y-4">
+                {% for etape in etapes %}
+                <div class="flex items-start space-x-4">
+                    <div class="flex-shrink-0">
+                        {% if etape.est_validee %}
+                        <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                            <i data-lucide="check" class="w-5 h-5 text-green-600"></i>
+                        </div>
+                        {% elif mission.etape_actuelle == etape.numero_ordre %}
+                        <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center animate-pulse">
+                            <span class="font-bold text-blue-600">{{ etape.numero_ordre }}</span>
+                        </div>
+                        {% else %}
+                        <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
+                            <span class="font-medium text-slate-400">{{ etape.numero_ordre }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="font-semibold">{{ etape.get_type_etape_display }}</h3>
+                        <p class="text-sm text-slate-600">{{ etape.adresse }}</p>
+                        {% if etape.est_validee %}
+                        <p class="text-xs text-green-600 mt-1">✓ Validée le {{ etape.date_validation|date:"d/m/Y H:i" }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Étape actuelle -->
+    {% if etape_actuelle %}
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">
+                <i data-lucide="target" class="w-5 h-5"></i>
+                Étape {{ etape_actuelle.numero_ordre }}: {{ etape_actuelle.get_type_etape_display }}
+            </h2>
+        </div>
+        <div class="card-body">
+            <div class="space-y-6">
+                <!-- Informations de l'étape -->
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div class="space-y-2">
+                        <div>
+                            <span class="text-sm font-medium text-slate-600">Adresse:</span>
+                            <p class="text-slate-900 font-medium">{{ etape_actuelle.adresse }}</p>
+                        </div>
+                        <div>
+                            <span class="text-sm font-medium text-slate-600">Action requise:</span>
+                            <p class="text-slate-900">{{ etape_actuelle.action_requise }}</p>
+                        </div>
+                        {% if etape_actuelle.instructions %}
+                        <div>
+                            <span class="text-sm font-medium text-slate-600">Instructions:</span>
+                            <p class="text-slate-900">{{ etape_actuelle.instructions }}</p>
+                        </div>
+                        {% endif %}
+                        {% if etape_actuelle.montant_requis %}
+                        <div>
+                            <span class="text-sm font-medium text-slate-600">Montant requis:</span>
+                            <p class="text-slate-900 font-bold">{{ etape_actuelle.montant_requis }} FCFA</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Articles à acheter (si étape d'achat) -->
+                {% if etape_actuelle.type_etape == 'achat' and etape_actuelle.articles.exists %}
+                <div>
+                    <h3 class="font-semibold mb-3">Articles à acheter:</h3>
+                    <div class="space-y-3">
+                        {% for article in etape_actuelle.articles.all %}
+                        <div class="border border-slate-200 rounded-lg p-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <div>
+                                    <span class="font-medium">{{ article.nom }}</span>
+                                    <span class="text-sm text-slate-600 ml-2">({{ article.quantite }})</span>
+                                </div>
+                                {% if article.est_achete %}
+                                <span class="badge badge-success">✓ Acheté</span>
+                                {% endif %}
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 text-sm">
+                                {% if article.prix_max_accepte %}
+                                <div>
+                                    <span class="text-slate-600">Prix max:</span>
+                                    <span class="font-medium ml-1">{{ article.prix_max_accepte }} FCFA</span>
+                                </div>
+                                {% endif %}
+                                {% if article.substitution_autorisee %}
+                                <div>
+                                    <span class="text-slate-600">Substitution:</span>
+                                    <span class="text-green-600 ml-1">Autorisée</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% if article.commentaire %}
+                            <p class="text-sm text-slate-600 mt-2">{{ article.commentaire }}</p>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Formulaire de validation -->
+                {% if not etape_actuelle.est_validee %}
+                <form method="POST" action="{% url 'client_dashboard:valider_etape_courses' mission.id etape_actuelle.id %}" enctype="multipart/form-data" class="space-y-4">
+                    {% csrf_token %}
+                    
+                    <!-- Articles à marquer comme achetés -->
+                    {% if etape_actuelle.type_etape == 'achat' and etape_actuelle.articles.exists %}
+                    <div>
+                        <h4 class="font-medium mb-2">Marquer les articles achetés:</h4>
+                        <div class="space-y-2">
+                            {% for article in etape_actuelle.articles.all %}
+                            {% if not article.est_achete %}
+                            <label class="flex items-center space-x-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer">
+                                <input type="checkbox" name="articles_achetes" value="{{ article.id }}" class="form-checkbox">
+                                <div class="flex-1">
+                                    <span class="font-medium">{{ article.nom }} ({{ article.quantite }})</span>
+                                    {% if article.prix_max_accepte %}
+                                    <div class="mt-1">
+                                        <span class="text-sm text-slate-600">Prix réel payé:</span>
+                                        <input type="number" name="prix_reel_{{ article.id }}" class="form-input inline-block w-32 ml-2" placeholder="FCFA" min="0" step="50">
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </label>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Preuve (photo/reçu) -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">
+                            Preuve (photo ou reçu)
+                        </label>
+                        <input type="file" name="fichier_preuve" accept="image/*" class="form-file-input">
+                        <p class="text-xs text-slate-500 mt-1">Prenez une photo des produits ou du reçu</p>
+                    </div>
+
+                    <!-- Commentaire -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">
+                            Commentaire (optionnel)
+                        </label>
+                        <textarea name="commentaire" class="form-textarea" rows="3" placeholder="Notes sur cette étape..."></textarea>
+                    </div>
+
+                    <!-- Bouton de validation -->
+                    <div class="flex space-x-4">
+                        <button type="submit" class="btn btn-primary flex-1">
+                            <i data-lucide="check-circle" class="w-4 h-4 mr-2"></i>
+                            Valider cette étape
+                        </button>
+                    </div>
+                </form>
+                {% else %}
+                <div class="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+                    <p class="text-green-800 font-medium">
+                        <i data-lucide="check-circle" class="w-5 h-5 inline mr-2"></i>
+                        Cette étape a été validée le {{ etape_actuelle.date_validation|date:"d/m/Y à H:i" }}
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="card-body text-center py-12">
+            <i data-lucide="check-circle" class="w-16 h-16 text-green-500 mx-auto mb-4"></i>
+            <h2 class="text-2xl font-bold mb-2">Mission terminée !</h2>
+            <p class="text-slate-600">Toutes les étapes ont été validées avec succès.</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    lucide.createIcons();
+});
+</script>
+{% endblock %}
+

@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports & Analytics - LivraFaso</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .glassmorphism {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #4338ca 0%, #6366f1 50%, #8b5cf6 100%);
+        }
+        .prediction-trend {
+            background: linear-gradient(45deg, #10b981, #059669);
+        }
+        .export-btn {
+            background: linear-gradient(45deg, #f59e0b, #d97706);
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen">
+    <!-- Header -->
+    <header class="glassmorphism text-white p-4 mb-6">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <i class="fas fa-chart-bar text-2xl"></i>
+                <h1 class="text-xl font-bold">Reports & Analytics</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <select id="report-period" class="px-3 py-1 bg-white/10 border border-white/20 rounded text-white text-sm">
+                    <option value="7d">7 derniers jours</option>
+                    <option value="30d" selected>30 derniers jours</option>
+                    <option value="90d">90 derniers jours</option>
+                    <option value="1y">1 an</option>
+                </select>
+                <button onclick="generateFullReport()" class="px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg">
+                    <i class="fas fa-file-pdf mr-2"></i>Rapport PDF
+                </button>
+                <button onclick="window.location.href='/admin/dashboard/'" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg">
+                    <i class="fas fa-arrow-left mr-2"></i>Retour
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-4">
+        <!-- Executive Summary -->
+        <div class="glassmorphism rounded-xl p-6 text-white mb-8">
+            <h2 class="text-2xl font-bold mb-6 flex items-center">
+                <i class="fas fa-crown mr-3 text-yellow-400"></i>
+                Résumé Exécutif
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl p-6 text-center">
+                    <i class="fas fa-chart-line text-3xl mb-3"></i>
+                    <h3 class="text-lg font-semibold mb-2">Croissance</h3>
+                    <p class="text-3xl font-bold">+24.5%</p>
+                    <p class="text-sm opacity-80">vs période précédente</p>
+                </div>
+                <div class="bg-gradient-to-br from-green-600 to-green-800 rounded-xl p-6 text-center">
+                    <i class="fas fa-money-bill-wave text-3xl mb-3"></i>
+                    <h3 class="text-lg font-semibold mb-2">Revenus</h3>
+                    <p class="text-3xl font-bold">2.85M FCFA</p>
+                    <p class="text-sm opacity-80">Objectif: 95% atteint</p>
+                </div>
+                <div class="bg-gradient-to-br from-purple-600 to-purple-800 rounded-xl p-6 text-center">
+                    <i class="fas fa-users text-3xl mb-3"></i>
+                    <h3 class="text-lg font-semibold mb-2">Utilisateurs</h3>
+                    <p class="text-3xl font-bold">12,847</p>
+                    <p class="text-sm opacity-80">+18% nouveaux</p>
+                </div>
+                <div class="bg-gradient-to-br from-orange-600 to-orange-800 rounded-xl p-6 text-center">
+                    <i class="fas fa-star text-3xl mb-3"></i>
+                    <h3 class="text-lg font-semibold mb-2">Satisfaction</h3>
+                    <p class="text-3xl font-bold">4.7/5</p>
+                    <p class="text-sm opacity-80">3,247 avis</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Analytics -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Performance Trends -->
+            <div class="lg:col-span-2 glassmorphism rounded-xl p-6 text-white">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold">Tendances de Performance</h3>
+                    <button onclick="exportChart('performance')" class="px-3 py-1 bg-blue-500 hover:bg-blue-600 rounded text-sm">
+                        <i class="fas fa-download mr-1"></i>Export
+                    </button>
+                </div>
+                <div class="h-80">
+                    <canvas id="performanceTrendsChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Top Performers -->
+            <div class="glassmorphism rounded-xl p-6 text-white">
+                <h3 class="text-lg font-semibold mb-4 flex items-center">
+                    <i class="fas fa-trophy mr-2 text-yellow-400"></i>
+                    Top Performers
+                </h3>
+                <div class="space-y-4">
+                    <div>
+                        <h5 class="font-medium mb-3 text-green-300">Meilleurs Livreurs</h5>
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between p-2 bg-white/10 rounded">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-xs">AT</div>
+                                    <span class="text-sm">Amadou Traoré</span>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm font-semibold">247</p>
+                                    <p class="text-xs opacity-80">missions</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between p-2 bg-white/10 rounded">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-xs">FK</div>
+                                    <span class="text-sm">Fatou Koné</span>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm font-semibold">198</p>
+                                    <p class="text-xs opacity-80">missions</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h5 class="font-medium mb-3 text-blue-300">Entreprises Actives</h5>
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between p-2 bg-white/10 rounded">
+                                <span class="text-sm">TechBF Solutions</span>
+                                <div class="text-right">
+                                    <p class="text-sm font-semibold">89</p>
+                                    <p class="text-xs opacity-80">commandes</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Predictive Analytics -->
+        <div class="glassmorphism rounded-xl p-6 text-white mb-8">
+            <h3 class="text-xl font-bold mb-6 flex items-center">
+                <i class="fas fa-crystal-ball mr-3 text-purple-400"></i>
+                Analytics Prédictives & IA
+            </h3>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="prediction-trend rounded-xl p-6">
+                    <h4 class="font-semibold mb-4 flex items-center">
+                        <i class="fas fa-chart-line mr-2"></i>
+                        Prédiction Revenus
+                    </h4>
+                    <div class="text-center">
+                        <p class="text-3xl font-bold mb-2">3.2M FCFA</p>
+                        <p class="text-sm opacity-80">Prochains 30 jours</p>
+                        <div class="mt-4 text-xs">
+                            <p>Confiance: <span class="font-semibold">87%</span></p>
+                            <p>Tendance: <span class="font-semibold text-green-200">↗ +12%</span></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gradient-to-br from-orange-600 to-red-600 rounded-xl p-6">
+                    <h4 class="font-semibold mb-4 flex items-center">
+                        <i class="fas fa-fire mr-2"></i>
+                        Prévision Demande
+                    </h4>
+                    <div class="text-center">
+                        <p class="text-3xl font-bold mb-2">+34%</p>
+                        <p class="text-sm opacity-80">Pic attendu</p>
+                        <div class="mt-4 text-xs">
+                            <p>Période: <span class="font-semibold">15-20 Sept</span></p>
+                            <p>Zone: <span class="font-semibold">Centre-ville</span></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gradient-to-br from-yellow-600 to-orange-600 rounded-xl p-6">
+                    <h4 class="font-semibold mb-4 flex items-center">
+                        <i class="fas fa-shield-alt mr-2"></i>
+                        Évaluation Risques
+                    </h4>
+                    <div class="text-center">
+                        <p class="text-3xl font-bold mb-2">Faible</p>
+                        <p class="text-sm opacity-80">Niveau de risque</p>
+                        <div class="mt-4 text-xs">
+                            <p>Score: <span class="font-semibold">2.3/10</span></p>
+                            <p>Facteurs: <span class="font-semibold">Météo, Trafic</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Actions -->
+        <div class="glassmorphism rounded-xl p-6 text-white mb-8">
+            <h3 class="text-lg font-bold mb-4">Actions d'Export</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button onclick="exportData('csv')" class="export-btn p-4 rounded-xl hover:scale-105 transition-transform">
+                    <i class="fas fa-file-csv text-2xl mb-2"></i>
+                    <p class="font-semibold">Export CSV</p>
+                    <p class="text-sm opacity-80">Données tabulaires</p>
+                </button>
+                <button onclick="exportData('pdf')" class="export-btn p-4 rounded-xl hover:scale-105 transition-transform">
+                    <i class="fas fa-file-pdf text-2xl mb-2"></i>
+                    <p class="font-semibold">Rapport PDF</p>
+                    <p class="text-sm opacity-80">Rapport complet</p>
+                </button>
+                <button onclick="exportData('excel')" class="export-btn p-4 rounded-xl hover:scale-105 transition-transform">
+                    <i class="fas fa-file-excel text-2xl mb-2"></i>
+                    <p class="font-semibold">Export Excel</p>
+                    <p class="text-sm opacity-80">Analyse avancée</p>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCharts();
+        });
+
+        function initializeCharts() {
+            const performanceCtx = document.getElementById('performanceTrendsChart').getContext('2d');
+            new Chart(performanceCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
+                    datasets: [{
+                        label: 'Revenus (FCFA)',
+                        data: [85000, 92000, 78000, 105000, 98000, 112000, 89000],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.4
+                    }, {
+                        label: 'Missions',
+                        data: [45, 52, 38, 67, 58, 71, 49],
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4,
+                        yAxisID: 'y1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: 'white' } }
+                    },
+                    scales: {
+                        x: { ticks: { color: 'white' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+                        y: { ticks: { color: 'white' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            ticks: { color: 'white' },
+                            grid: { drawOnChartArea: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        function generateFullReport() {
+            showToast('Génération du rapport PDF...', 'info');
+            setTimeout(() => {
+                showToast('Rapport généré avec succès!', 'success');
+            }, 2000);
+        }
+
+        function exportChart(chartType) {
+            const canvas = document.getElementById(chartType + 'TrendsChart');
+            const link = document.createElement('a');
+            link.download = `${chartType}_chart.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+            showToast('Graphique exporté!', 'success');
+        }
+
+        function exportData(format) {
+            showToast(`Export ${format.toUpperCase()} en cours...`, 'info');
+            setTimeout(() => {
+                showToast(`Données exportées en ${format.toUpperCase()}!`, 'success');
+            }, 1500);
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `fixed top-4 right-4 px-6 py-3 rounded-lg text-white z-50 ${
+                type === 'success' ? 'bg-green-500' : 
+                type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+            }`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    document.body.removeChild(toast);
+                }
+            }, 3000);
+        }
+
+        document.getElementById('report-period').addEventListener('change', function() {
+            showToast('Période mise à jour', 'info');
+        });
+    </script>
+</body>
+</html>

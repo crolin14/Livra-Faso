@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Détails Mission #{{ mission.id }} - LivraFaso{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="card mb-8">
+        <div class="gradient-header">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="heading-1 mb-2">{{ mission.title }}</h1>
+                    <p class="text-lg opacity-90">Mission #{{ mission.id }}</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <a href="{% url 'client_dashboard:suivi_mission' mission.id %}" class="btn btn-secondary">
+                        <i data-lucide="map-pin" class="w-5 h-5 mr-2"></i>
+                        Suivre
+                    </a>
+                    <a href="{% url 'client_dashboard:mes_livraisons' %}" class="btn btn-outline">
+                        <i data-lucide="arrow-left" class="w-5 h-5 mr-2"></i>
+                        Retour
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Contenu principal -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Informations générales -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i data-lucide="info" class="w-5 h-5"></i>
+                        Informations Générales
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-sm font-medium text-slate-600">Description</label>
+                            <p class="text-slate-900 mt-1">{{ mission.description|default:"Aucune description" }}</p>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-sm font-medium text-slate-600">Statut</label>
+                                <p class="mt-1">
+                                    <span class="badge {% if mission.status == 'livree' %}badge-success{% elif mission.status == 'en_cours' %}badge-warning{% elif mission.status == 'acceptee' %}badge-info{% elif mission.status == 'annulee' %}badge-danger{% else %}badge-secondary{% endif %}">
+                                        {{ mission.get_status_display }}
+                                    </span>
+                                </p>
+                            </div>
+                            <div>
+                                <label class="text-sm font-medium text-slate-600">Priorité</label>
+                                <p class="mt-1">
+                                    <span class="badge badge-outline">{{ mission.get_priority_display }}</span>
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-sm font-medium text-slate-600">Type de colis</label>
+                                <p class="text-slate-900 mt-1">{{ mission.get_package_type_display }}</p>
+                            </div>
+                            {% if mission.package_weight %}
+                            <div>
+                                <label class="text-sm font-medium text-slate-600">Poids</label>
+                                <p class="text-slate-900 mt-1">{{ mission.package_weight }} kg</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        {% if mission.package_dimensions %}
+                        <div>
+                            <label class="text-sm font-medium text-slate-600">Dimensions</label>
+                            <p class="text-slate-900 mt-1">{{ mission.package_dimensions }}</p>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="flex items-center space-x-4">
+                            {% if mission.is_fragile %}
+                            <span class="badge badge-warning">
+                                <i data-lucide="alert-triangle" class="w-4 h-4 mr-1"></i>
+                                Fragile
+                            </span>
+                            {% endif %}
+                            {% if mission.requires_signature %}
+                            <span class="badge badge-info">
+                                <i data-lucide="pen-tool" class="w-4 h-4 mr-1"></i>
+                                Signature requise
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Adresses -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i data-lucide="map-pin" class="w-5 h-5"></i>
+                        Adresses
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="text-sm font-medium text-slate-600 flex items-center mb-2">
+                                <i data-lucide="map-pin" class="w-4 h-4 mr-2 text-green-600"></i>
+                                Adresse de départ
+                            </label>
+                            <p class="text-slate-900">{{ mission.pickup_address }}</p>
+                            {% if mission.pickup_instructions %}
+                            <p class="text-sm text-slate-500 mt-2">
+                                <strong>Instructions:</strong> {{ mission.pickup_instructions }}
+                            </p>
+                            {% endif %}
+                        </div>
+                        
+                        <div>
+                            <label class="text-sm font-medium text-slate-600 flex items-center mb-2">
+                                <i data-lucide="target" class="w-4 h-4 mr-2 text-blue-600"></i>
+                                Adresse de livraison
+                            </label>
+                            <p class="text-slate-900">{{ mission.delivery_address }}</p>
+                            {% if mission.delivery_instructions %}
+                            <p class="text-sm text-slate-500 mt-2">
+                                <strong>Instructions:</strong> {{ mission.delivery_instructions }}
+                            </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Documents -->
+            {% if documents %}
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i data-lucide="file-text" class="w-5 h-5"></i>
+                        Documents
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {% for doc in documents %}
+                        <a href="{{ doc.file.url }}" target="_blank" class="border rounded-lg p-4 hover:bg-slate-50 transition-colors">
+                            <i data-lucide="file" class="w-8 h-8 mx-auto mb-2 text-slate-400"></i>
+                            <p class="text-sm text-center text-slate-600">{{ doc.get_document_type_display }}</p>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Historique récent -->
+            {% if tracking_events %}
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i data-lucide="clock" class="w-5 h-5"></i>
+                        Historique Récent
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <div class="space-y-3">
+                        {% for event in tracking_events %}
+                        <div class="flex items-start space-x-3 p-3 bg-slate-50 rounded-lg">
+                            <i data-lucide="circle" class="w-2 h-2 mt-2 text-slate-400"></i>
+                            <div class="flex-1">
+                                <p class="text-slate-900 font-medium">{{ event.description }}</p>
+                                <p class="text-sm text-slate-500">{{ event.timestamp|date:"d/m/Y H:i" }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="space-y-6">
+            <!-- Prix et paiement -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Prix</h2>
+                </div>
+                <div class="card-body">
+                    <div class="text-center">
+                        <p class="text-3xl font-bold text-slate-900 mb-2">{{ mission.price|floatformat:0 }} FCFA</p>
+                        {% if mission.estimated_price and mission.estimated_price != mission.price %}
+                        <p class="text-sm text-slate-500">Prix estimé: {{ mission.estimated_price|floatformat:0 }} FCFA</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Livreur -->
+            {% if mission.livreur %}
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Livreur</h2>
+                </div>
+                <div class="card-body">
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-primary-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <span class="text-white text-xl font-bold">{{ mission.livreur.username|first|upper }}</span>
+                        </div>
+                        <p class="font-semibold text-slate-900">{{ mission.livreur.get_full_name|default:mission.livreur.username }}</p>
+                        <a href="{% url 'client_dashboard:mission_chat' mission.id %}" class="btn btn-primary w-full mt-3">
+                            <i data-lucide="message-circle" class="w-4 h-4 mr-2"></i>
+                            Contacter
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Dates -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Dates</h2>
+                </div>
+                <div class="card-body space-y-3">
+                    <div>
+                        <label class="text-sm font-medium text-slate-600">Créée le</label>
+                        <p class="text-slate-900">{{ mission.created_at|date:"d/m/Y H:i" }}</p>
+                    </div>
+                    {% if mission.pickup_time %}
+                    <div>
+                        <label class="text-sm font-medium text-slate-600">Ramassage prévu</label>
+                        <p class="text-slate-900">{{ mission.pickup_time|date:"d/m/Y H:i" }}</p>
+                    </div>
+                    {% endif %}
+                    {% if mission.delivery_time %}
+                    <div>
+                        <label class="text-sm font-medium text-slate-600">Livraison effectuée</label>
+                        <p class="text-slate-900">{{ mission.delivery_time|date:"d/m/Y H:i" }}</p>
+                    </div>
+                    {% endif %}
+                    {% if mission.estimated_delivery_time %}
+                    <div>
+                        <label class="text-sm font-medium text-slate-600">Livraison estimée</label>
+                        <p class="text-slate-900">{{ mission.estimated_delivery_time|date:"d/m/Y H:i" }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Actions</h2>
+                </div>
+                <div class="card-body space-y-2">
+                    <a href="{% url 'client_dashboard:suivi_mission' mission.id %}" class="btn btn-outline w-full">
+                        <i data-lucide="map-pin" class="w-4 h-4 mr-2"></i>
+                        Suivre la mission
+                    </a>
+                    {% if mission.status == 'en_attente' %}
+                    <form method="POST" action="{% url 'client_dashboard:annuler_mission' mission.id %}" onsubmit="return confirm('Êtes-vous sûr de vouloir annuler cette mission ?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger w-full">
+                            <i data-lucide="x" class="w-4 h-4 mr-2"></i>
+                            Annuler la mission
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    lucide.createIcons();
+</script>
+{% endblock %}
+

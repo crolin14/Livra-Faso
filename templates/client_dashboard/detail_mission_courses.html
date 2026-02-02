@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Détails Mission Courses{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header avec statut -->
+    <div class="card mb-6">
+        <div class="card-header">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="card-title">{{ mission.titre }}</h1>
+                    <p class="text-slate-600 mt-1">{{ mission.nombre_etapes }} étapes • {{ mission.distance_totale_km|default:0 }} km</p>
+                </div>
+                <div>
+                    <span class="badge badge-{{ mission.status }}">
+                        {{ mission.get_status_display }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Compte à rebours (si mission en cours) -->
+    {% if mission.delai_debut and mission.status in 'acceptee,en_cours' %}
+    <div class="card mb-6 {% if est_en_retard %}border-red-500{% endif %}">
+        <div class="card-body">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="font-semibold text-lg mb-2">
+                        <i data-lucide="clock" class="w-5 h-5 inline mr-2"></i>
+                        Temps restant
+                    </h3>
+                    {% if temps_restant %}
+                        {% if temps_restant.total_seconds > 0 %}
+                            <div id="countdown" class="text-2xl font-bold {% if est_en_retard %}text-red-600{% else %}text-blue-600{% endif %}">
+                                <!-- Compte à rebours JavaScript -->
+                            </div>
+                        {% else %}
+                            <div class="text-red-600 font-bold">Délai dépassé !</div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+                {% if est_en_retard %}
+                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <p class="text-red-600 font-medium">⚠️ Mission en retard</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Informations générales -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <i data-lucide="info" class="w-5 h-5"></i>
+                    Informations
+                </h2>
+            </div>
+            <div class="card-body space-y-3">
+                <div>
+                    <span class="text-sm text-slate-600">Statut:</span>
+                    <span class="ml-2 font-medium">{{ mission.get_status_display }}</span>
+                </div>
+                <div>
+                    <span class="text-sm text-slate-600">Délai maximum:</span>
+                    <span class="ml-2 font-medium">
+                        {% if mission.delai_type == 'heure_limite' %}
+                            Avant {{ mission.heure_limite|date:"d/m/Y H:i" }}
+                        {% else %}
+                            {{ mission.duree_max_minutes }} minutes
+                        {% endif %}
+                    </span>
+                </div>
+                <div>
+                    <span class="text-sm text-slate-600">Prix total:</span>
+                    <span class="ml-2 font-bold text-blue-600">{{ mission.prix_total }} FCFA</span>
+                </div>
+                {% if mission.livreur %}
+                <div>
+                    <span class="text-sm text-slate-600">Livreur:</span>
+                    <span class="ml-2 font-medium">{{ mission.livreur.get_full_name|default:mission.livreur.username }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <i data-lucide="map" class="w-5 h-5"></i>
+                    Parcours
+                </h2>
+            </div>
+            <div class="card-body">
+                <div class="space-y-2">
+                    {% for etape in mission.etapes.all %}
+                    <div class="flex items-start space-x-3">
+                        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center font-semibold text-blue-600">
+                            {{ etape.numero_ordre }}
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-medium">{{ etape.get_type_etape_display }}</div>
+                            <div class="text-sm text-slate-600">{{ etape.adresse|truncatewords:10 }}</div>
+                            {% if etape.est_validee %}
+                            <span class="badge badge-success text-xs mt-1">✓ Validée</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Détails des étapes -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">
+                <i data-lucide="list" class="w-5 h-5"></i>
+                Détails des étapes
+            </h2>
+        </div>
+        <div class="card-body">
+            <div class="space-y-6">
+                {% for etape in mission.etapes.all %}
+                <div class="border border-slate-200 rounded-lg p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold">
+                            Étape {{ etape.numero_ordre }}: {{ etape.get_type_etape_display }}
+                        </h3>
+                        {% if etape.est_validee %}
+                        <span class="badge badge-success">✓ Validée</span>
+                        {% elif mission.etape_actuelle == etape.numero_ordre %}
+                        <span class="badge badge-warning">En cours</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <div>
+                            <span class="text-sm font-medium text-slate-600">Adresse:</span>
+                            <p class="text-slate-900">{{ etape.adresse }}</p>
+                        </div>
+                        <div>
+                            <span class="text-sm font-medium text-slate-600">Action requise:</span>
+                            <p class="text-slate-900">{{ etape.action_requise }}</p>
+                        </div>
+                        {% if etape.instructions %}
+                        <div>
+                            <span class="text-sm font-medium text-slate-600">Instructions:</span>
+                            <p class="text-slate-900">{{ etape.instructions }}</p>
+                        </div>
+                        {% endif %}
+                        
+                        {% if etape.articles.exists %}
+                        <div class="mt-4">
+                            <h4 class="font-medium mb-2">Articles à acheter:</h4>
+                            <div class="space-y-2">
+                                {% for article in etape.articles.all %}
+                                <div class="bg-slate-50 rounded-lg p-3">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <span class="font-medium">{{ article.nom }}</span>
+                                            <span class="text-sm text-slate-600 ml-2">({{ article.quantite }})</span>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            {% if article.prix_max_accepte %}
+                                            <span class="text-sm text-slate-600">Max: {{ article.prix_max_accepte }} FCFA</span>
+                                            {% endif %}
+                                            {% if article.est_achete %}
+                                            <span class="badge badge-success text-xs">✓ Acheté</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% if article.commentaire %}
+                                    <p class="text-sm text-slate-600 mt-1">{{ article.commentaire }}</p>
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if temps_restant and temps_restant.total_seconds > 0 %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    lucide.createIcons();
+    
+    const countdownElement = document.getElementById('countdown');
+    const endTime = new Date('{{ mission.delai_debut|date:"c" }}').getTime();
+    {% if mission.delai_type == 'duree_max_minutes' %}
+    const durationMinutes = {{ mission.duree_max_minutes }};
+    const endTime = new Date(endTime + durationMinutes * 60000).getTime();
+    {% else %}
+    const endTime = new Date('{{ mission.heure_limite|date:"c" }}').getTime();
+    {% endif %}
+    
+    function updateCountdown() {
+        const now = new Date().getTime();
+        const distance = endTime - now;
+        
+        if (distance < 0) {
+            countdownElement.innerHTML = '<span class="text-red-600">Délai dépassé !</span>';
+            return;
+        }
+        
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+        
+        countdownElement.textContent = `${hours}h ${minutes}m ${seconds}s`;
+    }
+    
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+});
+</script>
+{% endif %}
+{% endblock %}
+

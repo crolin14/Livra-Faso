@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LivraFaso Pro - Boostez votre logistique</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .hero-gradient {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        }
+        .pricing-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .highlight-card {
+            border: 2px solid #3b82f6;
+        }
+        .how-it-works-step {
+            position: relative;
+        }
+        .how-it-works-step:not(:last-child):after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 60px;
+            background: #3b82f6;
+        }
+        @media (max-width: 768px) {
+            .how-it-works-step:not(:last-child):after {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body class="font-sans antialiased text-gray-800">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center">
+                <div class="bg-blue-600 text-white p-2 rounded-lg mr-2">
+                    <i class="fas fa-truck-fast text-xl"></i>
+                </div>
+                <span class="text-xl font-bold text-blue-600">LivraFaso Pro</span>
+            </div>
+            <div class="hidden md:flex space-x-8">
+                <a href="#avantages" class="text-gray-600 hover:text-blue-600 font-medium">Avantages</a>
+                <a href="#formules" class="text-gray-600 hover:text-blue-600 font-medium">Formules</a>
+                <a href="#fonctionnement" class="text-gray-600 hover:text-blue-600 font-medium">Fonctionnement</a>
+                <a href="#temoignages" class="text-gray-600 hover:text-blue-600 font-medium">Témoignages</a>
+                <a href="#livreurs" class="text-gray-600 hover:text-blue-600 font-medium">Devenir livreur</a>
+            </div>
+            <button class="md:hidden text-gray-600">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-gradient text-white py-16 md:py-24">
+        <div class="container mx-auto px-4">
+            <div class="max-w-4xl mx-auto text-center">
+                <h1 class="text-3xl md:text-5xl font-bold mb-6">Boostez votre logistique avec LivraFaso Pro</h1>
+                <p class="text-xl md:text-2xl mb-8">Livrez plus, dépensez moins. Simplement.</p>
+                <div class="flex flex-col md:flex-row justify-center gap-4">
+                    <a href="#formules" class="bg-white text-blue-600 font-bold py-3 px-8 rounded-full hover:bg-gray-100 transition duration-300 shadow-lg">Je m'abonne maintenant</a>
+                    <a href="#fonctionnement" class="border-2 border-white text-white font-bold py-3 px-8 rounded-full hover:bg-white hover:text-blue-600 transition duration-300">Comment ça marche ?</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Avantages Section -->
+    <section id="avantages" class="py-16 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-12">Les avantages immédiats</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Avantage 1 -->
+                <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition duration-300">
+                    <div class="bg-blue-100 w-14 h-14 rounded-full flex items-center justify-center mb-4">
+                        <i class="fas fa-clock text-blue-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Gagnez du temps</h3>
+                    <p class="text-gray-600">Une seule facture mensuelle pour toutes vos livraisons, plus besoin de gérer les paiements à chaque course.</p>
+                </div>
+                
+                <!-- Avantage 2 -->
+                <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition duration-300">
+                    <div class="bg-green-100 w-14 h-14 rounded-full flex items-center justify-center mb-4">
+                        <i class="fas fa-money-bill-wave text-green-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Réduisez vos coûts</h3>
+                    <p class="text-gray-600">Jusqu'à 30% d'économies sur vos livraisons grâce à nos tarifs préférentiels.</p>
+                </div>
+                
+                <!-- Avantage 3 -->
+                <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition duration-300">
+                    <div class="bg-purple-100 w-14 h-14 rounded-full flex items-center justify-center mb-4">
+                        <i class="fas fa-star text-purple-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Livraisons prioritaires</h3>
+                    <p class="text-gray-600">Vos colis passent en premier avec notre service de livraison express dédié aux abonnés Pro.</p>
+                </div>
+                
+                <!-- Avantage 4 -->
+                <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition duration-300">
+                    <div class="bg-yellow-100 w-14 h-14 rounded-full flex items-center justify-center mb-4">
+                        <i class="fas fa-chart-line text-yellow-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Outils professionnels</h3>
+                    <p class="text-gray-600">Tableau de bord complet, historique des livraisons et suivi en temps réel de vos colis.</p>
+                </div>
+                
+                <!-- Avantage 5 -->
+                <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition duration-300">
+                    <div class="bg-red-100 w-14 h-14 rounded-full flex items-center justify-center mb-4">
+                        <i class="fas fa-headset text-red-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Service premium</h3>
+                    <p class="text-gray-600">Support dédié et livreurs professionnels formés pour répondre à vos besoins spécifiques.</p>
+                </div>
+                
+                <!-- Avantage 6 -->
+                <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition duration-300">
+                    <div class="bg-indigo-100 w-14 h-14 rounded-full flex items-center justify-center mb-4">
+                        <i class="fas fa-lock text-indigo-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Sécurité garantie</h3>
+                    <p class="text-gray-600">Assurance incluse sur tous vos colis et protection contre les pertes ou dommages.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Formules Section -->
+    <section id="formules" class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-12">Nos formules d'abonnement</h2>
+            <p class="text-center text-gray-600 max-w-2xl mx-auto mb-12">Choisissez la formule qui correspond à votre volume de livraisons et bénéficiez de tarifs préférentiels.</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Formule Pro Start -->
+                <div class="p-6 rounded-xl shadow-md border border-gray-200 pricing-card transition duration-300">
+                    <h3 class="text-xl font-bold mb-2">Pro Start</h3>
+                    <p class="text-gray-600 mb-4">Idéal pour les petits commerces et artisans</p>
+                    <div class="text-3xl font-bold mb-4">15 000 F<span class="text-sm font-normal text-gray-500">/mois</span></div>
+                    <ul class="space-y-2 mb-6">
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-2"></i>
+                            <span>30 livraisons / mois</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-2"></i>
+                            <span>Max 10 km par livraison</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-2"></i>
+                            <span>Suivi des colis</span>
+                        </li>
+                    </ul>
+                    <button class="w-full bg-gray-100 text-gray-800 font-medium py-2 px-4 rounded-lg hover:bg-gray-200 transition duration-300">Choisir cette formule</button>
+                </div>
+                
+                <!-- Formule Business+ -->
+                <div class="p-6 rounded-xl shadow-lg border-2 border-blue-500 pricing-card highlight-card transition duration-300 transform scale-105">
+                    <div class="absolute top-0 right-0 bg-blue-600 text-white px-3 py-1 text-xs font-bold rounded-bl-lg">POPULAIRE</div>
+                    <h3 class="text-xl font-bold mb-2">Business+</h3>
+                    <p class="text-gray-600 mb-4">Parfait pour les boutiques et pharmacies</p>
+                    <div class="text-3xl font-bold mb-4">25 000 F<span class="text-sm font-normal text-gray-500">/mois</span></div>
+                    <ul class="space-y-2 mb-6">
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-2"></i>
+                            <span>60 livraisons / mois</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-2"></i>
+                            <span>Max 15 km par livraison</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-2"></i>
+                            <span>Livraisons prioritaires</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-2"></i>
+                            <span>Support dédié</span>
+                        </li>
+                    </ul>
+                    <button class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300">Choisir cette formule</button>
+                </div>
+                
+                <!-- Formule Premium+ -->
+                <div class="p-6 rounded-xl shadow-md border border-gray-200 pricing-card transition duration-300">
+                    <h3 class="text-xl font-bold mb-2">Premium+</h3>
+                    <p class="text-gray-600 mb-4">Pour les e-commerces et livraisons intensives</p>
+                    <div class="text-3xl font-bold mb-4">50 000 F<span class="text-sm font-normal text-gray-500">/mois</span></div>
+                    <ul class="space-y-2 mb-6">
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-2"></i>
+                            <span>150 livraisons / mois</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-2"></i>
+                            <span>Accès express 24/7</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-2"></i>
+                            <span>Statistiques avancées</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-2"></i>
+                            <span>Gestion multi-utilisateurs</span>
+                        </li>
+                    </ul>
+                    <button class="w-full bg-gray-100 text-gray-800 font-medium py-2 px-4 rounded-lg hover:bg-gray-200 transition duration-300">Choisir cette formule</button>
+                </div>
+                
+                <!-- Formule Sur mesure -->
+                <div class="p-6 rounded-xl shadow-md border border-gray-200 pricing-card transition duration-300">
+                    <h3 class="text-xl font-bold mb-2">Sur mesure</h3>
+                    <p class="text-gray-600 mb-4">Solution personnalisée pour les grandes entreprises</p>
+                    <div class="text-3xl font-bold mb-4">Sur devis</div>
+                    <ul class="space-y-2 mb-6">
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-2"></i>
+                            <span>Livraison illimitée</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-2"></i>
+                            <span>Statistiques avancées</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-2"></i>
+                            <span>API d'intégration</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-green-500 mt-1 mr-2"></i>
+                            <span>Conseiller dédié</span>
+                        </li>
+                    </ul>
+                    <button class="w-full bg-gray-100 text-gray-800 font-medium py-2 px-4 rounded-lg hover:bg-gray-200 transition duration-300">Contactez-nous</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Fonctionnement Section -->
+    <section id="fonctionnement" class="py-16 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-12">Comment ça marche ?</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <!-- Étape 1 -->
+                <div class="how-it-works-step text-center">
+                    <div class="bg-blue-600 text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">1</div>
+                    <h3 class="text-xl font-bold mb-2">Choisissez votre formule</h3>
+                    <p class="text-gray-600">Sélectionnez l'abonnement qui correspond à votre volume de livraisons.</p>
+                </div>
+                
+                <!-- Étape 2 -->
+                <div class="how-it-works-step text-center">
+                    <div class="bg-blue-600 text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">2</div>
+                    <h3 class="text-xl font-bold mb-2">Ajoutez vos adresses</h3>
+                    <p class="text-gray-600">Configurez vos adresses de collecte et de livraison dans votre espace client.</p>
+                </div>
+                
+                <!-- Étape 3 -->
+                <div class="how-it-works-step text-center">
+                    <div class="bg-blue-600 text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">3</div>
+                    <h3 class="text-xl font-bold mb-2">Programmez vos livraisons</h3>
+                    <p class="text-gray-600">Planifiez vos livraisons via l'application ou le tableau de bord web.</p>
+                </div>
+                
+                <!-- Étape 4 -->
+                <div class="how-it-works-step text-center">
+                    <div class="bg-blue-600 text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">4</div>
+                    <h3 class="text-xl font-bold mb-2">Suivez et économisez</h3>
+                    <p class="text-gray-600">Suivez vos colis en temps réel et visualisez vos économies.</p>
+                </div>
+            </div>
+            
+            <div class="mt-16 bg-white rounded-xl shadow-md p-8 max-w-4xl mx-auto">
+                <div class="flex flex-col md:flex-row items-center">
+                    <div class="md:w-1/2 mb-6 md:mb-0 md:pr-8">
+                        <h3 class="text-2xl font-bold mb-4">🎁 Essayez LivraFaso Pro gratuitement pendant 1 mois</h3>
+                        <p class="text-gray-600 mb-4">Sans engagement. Résiliable à tout moment.</p>
+                        <button class="bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition duration-300">Je commence mon essai gratuit</button>
+                    </div>
+                    <div class="md:w-1/2">
+                        <img src="https://images.unsplash.com/photo-1556740738-b6a63e27c4df?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60" alt="Livraison express" class="rounded-lg shadow-md">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Témoignages Section -->
+    <section id="temoignages" class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-12">Ce que nos clients disent</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                <!-- Témoignage 1 -->
+                <div class="bg-gray-50 p-6 rounded-xl shadow-sm">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mr-4">
+                            <i class="fas fa-user text-blue-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold">Fatou</h4>
+                            <p class="text-gray-500 text-sm">Propriétaire de boutique en ligne</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-700 italic">"Grâce à l'abonnement Business+, j'ai divisé par deux mes frais de livraison mensuels. Le service est rapide et fiable, ce qui a augmenté la satisfaction de mes clients."</p>
+                    <div class="flex mt-4">
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                    </div>
+                </div>
+                
+                <!-- Témoignage 2 -->
+                <div class="bg-gray-50 p-6 rounded-xl shadow-sm">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mr-4">
+                            <i class="fas fa-user text-green-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold">Ali</h4>
+                            <p class="text-gray-500 text-sm">Gérant d'un point de vente de cosmétiques</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-700 italic">"On fait 80 livraisons par mois. Avant, on payait +60 000 F. Aujourd'hui, avec un abonnement Premium+, on en paie 50 000 tout compris. La gestion est tellement plus simple maintenant !"</p>
+                    <div class="flex mt-4">
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <i class="fas fa-star-half-alt text-yellow-400"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Become a Driver Section -->
+    <section id="livreurs" class="py-16 bg-gray-100">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-12">🛵 Devenez livreur avec LivraFaso</h2>
+            <p class="text-xl text-center mb-8 max-w-3xl mx-auto">Gagnez votre vie à votre rythme, avec ou sans abonnement.</p>
+            
+            <div class="bg-white rounded-xl shadow-md p-8 mb-12">
+                <h3 class="text-2xl font-bold mb-6 text-center">🎯 Pourquoi rejoindre LivraFaso en tant que livreur ?</h3>
+                <p class="text-center mb-8 max-w-2xl mx-auto">Que vous soyez étudiant, père de famille, entrepreneur ou aventurier de la route, LivraFaso vous permet de travailler librement, sans patron sur le dos, avec un système adapté à tous les profils.</p>
+                <p class="text-center text-xl font-bold mb-8">📦 Livrez des colis. Gagnez de l'argent. Maîtrisez votre emploi du temps.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                    <div>
+                        <h4 class="text-xl font-bold mb-4">Deux façons de livrer avec nous :</h4>
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr class="bg-gray-100">
+                                    <th class="p-3 text-left">Mode de fonctionnement</th>
+                                    <th class="p-3 text-center">🔓 Sans abonnement</th>
+                                    <th class="p-3 text-center">🛡️ Avec abonnement</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b border-gray-200">
+                                    <td class="p-3">Engagement</td>
+                                    <td class="p-3 text-center">Aucun</td>
+                                    <td class="p-3 text-center">Petit forfait mensuel</td>
+                                </tr>
+                                <tr class="border-b border-gray-200">
+                                    <td class="p-3">Commission sur les gains</td>
+                                    <td class="p-3 text-center">Oui (ex. 15%)</td>
+                                    <td class="p-3 text-center">Non (0%)</td>
+                                </tr>
+                                <tr class="border-b border-gray-200">
+                                    <td class="p-3">Accès aux meilleures livraisons</td>
+                                    <td class="p-3 text-center">Standard</td>
+                                    <td class="p-3 text-center">Prioritaire</td>
+                                </tr>
+                                <tr class="border-b border-gray-200">
+                                    <td class="p-3">Revenu potentiel</td>
+                                    <td class="p-3 text-center">Correct</td>
+                                    <td class="p-3 text-center">Très élevé</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3">Recommandé pour</td>
+                                    <td class="p-3 text-center">Débutants, occasionnels</td>
+                                    <td class="p-3 text-center">Réguliers, ambitieux</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-xl font-bold mb-4">Formules d'abonnement pour les livreurs</h4>
+                        <div class="space-y-4">
+                            <div class="bg-blue-50 p-4 rounded-lg">
+                                <h5 class="font-bold">💼 Livreur Flex</h5>
+                                <p><span class="font-semibold">0 F/mois</span> - Débutant / occasionnel</p>
+                                <p class="text-sm">Commission 15%, liberté totale</p>
+                            </div>
+                            <div class="bg-green-50 p-4 rounded-lg">
+                                <h5 class="font-bold">💼 Start</h5>
+                                <p><span class="font-semibold">5 000 F/mois</span> - 5 à 10 livraisons/semaine</p>
+                                <p class="text-sm">Commission réduite, accès optimisé</p>
+                            </div>
+                            <div class="bg-yellow-50 p-4 rounded-lg">
+                                <h5 class="font-bold">💼 Pro</h5>
+                                <p><span class="font-semibold">10 000 F/mois</span> - Régulier / professionnel</p>
+                                <p class="text-sm">0% de commission, priorité, stats</p>
+                            </div>
+                            <div class="bg-purple-50 p-4 rounded-lg">
+                                <h5 class="font-bold">💼 Elite</h5>
+                                <p><span class="font-semibold">20 000 F/mois</span> - Ultra-performant / expert</p>
+                                <p class="text-sm">Missions longues, dashboard avancé, support VIP</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                    <h3 class="text-xl font-bold mb-4">✅ Tous les livreurs bénéficient de :</h3>
+                    <ul class="space-y-2">
+                        <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1"></i> Horaires libres : travaillez quand vous voulez</li>
+                        <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1"></i> Paiement rapide et sécurisé</li>
+                        <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1"></i> Application intuitive et simple</li>
+                        <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1"></i> Missions disponibles tous les jours</li>
+                        <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1"></i> Choix des zones de livraison</li>
+                        <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1"></i> Accompagnement pour progresser</li>
+                        <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1"></i> Possibilité de monter en grade et gagner plus</li>
+                    </ul>
+                </div>
+                
+                <div class="bg-white p-6 rounded-xl shadow-md">
+                    <h3 class="text-xl font-bold mb-4">🔥 Pourquoi prendre un abonnement ?</h3>
+                    <div class="space-y-4">
+                        <div class="bg-blue-100 p-4 rounded-lg">
+                            <p class="font-medium">💬 "Je veux garder tout ce que je gagne."</p>
+                        </div>
+                        <div class="bg-green-100 p-4 rounded-lg">
+                            <p class="font-medium">💬 "Je veux recevoir plus de livraisons longues et bien payées."</p>
+                        </div>
+                        <div class="bg-yellow-100 p-4 rounded-lg">
+                            <p class="font-medium">💬 "Je veux être reconnu comme un livreur pro."</p>
+                        </div>
+                    </div>
+                    <div class="mt-6 bg-gray-50 p-4 rounded-lg">
+                        <h4 class="font-bold mb-2">💡 Le saviez-vous ?</h4>
+                        <p>Avec un abonnement Pro, un livreur actif peut gagner jusqu'à 2x plus qu'en mode Flex. En gardant 100% de ses gains, il rentabilise son abonnement en quelques jours seulement.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-12 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl p-8 max-w-4xl mx-auto text-center">
+                <h3 class="text-2xl font-bold mb-4">🎁 Bonus de bienvenue</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <div class="bg-white text-blue-600 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2">
+                            <i class="fas fa-gift text-xl"></i>
+                        </div>
+                        <p>🎉 1er mois offert pour tous les nouveaux livreurs abonnés</p>
+                    </div>
+                    <div>
+                        <div class="bg-white text-blue-600 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2">
+                            <i class="fas fa-money-bill-wave text-xl"></i>
+                        </div>
+                        <p>💸 Bonus de 5 000 F dès 10 livraisons réussies</p>
+                    </div>
+                    <div>
+                        <div class="bg-white text-blue-600 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2">
+                            <i class="fas fa-graduation-cap text-xl"></i>
+                        </div>
+                        <p>📈 Formation gratuite pour apprendre à maximiser ses tournées</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-12 max-w-2xl mx-auto">
+                <div class="bg-white p-6 rounded-xl shadow-md text-center">
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-quote-left text-blue-600 text-xl"></i>
+                    </div>
+                    <p class="text-lg italic mb-4">"Avant LivraFaso, je faisais 30 000 F/mois. Maintenant, en mode Pro, je tourne à 80 000 F. Et je suis mon propre boss."</p>
+                    <p class="font-bold">— Yacouba, livreur LivraFaso Pro depuis 4 mois</p>
+                </div>
+            </div>
+            
+            <div class="mt-12 text-center">
+                <h3 class="text-2xl font-bold mb-6">📲 Prêt à rejoindre la team LivraFaso ?</h3>
+                <p class="mb-8">Choisissez votre formule, installez l'app, et commencez à livrer aujourd'hui.</p>
+                <div class="flex flex-col md:flex-row justify-center gap-4">
+                    <a href="#" class="bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition duration-300">Télécharger l'application</a>
+                    <a href="#" class="bg-white text-blue-600 border border-blue-600 font-bold py-3 px-6 rounded-lg hover:bg-gray-100 transition duration-300">S'inscrire comme livreur</a>
+                    <a href="#" class="bg-gray-800 text-white font-bold py-3 px-6 rounded-lg hover:bg-gray-700 transition duration-300">Voir les abonnements</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-16 bg-blue-600 text-white">
+        <div class="container mx-auto px-4 text-center">
+            <h2 class="text-3xl font-bold mb-6">Prêt à révolutionner votre logistique ?</h2>
+            <p class="text-xl mb-8 max-w-2xl mx-auto">Rejoignez les centaines d'entreprises qui font confiance à LivraFaso Pro pour leurs livraisons.</p>
+            <div class="flex flex-col md:flex-row justify-center gap-4">
+                <a href="#formules" class="bg-white text-blue-600 font-bold py-3 px-8 rounded-full hover:bg-gray-100 transition duration-300 shadow-lg">Je m'abonne maintenant</a>
+                <a href="#" class="border-2 border-white text-white font-bold py-3 px-8 rounded-full hover:bg-white hover:text-blue-600 transition duration-300">Contactez-nous</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <div class="flex items-center mb-4">
+                        <div class="bg-blue-600 text-white p-2 rounded-lg mr-2">
+                            <i class="fas fa-truck-fast text-xl"></i>
+                        </div>
+                        <span class="text-xl font-bold">LivraFaso Pro</span>
+                    </div>
+                    <p class="text-gray-400">La solution logistique professionnelle pour les entreprises qui veulent livrer plus et dépenser moins.</p>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-bold mb-4">Liens utiles</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#avantages" class="text-gray-400 hover:text-white transition duration-300">Avantages</a></li>
+                        <li><a href="#formules" class="text-gray-400 hover:text-white transition duration-300">Nos formules</a></li>
+                        <li><a href="#fonctionnement" class="text-gray-400 hover:text-white transition duration-300">Comment ça marche</a></li>
+                        <li><a href="#temoignages" class="text-gray-400 hover:text-white transition duration-300">Témoignages</a></li>
+                        <li><a href="#livreurs" class="text-gray-400 hover:text-white transition duration-300">Devenir livreur</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-bold mb-4">Contact</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li class="flex items-start">
+                            <i class="fas fa-envelope mt-1 mr-2"></i>
+                            <span>contact@livrafaso.bf</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-phone-alt mt-1 mr-2"></i>
+                            <span>+226 XX XX XX XX</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fab fa-whatsapp mt-1 mr-2"></i>
+                            <span>WhatsApp</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-bold mb-4">Réseaux sociaux</h4>
+                    <div class="flex space-x-4">
+                        <a href="#" class="bg-gray-700 w-10 h-10 rounded-full flex items-center justify-center hover:bg-blue-600 transition duration-300">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="#" class="bg-gray-700 w-10 h-10 rounded-full flex items-center justify-center hover:bg-blue-400 transition duration-300">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="bg-gray-700 w-10 h-10 rounded-full flex items-center justify-center hover:bg-pink-600 transition duration-300">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="#" class="bg-gray-700 w-10 h-10 rounded-full flex items-center justify-center hover:bg-blue-700 transition duration-300">
+                            <i class="fab fa-linkedin-in"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 mt-12 pt-8 text-center text-gray-500">
+                <p>© 2023 LivraFaso Pro. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+        
+        // Mobile menu toggle (would need more implementation)
+        document.querySelector('.md\\:hidden').addEventListener('click', function() {
+            alert("Menu mobile à implémenter");
+        });
+    </script>
+</body>
+</html>

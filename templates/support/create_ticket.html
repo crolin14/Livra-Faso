@@ -1,0 +1,324 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Créer un Ticket - Support LivraFaso{% endblock %}
+
+{% block content %}
+<!-- Support Header -->
+<div class="bg-gradient-to-r from-primary-600 via-blue-600 to-purple-600 text-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div class="text-center">
+            <div class="flex items-center justify-center mb-6">
+                <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
+                    <i data-lucide="headphones" class="w-12 h-12 text-white"></i>
+                </div>
+            </div>
+            <h1 class="text-4xl lg:text-5xl font-display font-bold mb-4">
+                Créer un Ticket de Support
+            </h1>
+            <p class="text-xl text-blue-100 max-w-2xl mx-auto">
+                Décrivez votre problème en détail pour obtenir une assistance rapide
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <!-- Navigation -->
+    <div class="mb-8">
+        <a href="{% url 'support:ticket_list' %}" class="btn-outline inline-flex items-center">
+            <i data-lucide="arrow-left" class="w-5 h-5 mr-2"></i>
+            Retour aux tickets
+        </a>
+    </div>
+
+    <!-- Formulaire -->
+    <div class="bg-white rounded-2xl shadow-xl border border-gray-200 p-8" data-aos="fade-up">
+        <form method="post" class="space-y-8">
+            {% csrf_token %}
+            
+            <!-- Titre -->
+            <div class="form-group">
+                <label for="title" class="form-label">
+                    <i data-lucide="edit-3" class="w-5 h-5 mr-2"></i>
+                    Titre du ticket <span class="text-red-500">*</span>
+                </label>
+                <input type="text" 
+                       id="title" 
+                       name="title" 
+                       required
+                       class="form-input"
+                       placeholder="Résumé court de votre problème"
+                       maxlength="200">
+                <p class="form-help">Soyez précis et concis (max. 200 caractères)</p>
+            </div>
+
+            <!-- Catégorie -->
+            <div class="form-group">
+                <label for="category" class="form-label">
+                    <i data-lucide="folder" class="w-5 h-5 mr-2"></i>
+                    Catégorie <span class="text-red-500">*</span>
+                </label>
+                <select id="category" 
+                        name="category" 
+                        required
+                        class="form-select">
+                    <option value="">Sélectionnez une catégorie</option>
+                    {% for category in categories %}
+                        <option value="{{ category.id }}" data-sla-response="{{ category.sla_response_hours }}" data-sla-resolution="{{ category.sla_resolution_hours }}">
+                            {{ category.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <div id="sla-info" class="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-3 hidden">
+                    <div class="flex items-start">
+                        <i data-lucide="clock" class="w-4 h-4 text-blue-600 mt-0.5 mr-2 flex-shrink-0"></i>
+                        <div class="text-sm text-blue-800">
+                            <p class="font-medium">Temps de réponse estimé: <span id="sla-response"></span></p>
+                            <p>Temps de résolution estimé: <span id="sla-resolution"></span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Priorité -->
+            <div class="form-group">
+                <label for="priority" class="form-label">
+                    <i data-lucide="alert-triangle" class="w-5 h-5 mr-2"></i>
+                    Priorité
+                </label>
+                <select id="priority" 
+                        name="priority" 
+                        class="form-select">
+                    {% for priority_key, priority_label in priority_choices %}
+                        <option value="{{ priority_key }}" {% if priority_key == 'medium' %}selected{% endif %}>
+                            {{ priority_label }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mt-3">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                            <span><strong>Faible:</strong> Question générale</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
+                            <span><strong>Moyenne:</strong> Problème gênant</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 bg-orange-500 rounded-full mr-2"></div>
+                            <span><strong>Élevée:</strong> Problème bloquant</span>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
+                            <span><strong>Critique:</strong> Panne majeure</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="form-group">
+                <label for="description" class="form-label">
+                    <i data-lucide="file-text" class="w-5 h-5 mr-2"></i>
+                    Description détaillée <span class="text-red-500">*</span>
+                </label>
+                <textarea id="description" 
+                          name="description" 
+                          required
+                          rows="8"
+                          class="form-textarea"
+                          placeholder="Décrivez votre problème en détail...
+
+Informations utiles à inclure:
+• Que faisiez-vous quand le problème est survenu ?
+• Quel était le comportement attendu ?
+• Quel est le comportement observé ?
+• À quelle fréquence cela se produit-il ?
+• Avez-vous des messages d'erreur ?
+• Captures d'écran si pertinentes"></textarea>
+                <p class="form-help">Plus vous donnez de détails, plus nous pourrons vous aider rapidement</p>
+            </div>
+
+            <!-- Conseils -->
+            <div class="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-6">
+                <div class="flex items-start">
+                    <div class="bg-blue-500 w-10 h-10 rounded-xl flex items-center justify-center mr-4 flex-shrink-0">
+                        <i data-lucide="lightbulb" class="w-5 h-5 text-white"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-semibold text-blue-900 mb-3">Conseils pour un ticket efficace</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div class="flex items-center text-sm text-blue-800">
+                                <i data-lucide="check" class="w-4 h-4 text-blue-600 mr-2 flex-shrink-0"></i>
+                                Titre clair et descriptif
+                            </div>
+                            <div class="flex items-center text-sm text-blue-800">
+                                <i data-lucide="check" class="w-4 h-4 text-blue-600 mr-2 flex-shrink-0"></i>
+                                Bonne catégorie sélectionnée
+                            </div>
+                            <div class="flex items-center text-sm text-blue-800">
+                                <i data-lucide="check" class="w-4 h-4 text-blue-600 mr-2 flex-shrink-0"></i>
+                                Étapes de reproduction
+                            </div>
+                            <div class="flex items-center text-sm text-blue-800">
+                                <i data-lucide="check" class="w-4 h-4 text-blue-600 mr-2 flex-shrink-0"></i>
+                                Informations techniques
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex flex-col sm:flex-row gap-4 pt-8 border-t border-gray-200">
+                <button type="submit" class="btn-primary flex-1">
+                    <i data-lucide="send" class="w-5 h-5 mr-2"></i>
+                    Créer le Ticket
+                </button>
+                
+                <a href="{% url 'support:ticket_list' %}" class="btn-secondary flex-1 text-center">
+                    <i data-lucide="x" class="w-5 h-5 mr-2"></i>
+                    Annuler
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- FAQ rapide -->
+    <div class="bg-gradient-to-br from-gray-50 to-blue-50 rounded-3xl p-8 lg:p-12 mt-12">
+        <div class="text-center mb-8">
+            <div class="flex items-center justify-center mb-4">
+                <div class="bg-primary-500 w-10 h-10 rounded-xl flex items-center justify-center">
+                    <i data-lucide="help-circle" class="w-5 h-5 text-white"></i>
+                </div>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-900 mb-2">Questions Fréquentes</h3>
+            <p class="text-gray-600">Réponses aux questions les plus courantes sur le support</p>
+        </div>
+        
+        <div class="grid md:grid-cols-2 gap-6">
+            <div class="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-shadow duration-300">
+                <div class="flex items-start mb-3">
+                    <div class="bg-blue-100 w-8 h-8 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
+                        <i data-lucide="eye" class="w-4 h-4 text-blue-600"></i>
+                    </div>
+                    <h4 class="font-semibold text-gray-900">Comment suivre mon ticket ?</h4>
+                </div>
+                <p class="text-sm text-gray-600">Vous recevrez des notifications par email et dans votre espace personnel à chaque mise à jour de votre ticket.</p>
+            </div>
+            
+            <div class="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-shadow duration-300">
+                <div class="flex items-start mb-3">
+                    <div class="bg-green-100 w-8 h-8 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
+                        <i data-lucide="clock" class="w-4 h-4 text-green-600"></i>
+                    </div>
+                    <h4 class="font-semibold text-gray-900">Combien de temps pour une réponse ?</h4>
+                </div>
+                <p class="text-sm text-gray-600">Le délai dépend de la catégorie et de la priorité. Consultez les SLA affichés lors de la sélection de catégorie.</p>
+            </div>
+            
+            <div class="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-shadow duration-300">
+                <div class="flex items-start mb-3">
+                    <div class="bg-purple-100 w-8 h-8 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
+                        <i data-lucide="edit" class="w-4 h-4 text-purple-600"></i>
+                    </div>
+                    <h4 class="font-semibold text-gray-900">Puis-je modifier mon ticket ?</h4>
+                </div>
+                <p class="text-sm text-gray-600">Vous pouvez ajouter des commentaires et des précisions, mais pas modifier le titre ou la catégorie une fois créé.</p>
+            </div>
+            
+            <div class="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-shadow duration-300">
+                <div class="flex items-start mb-3">
+                    <div class="bg-red-100 w-8 h-8 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
+                        <i data-lucide="phone" class="w-4 h-4 text-red-600"></i>
+                    </div>
+                    <h4 class="font-semibold text-gray-900">Besoin d'aide urgente ?</h4>
+                </div>
+                <p class="text-sm text-gray-600">Pour les urgences, sélectionnez la priorité "Critique" et contactez-nous par téléphone si disponible.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const categorySelect = document.getElementById('category');
+    const slaInfo = document.getElementById('sla-info');
+    const slaResponse = document.getElementById('sla-response');
+    const slaResolution = document.getElementById('sla-resolution');
+    
+    // Afficher les SLA selon la catégorie
+    categorySelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        
+        if (selectedOption.value) {
+            const responseHours = selectedOption.dataset.slaResponse;
+            const resolutionHours = selectedOption.dataset.slaResolution;
+            
+            slaResponse.textContent = responseHours + ' heures';
+            slaResolution.textContent = resolutionHours + ' heures';
+            slaInfo.classList.remove('hidden');
+        } else {
+            slaInfo.classList.add('hidden');
+        }
+    });
+    
+    // Validation du formulaire
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        const title = document.getElementById('title').value.trim();
+        const category = document.getElementById('category').value;
+        const description = document.getElementById('description').value.trim();
+        
+        if (!title || !category || !description) {
+            e.preventDefault();
+            alert('Veuillez remplir tous les champs obligatoires.');
+            return;
+        }
+        
+        if (title.length < 10) {
+            e.preventDefault();
+            alert('Le titre doit contenir au moins 10 caractères.');
+            return;
+        }
+        
+        if (description.length < 20) {
+            e.preventDefault();
+            alert('La description doit contenir au moins 20 caractères.');
+            return;
+        }
+    });
+    
+    // Compteur de caractères pour le titre
+    const titleInput = document.getElementById('title');
+    const titleCounter = document.createElement('div');
+    titleCounter.className = 'text-sm text-gray-400 mt-1 text-right';
+    titleInput.parentNode.appendChild(titleCounter);
+    
+    function updateTitleCounter() {
+        const length = titleInput.value.length;
+        titleCounter.textContent = length + '/200 caractères';
+        
+        if (length > 180) {
+            titleCounter.className = 'text-sm text-orange-500 mt-1 text-right';
+        } else if (length > 200) {
+            titleCounter.className = 'text-sm text-red-500 mt-1 text-right';
+        } else {
+            titleCounter.className = 'text-sm text-gray-400 mt-1 text-right';
+        }
+    }
+    
+    titleInput.addEventListener('input', updateTitleCounter);
+    updateTitleCounter();
+    
+    // Initialiser Lucide icons
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+});
+</script>
+{% endblock %}

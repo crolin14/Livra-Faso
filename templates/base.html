@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}LivraFaso - Plateforme de Livraison{% endblock %}</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    
+    <!-- AOS Animation -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    
+    <!-- Custom CSS -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/livrafaso-modern.css' %}">
+    
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            200: '#bfdbfe',
+                            300: '#93c5fd',
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        },
+                        secondary: {
+                            50: '#faf5ff',
+                            100: '#f3e8ff',
+                            200: '#e9d5ff',
+                            300: '#d8b4fe',
+                            400: '#c084fc',
+                            500: '#a855f7',
+                            600: '#9333ea',
+                            700: '#7c3aed',
+                            800: '#6b21a8',
+                            900: '#581c87',
+                        }
+                    },
+                    backgroundImage: {
+                        'gradient-primary': 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
+                        'gradient-light': 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-slate-50 min-h-screen font-inter antialiased">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <a href="{% url 'public:home' %}" class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
+                            <i data-lucide="truck" class="w-5 h-5 text-white"></i>
+                        </div>
+                        <span class="text-xl font-bold text-slate-800">LivraFaso</span>
+                    </a>
+                </div>
+                
+                <!-- Navigation Menu -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="{% url 'public:home' %}" class="text-slate-600 hover:text-primary-600 font-medium transition-colors">Accueil</a>
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'public:dashboard' %}" class="text-slate-600 hover:text-primary-600 font-medium transition-colors">Dashboard</a>
+                        {% if user.user_type == 'entreprise' %}
+                            <a href="{% url 'missions:create' %}" class="text-slate-600 hover:text-primary-600 font-medium transition-colors">Créer Mission</a>
+                            <a href="{% url 'missions:enterprise_list' %}" class="text-slate-600 hover:text-primary-600 font-medium transition-colors">Mes Missions</a>
+                        {% elif user.user_type == 'livreur' %}
+                            <a href="{% url 'missions:disponibles' %}" class="text-slate-600 hover:text-primary-600 font-medium transition-colors">Missions Disponibles</a>
+                        {% elif user.user_type == 'client' %}
+                            <a href="{% url 'client_dashboard:mes_livraisons' %}" class="text-slate-600 hover:text-primary-600 font-medium transition-colors">Mes Missions</a>
+                        {% endif %}
+                    {% endif %}
+                    <a href="{% url 'public:about' %}" class="text-slate-600 hover:text-primary-600 font-medium transition-colors">À propos</a>
+                    <a href="{% url 'public:contact' %}" class="text-slate-600 hover:text-primary-600 font-medium transition-colors">Contact</a>
+                </div>
+                
+                <!-- User Menu -->
+                <div class="flex items-center space-x-4">
+                    {% if user.is_authenticated %}
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center">
+                                <span class="text-white text-sm font-medium">{{ user.first_name.0|default:user.username.0|upper }}</span>
+                            </div>
+                            <span class="text-slate-600">Bonjour, {{ user.get_full_name|default:user.username }}</span>
+                            <a href="{% url 'public:dashboard' %}" class="text-slate-600 hover:text-primary-600 font-medium transition-colors">Dashboard</a>
+                            <a href="{% url 'users:logout' %}" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors font-medium">Déconnexion</a>
+                        </div>
+                    {% else %}
+                        <a href="{% url 'users:login' %}" class="text-slate-600 hover:text-primary-600 font-medium transition-colors">Connexion</a>
+                        <a href="{% url 'users:register' %}" class="bg-gradient-primary text-white px-6 py-2 rounded-lg hover:opacity-90 transition-opacity font-medium">Inscription</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} bg-{{ message.tags }}-100 border border-{{ message.tags }}-400 text-{{ message.tags }}-700 px-4 py-3 rounded mb-4">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-white py-12 mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <!-- Brand -->
+                <div class="col-span-1 md:col-span-1">
+                    <div class="flex items-center space-x-2 mb-4">
+                        <div class="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
+                            <i data-lucide="truck" class="w-5 h-5 text-white"></i>
+                        </div>
+                        <span class="text-xl font-bold">LivraFaso</span>
+                    </div>
+                    <p class="text-slate-400 text-sm leading-relaxed">Plateforme moderne de livraison connectant entreprises et livreurs au Burkina Faso. Livraisons rapides, sécurisées et traçables.</p>
+                    <!-- Social Links -->
+                    <div class="flex space-x-4 mt-6">
+                        <a href="#" class="text-slate-400 hover:text-white transition-colors">
+                            <i data-lucide="facebook" class="w-5 h-5"></i>
+                        </a>
+                        <a href="#" class="text-slate-400 hover:text-white transition-colors">
+                            <i data-lucide="twitter" class="w-5 h-5"></i>
+                        </a>
+                        <a href="#" class="text-slate-400 hover:text-white transition-colors">
+                            <i data-lucide="instagram" class="w-5 h-5"></i>
+                        </a>
+                        <a href="#" class="text-slate-400 hover:text-white transition-colors">
+                            <i data-lucide="linkedin" class="w-5 h-5"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Liens Rapides -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Liens Rapides</h3>
+                    <ul class="space-y-3">
+                        <li><a href="{% url 'public:home' %}" class="text-slate-400 hover:text-white transition-colors">Accueil</a></li>
+                        <li><a href="{% url 'public:about' %}" class="text-slate-400 hover:text-white transition-colors">À propos</a></li>
+                        <li><a href="{% url 'public:faq' %}" class="text-slate-400 hover:text-white transition-colors">FAQ</a></li>
+                        <li><a href="{% url 'public:contact' %}" class="text-slate-400 hover:text-white transition-colors">Contact</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Services -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Services</h3>
+                    <ul class="space-y-3">
+                        <li><span class="text-slate-400">Livraison Express</span></li>
+                        <li><span class="text-slate-400">Livraison Standard</span></li>
+                        <li><span class="text-slate-400">Suivi en Temps Réel</span></li>
+                        <li><span class="text-slate-400">Support 24/7</span></li>
+                    </ul>
+                </div>
+                
+                <!-- Contact -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Contact</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center space-x-3">
+                            <i data-lucide="mail" class="w-4 h-4 text-slate-400"></i>
+                            <span class="text-slate-400">contact@livrafaso.bf</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <i data-lucide="phone" class="w-4 h-4 text-slate-400"></i>
+                            <span class="text-slate-400">+226 XX XX XX XX</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <i data-lucide="map-pin" class="w-4 h-4 text-slate-400"></i>
+                            <span class="text-slate-400">Ouagadougou, Burkina Faso</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Bottom Bar -->
+            <div class="border-t border-slate-800 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
+                <p class="text-slate-400 text-sm">&copy; 2024 LivraFaso. Tous droits réservés.</p>
+                <div class="flex space-x-6 mt-4 md:mt-0">
+                    <a href="{% url 'legal:privacy' %}" class="text-slate-400 hover:text-white text-sm transition-colors">Politique de Confidentialité</a>
+                    <a href="{% url 'legal:terms' %}" class="text-slate-400 hover:text-white text-sm transition-colors">Conditions d'Utilisation</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        // Initialize AOS
+        AOS.init({
+            duration: 800,
+            once: true
+        });
+        
+        // Initialize Lucide icons
+        lucide.createIcons();
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

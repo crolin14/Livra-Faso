@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Logs Dashboard - LivraFaso</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .glassmorphism {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #991b1b 0%, #dc2626 50%, #ef4444 100%);
+        }
+        .blink-alert {
+            animation: blink 1s infinite;
+        }
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen">
+    <!-- Header -->
+    <header class="glassmorphism text-white p-4 mb-6">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <i class="fas fa-shield-alt text-2xl"></i>
+                <h1 class="text-xl font-bold">Security Logs Dashboard</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-2">
+                    <div class="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                    <span class="text-sm">Surveillance Active</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-exclamation-triangle text-red-400 blink-alert"></i>
+                    <span class="bg-red-500 text-xs rounded-full px-2 py-1">{{ threats.critical_count|default:2 }}</span>
+                </div>
+                <button onclick="window.location.href='/admin/dashboard/'" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg">
+                    <i class="fas fa-arrow-left mr-2"></i>Retour
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-4">
+        <!-- Threat Level Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="glassmorphism rounded-xl p-6 text-white bg-gradient-to-br from-red-600 to-red-800">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm opacity-90">Menaces Critiques</p>
+                        <p class="text-3xl font-bold">{{ security_stats.critical_threats|default:2 }}</p>
+                        <p class="text-xs">Dernière: il y a 5 min</p>
+                    </div>
+                    <i class="fas fa-exclamation-triangle text-4xl opacity-80"></i>
+                </div>
+            </div>
+            
+            <div class="glassmorphism rounded-xl p-6 text-white bg-gradient-to-br from-orange-600 to-red-600">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm opacity-90">Menaces Élevées</p>
+                        <p class="text-3xl font-bold">{{ security_stats.high_threats|default:7 }}</p>
+                        <p class="text-xs">Dernière: il y a 12 min</p>
+                    </div>
+                    <i class="fas fa-shield-alt text-4xl opacity-80"></i>
+                </div>
+            </div>
+            
+            <div class="glassmorphism rounded-xl p-6 text-white bg-gradient-to-br from-yellow-600 to-orange-600">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm opacity-90">Menaces Moyennes</p>
+                        <p class="text-3xl font-bold">{{ security_stats.medium_threats|default:23 }}</p>
+                        <p class="text-xs">Dernière: il y a 1h</p>
+                    </div>
+                    <i class="fas fa-eye text-4xl opacity-80"></i>
+                </div>
+            </div>
+            
+            <div class="glassmorphism rounded-xl p-6 text-white bg-gradient-to-br from-green-600 to-teal-600">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm opacity-90">Activité Normale</p>
+                        <p class="text-3xl font-bold">{{ security_stats.normal_activity|default:1247 }}</p>
+                        <p class="text-xs">Taux: 98.2%</p>
+                    </div>
+                    <i class="fas fa-check-circle text-4xl opacity-80"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Real-time Alerts -->
+        <div class="glassmorphism rounded-xl p-6 text-white mb-8">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold flex items-center">
+                    <i class="fas fa-bell mr-2 text-red-400"></i>
+                    Alertes Temps Réel
+                </h3>
+                <div class="flex space-x-2">
+                    <button onclick="pauseAlerts()" class="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 rounded text-sm">
+                        <i class="fas fa-pause mr-1"></i>Pause
+                    </button>
+                    <button onclick="clearAlerts()" class="px-3 py-1 bg-red-500 hover:bg-red-600 rounded text-sm">
+                        <i class="fas fa-trash mr-1"></i>Effacer
+                    </button>
+                </div>
+            </div>
+            <div id="real-time-alerts" class="space-y-3 max-h-64 overflow-y-auto">
+                <div class="bg-red-500/20 border border-red-500/50 rounded-lg p-3 flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <i class="fas fa-skull-crossbones text-red-400"></i>
+                        <div>
+                            <p class="font-medium">Tentative d'injection SQL détectée</p>
+                            <p class="text-xs opacity-80">IP: 192.168.1.100 | Il y a 2 min</p>
+                        </div>
+                    </div>
+                    <button onclick="blockIP('192.168.1.100')" class="px-2 py-1 bg-red-600 hover:bg-red-700 rounded text-xs">
+                        Bloquer IP
+                    </button>
+                </div>
+                <div class="bg-orange-500/20 border border-orange-500/50 rounded-lg p-3 flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <i class="fas fa-user-secret text-orange-400"></i>
+                        <div>
+                            <p class="font-medium">Connexions multiples suspectes</p>
+                            <p class="text-xs opacity-80">IP: 10.0.0.25 | 15 tentatives | Il y a 8 min</p>
+                        </div>
+                    </div>
+                    <button onclick="investigateIP('10.0.0.25')" class="px-2 py-1 bg-orange-600 hover:bg-orange-700 rounded text-xs">
+                        Enquêter
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Security Analytics -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Threat Timeline -->
+                <div class="glassmorphism rounded-xl p-6 text-white">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                        <i class="fas fa-chart-line mr-2"></i>
+                        Timeline des Menaces (24h)
+                    </h3>
+                    <div class="h-64">
+                        <canvas id="threatTimelineChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Security Logs Table -->
+                <div class="glassmorphism rounded-xl p-6 text-white">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold">Logs de Sécurité</h3>
+                        <div class="flex space-x-2">
+                            <select id="log-filter" class="px-3 py-1 bg-white/10 border border-white/20 rounded text-white text-sm">
+                                <option value="all">Tous les logs</option>
+                                <option value="critical">Critiques</option>
+                                <option value="high">Élevés</option>
+                                <option value="failed_login">Connexions échouées</option>
+                            </select>
+                            <button onclick="exportLogs()" class="px-3 py-1 bg-green-500 hover:bg-green-600 rounded text-sm">
+                                <i class="fas fa-download mr-1"></i>Export
+                            </button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto max-h-96 overflow-y-auto">
+                        <table class="w-full text-xs">
+                            <thead class="sticky top-0 bg-gray-800">
+                                <tr class="border-b border-white/20">
+                                    <th class="text-left p-2">Timestamp</th>
+                                    <th class="text-left p-2">Niveau</th>
+                                    <th class="text-left p-2">IP Source</th>
+                                    <th class="text-left p-2">Action</th>
+                                    <th class="text-left p-2">Détails</th>
+                                    <th class="text-left p-2">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b border-white/10 hover:bg-white/5">
+                                    <td class="p-2">26/08 16:52:15</td>
+                                    <td class="p-2">
+                                        <span class="px-2 py-1 rounded-full text-xs bg-red-500">Critique</span>
+                                    </td>
+                                    <td class="p-2 font-mono">192.168.1.100</td>
+                                    <td class="p-2">Injection SQL</td>
+                                    <td class="p-2">Tentative d'accès base données</td>
+                                    <td class="p-2">
+                                        <button onclick="viewLogDetails(1)" class="p-1 hover:bg-white/20 rounded">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button onclick="blockIP('192.168.1.100')" class="p-1 hover:bg-white/20 rounded text-red-400">
+                                            <i class="fas fa-ban"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr class="border-b border-white/10 hover:bg-white/5">
+                                    <td class="p-2">26/08 16:45:32</td>
+                                    <td class="p-2">
+                                        <span class="px-2 py-1 rounded-full text-xs bg-orange-500">Élevé</span>
+                                    </td>
+                                    <td class="p-2 font-mono">10.0.0.25</td>
+                                    <td class="p-2">Brute Force</td>
+                                    <td class="p-2">15 tentatives connexion</td>
+                                    <td class="p-2">
+                                        <button onclick="viewLogDetails(2)" class="p-1 hover:bg-white/20 rounded">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="space-y-6">
+                <!-- Blocked IPs -->
+                <div class="glassmorphism rounded-xl p-6 text-white">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                        <i class="fas fa-ban mr-2"></i>
+                        IPs Bloquées
+                    </h3>
+                    <div class="space-y-3 max-h-48 overflow-y-auto">
+                        <div class="bg-white/10 rounded-lg p-3 flex justify-between items-center">
+                            <div>
+                                <p class="font-mono text-sm">192.168.1.100</p>
+                                <p class="text-xs opacity-80">Injection SQL</p>
+                                <p class="text-xs opacity-60">Il y a 5 min</p>
+                            </div>
+                            <button onclick="unblockIP('192.168.1.100')" class="px-2 py-1 bg-green-500 hover:bg-green-600 rounded text-xs">
+                                Débloquer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Attack Patterns -->
+                <div class="glassmorphism rounded-xl p-6 text-white">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                        <i class="fas fa-search mr-2"></i>
+                        Patterns d'Attaque
+                    </h3>
+                    <div class="h-48">
+                        <canvas id="attackPatternsChart"></canvas>
+                    </div>
+                    <div class="mt-4 space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="opacity-80">Injection SQL</span>
+                            <span class="font-semibold text-red-300">15</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="opacity-80">Brute Force</span>
+                            <span class="font-semibold text-orange-300">8</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="opacity-80">XSS</span>
+                            <span class="font-semibold text-yellow-300">3</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System Health -->
+                <div class="glassmorphism rounded-xl p-6 text-white">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                        <i class="fas fa-heartbeat mr-2"></i>
+                        Santé Sécurité
+                    </h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm">Firewall</span>
+                            <div class="flex items-center space-x-2">
+                                <div class="w-2 h-2 bg-green-400 rounded-full"></div>
+                                <span class="text-sm font-semibold">Actif</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm">IDS/IPS</span>
+                            <div class="flex items-center space-x-2">
+                                <div class="w-2 h-2 bg-green-400 rounded-full"></div>
+                                <span class="text-sm font-semibold">Opérationnel</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm">SSL/TLS</span>
+                            <div class="flex items-center space-x-2">
+                                <div class="w-2 h-2 bg-green-400 rounded-full"></div>
+                                <span class="text-sm font-semibold">Sécurisé</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="glassmorphism rounded-xl p-6 text-white">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                        <i class="fas fa-bolt mr-2"></i>
+                        Actions Rapides
+                    </h3>
+                    <div class="space-y-2">
+                        <button onclick="emergencyLockdown()" class="w-full text-left p-3 hover:bg-white/10 rounded-lg flex items-center text-red-300">
+                            <i class="fas fa-lock mr-3"></i>Verrouillage d'urgence
+                        </button>
+                        <button onclick="generateReport()" class="w-full text-left p-3 hover:bg-white/10 rounded-lg flex items-center">
+                            <i class="fas fa-file-alt mr-3"></i>Rapport sécurité
+                        </button>
+                        <button onclick="updateRules()" class="w-full text-left p-3 hover:bg-white/10 rounded-lg flex items-center">
+                            <i class="fas fa-shield-alt mr-3"></i>Mettre à jour règles
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let threatChart, attackChart;
+        let alertsPaused = false;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCharts();
+            startRealTimeUpdates();
+        });
+
+        function initializeCharts() {
+            // Threat Timeline Chart
+            const threatCtx = document.getElementById('threatTimelineChart').getContext('2d');
+            threatChart = new Chart(threatCtx, {
+                type: 'line',
+                data: {
+                    labels: generateHourLabels(24),
+                    datasets: [{
+                        label: 'Menaces Critiques',
+                        data: [0, 1, 0, 2, 1, 0, 3, 1, 0, 0, 2, 1, 0, 1, 0, 0, 1, 2, 0, 1, 0, 0, 1, 0],
+                        borderColor: 'rgb(239, 68, 68)',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        tension: 0.4
+                    }, {
+                        label: 'Menaces Élevées',
+                        data: [1, 2, 1, 3, 2, 1, 4, 2, 1, 1, 3, 2, 1, 2, 1, 1, 2, 3, 1, 2, 1, 1, 2, 1],
+                        borderColor: 'rgb(251, 146, 60)',
+                        backgroundColor: 'rgba(251, 146, 60, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: 'white' } } },
+                    scales: {
+                        y: { 
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255,255,255,0.1)' }
+                        },
+                        x: { 
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255,255,255,0.1)' }
+                        }
+                    }
+                }
+            });
+
+            // Attack Patterns Chart
+            const attackCtx = document.getElementById('attackPatternsChart').getContext('2d');
+            attackChart = new Chart(attackCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Injection SQL', 'Brute Force', 'XSS', 'CSRF'],
+                    datasets: [{
+                        data: [15, 8, 3, 2],
+                        backgroundColor: ['#dc2626', '#ea580c', '#d97706', '#7c2d12']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: 'white', font: { size: 10 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function generateHourLabels(hours) {
+            const labels = [];
+            for (let i = hours - 1; i >= 0; i--) {
+                const date = new Date();
+                date.setHours(date.getHours() - i);
+                labels.push(date.getHours() + 'h');
+            }
+            return labels;
+        }
+
+        function startRealTimeUpdates() {
+            if (!alertsPaused) {
+                setInterval(updateSecurityMetrics, 10000);
+            }
+        }
+
+        function updateSecurityMetrics() {
+            fetch('/api/admin/security/real-time/')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.new_alerts && data.new_alerts.length > 0) {
+                        addNewAlerts(data.new_alerts);
+                    }
+                })
+                .catch(error => console.error('Erreur:', error));
+        }
+
+        function addNewAlerts(alerts) {
+            const container = document.getElementById('real-time-alerts');
+            alerts.forEach(alert => {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `bg-${alert.level}-500/20 border border-${alert.level}-500/50 rounded-lg p-3 flex items-center justify-between`;
+                alertDiv.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <i class="fas fa-exclamation-triangle text-${alert.level}-400"></i>
+                        <div>
+                            <p class="font-medium">${alert.message}</p>
+                            <p class="text-xs opacity-80">IP: ${alert.ip} | ${alert.timestamp}</p>
+                        </div>
+                    </div>
+                    <button onclick="blockIP('${alert.ip}')" class="px-2 py-1 bg-red-600 hover:bg-red-700 rounded text-xs">
+                        Bloquer
+                    </button>
+                `;
+                container.insertBefore(alertDiv, container.firstChild);
+            });
+        }
+
+        function pauseAlerts() {
+            alertsPaused = !alertsPaused;
+            const btn = document.getElementById('pause-btn');
+            if (alertsPaused) {
+                btn.innerHTML = '<i class="fas fa-play mr-1"></i>Reprendre';
+                btn.className = 'px-3 py-1 bg-green-500 hover:bg-green-600 rounded text-sm';
+            } else {
+                btn.innerHTML = '<i class="fas fa-pause mr-1"></i>Pause';
+                btn.className = 'px-3 py-1 bg-yellow-500 hover:bg-yellow-600 rounded text-sm';
+                startRealTimeUpdates();
+            }
+        }
+
+        function clearAlerts() {
+            if (confirm('Effacer toutes les alertes?')) {
+                document.getElementById('real-time-alerts').innerHTML = '<p class="text-center opacity-60">Aucune alerte</p>';
+            }
+        }
+
+        function blockIP(ip) {
+            if (confirm(`Bloquer l'IP ${ip}?`)) {
+                fetch('/api/admin/security/block-ip/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ip_address: ip })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(`IP ${ip} bloquée avec succès`);
+                        location.reload();
+                    }
+                });
+            }
+        }
+
+        function unblockIP(ip) {
+            if (confirm(`Débloquer l'IP ${ip}?`)) {
+                fetch('/api/admin/security/unblock-ip/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ip_address: ip })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(`IP ${ip} débloquée`);
+                        location.reload();
+                    }
+                });
+            }
+        }
+
+        function investigateIP(ip) {
+            window.open(`/admin/security/investigate/${ip}/`, '_blank');
+        }
+
+        function viewLogDetails(logId) {
+            window.open(`/admin/security/logs/${logId}/`, '_blank');
+        }
+
+        function exportLogs() {
+            const filter = document.getElementById('log-filter').value;
+            window.open(`/api/admin/security/logs/export/?filter=${filter}&format=csv`);
+        }
+
+        function emergencyLockdown() {
+            if (confirm('ATTENTION: Verrouillage d\'urgence du système. Continuer?')) {
+                fetch('/api/admin/security/emergency-lockdown/', { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        alert('Verrouillage d\'urgence activé');
+                    });
+            }
+        }
+
+        function generateReport() {
+            window.open('/api/admin/security/generate-report/?format=pdf');
+        }
+
+        function updateRules() {
+            fetch('/api/admin/security/update-rules/', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    alert('Règles de sécurité mises à jour');
+                });
+        }
+    </script>
+</body>
+</html>

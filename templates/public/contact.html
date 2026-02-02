@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+
+{% block title %}Contact - LivraFaso{% endblock %}
+
+{% block page_title %}Contactez-nous{% endblock %}
+
+{% block content %}
+<!-- Contact Section -->
+<section class="section">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card shadow">
+                    <div class="card-body p-5">
+                        <h3 class="mb-4">Envoyez-nous un message</h3>
+                        
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="name" class="form-label">
+                                        <i class="bi bi-person me-2"></i>Nom complet
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="name" 
+                                           name="name" 
+                                           required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="email" class="form-label">
+                                        <i class="bi bi-envelope me-2"></i>Adresse email
+                                    </label>
+                                    <input type="email" 
+                                           class="form-control" 
+                                           id="email" 
+                                           name="email" 
+                                           required>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="subject" class="form-label">
+                                    <i class="bi bi-tag me-2"></i>Sujet
+                                </label>
+                                <select class="form-select" id="subject" name="subject" required>
+                                    <option value="">Choisissez un sujet</option>
+                                    <option value="general">Question générale</option>
+                                    <option value="support">Support technique</option>
+                                    <option value="partnership">Partenariat</option>
+                                    <option value="complaint">Réclamation</option>
+                                    <option value="other">Autre</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="message" class="form-label">
+                                    <i class="bi bi-chat-text me-2"></i>Message
+                                </label>
+                                <textarea class="form-control" 
+                                          id="message" 
+                                          name="message" 
+                                          rows="5" 
+                                          required 
+                                          placeholder="Décrivez votre demande..."></textarea>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="bi bi-send me-2"></i>Envoyer le message
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="card shadow">
+                    <div class="card-body p-4">
+                        <h4 class="mb-4">Informations de contact</h4>
+                        
+                        <div class="mb-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                    <i class="bi bi-geo-alt"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">Adresse</h6>
+                                    <p class="text-muted mb-0">Ouagadougou, Burkina Faso</p>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                    <i class="bi bi-telephone"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">Téléphone</h6>
+                                    <p class="text-muted mb-0">+226 XX XX XX XX</p>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                    <i class="bi bi-envelope"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">Email</h6>
+                                    <p class="text-muted mb-0">contact@livrafaso.bf</p>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                    <i class="bi bi-clock"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">Horaires</h6>
+                                    <p class="text-muted mb-0">Lun-Ven: 8h-18h<br>Sam: 9h-16h</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <h6 class="mb-3">Suivez-nous</h6>
+                        <div class="d-flex gap-2">
+                            <a href="#" class="btn btn-outline-primary">
+                                <i class="bi bi-facebook"></i>
+                            </a>
+                            <a href="#" class="btn btn-outline-primary">
+                                <i class="bi bi-twitter"></i>
+                            </a>
+                            <a href="#" class="btn btn-outline-primary">
+                                <i class="bi bi-instagram"></i>
+                            </a>
+                            <a href="#" class="btn btn-outline-primary">
+                                <i class="bi bi-linkedin"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Map Section -->
+<section class="section bg-light">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <h3 class="text-center mb-4">Notre localisation</h3>
+                <div id="contact-map" class="map-container" data-init="true"></div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block script %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialiser la carte de contact
+    if (typeof L !== 'undefined') {
+        const map = LivraFaso.initMap('contact-map', [12.3714, -1.5197], 15);
+        
+        // Ajouter un marqueur pour notre bureau
+        LivraFaso.addMarker(12.3714, -1.5197, 'LivraFaso - Bureau principal');
+    }
+});
+</script>
+{% endblock %}

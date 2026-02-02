@@ -1,0 +1,424 @@
+{% extends 'base_ultra_modern.html' %}
+{% load static %}
+{% load math_filters %}
+
+{% block title %}Missions Disponibles - LivraFaso{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<section class="bg-gradient-to-br from-primary-50 via-blue-50 to-indigo-50 py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center" data-aos="fade-up">
+            <h1 class="text-3xl lg:text-4xl font-display font-bold text-gray-900 mb-4">
+                Missions Disponibles
+            </h1>
+            <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                Découvrez les missions de livraison disponibles et postulez à celles qui vous intéressent
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- Filters -->
+<section class="py-6 bg-white border-b border-gray-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col lg:flex-row gap-4 items-center justify-between" data-aos="fade-up">
+            <div class="flex flex-wrap gap-3">
+                <select class="filter-select" id="priority-filter">
+                    <option value="">Toutes les priorités</option>
+                    <option value="normale">Normale</option>
+                    <option value="urgente">Urgente</option>
+                    <option value="express">Express</option>
+                </select>
+                
+                <select class="filter-select" id="distance-filter">
+                    <option value="">Toutes les distances</option>
+                    <option value="0-5">0-5 km</option>
+                    <option value="5-10">5-10 km</option>
+                    <option value="10-20">10-20 km</option>
+                    <option value="20+">20+ km</option>
+                </select>
+                
+                <select class="filter-select" id="price-filter">
+                    <option value="">Tous les prix</option>
+                    <option value="0-1000">0-1000 FCFA</option>
+                    <option value="1000-3000">1000-3000 FCFA</option>
+                    <option value="3000-5000">3000-5000 FCFA</option>
+                    <option value="5000+">5000+ FCFA</option>
+                </select>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <span class="text-sm text-gray-500">{{ missions.count }} mission{{ missions.count|pluralize }}</span>
+                <button class="btn-outline btn-sm" onclick="refreshMissions()">
+                    <i data-lucide="refresh-cw" class="w-4 h-4 mr-2"></i>
+                    Actualiser
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Missions List -->
+<section class="py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {% if missions %}
+            <div class="grid gap-6" id="missions-container">
+                {% for mission in missions %}
+                    <div class="mission-card bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300" data-aos="fade-up" data-aos-delay="{{ forloop.counter0|mul:50 }}">
+                        <div class="p-6">
+                            <div class="flex flex-col lg:flex-row gap-6">
+                                <!-- Mission Info -->
+                                <div class="flex-1">
+                                    <div class="flex items-start justify-between mb-4">
+                                        <div>
+                                            <h3 class="text-xl font-semibold text-gray-900 mb-2">{{ mission.title }}</h3>
+                                            
+                                            {% if show_limited_info and mission.id not in user_has_applied %}
+                                                {# Informations limitées pour les livreurs non candidats #}
+                                                <p class="text-gray-600 mb-3">
+                                                    <i data-lucide="info" class="w-4 h-4 inline mr-1"></i>
+                                                    Postulez pour voir les détails complets de cette mission
+                                                </p>
+                                                
+                                                <div class="flex items-center gap-4 text-sm text-gray-500 mb-4">
+                                                    <span class="flex items-center">
+                                                        <i data-lucide="calendar" class="w-4 h-4 mr-1"></i>
+                                                        {{ mission.created_at|date:"d/m/Y" }}
+                                                    </span>
+                                                    <span class="flex items-center">
+                                                        <i data-lucide="map-pin" class="w-4 h-4 mr-1"></i>
+                                                        Zone générale
+                                                    </span>
+                                                    <span class="priority-badge priority-{{ mission.priority }}">
+                                                        {{ mission.get_priority_display }}
+                                                    </span>
+                                                </div>
+                                                
+                                                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                                                    <p class="text-sm text-yellow-800">
+                                                        <i data-lucide="lock" class="w-4 h-4 inline mr-1"></i>
+                                                        Les adresses complètes et les informations détaillées seront visibles après votre candidature et sélection.
+                                                    </p>
+                                                </div>
+                                            {% else %}
+                                                {# Informations complètes pour les candidats ou si show_limited_info est False #}
+                                                <p class="text-gray-600 mb-3">{{ mission.description|truncatechars:120 }}</p>
+                                                
+                                                <div class="flex items-center gap-4 text-sm text-gray-500 mb-4">
+                                                    <span class="flex items-center">
+                                                        <i data-lucide="calendar" class="w-4 h-4 mr-1"></i>
+                                                        {{ mission.created_at|date:"d/m/Y" }}
+                                                    </span>
+                                                    {% if not show_limited_info %}
+                                                    <span class="flex items-center">
+                                                        <i data-lucide="user" class="w-4 h-4 mr-1"></i>
+                                                        {{ mission.client.get_full_name|default:mission.client.username }}
+                                                    </span>
+                                                    {% endif %}
+                                                    <span class="priority-badge priority-{{ mission.priority }}">
+                                                        {{ mission.get_priority_display }}
+                                                    </span>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <div class="text-right">
+                                            <div class="text-2xl font-bold text-primary-600 mb-1">
+                                                {{ mission.price|floatformat:0 }} FCFA
+                                            </div>
+                                            <div class="text-sm text-gray-500">Prix de la mission</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Addresses -->
+                                    {% if show_limited_info and mission.id not in user_has_applied %}
+                                        {# Masquer les adresses complètes pour les livreurs non candidats #}
+                                        <div class="grid md:grid-cols-2 gap-4 mb-4">
+                                            <div class="flex items-start gap-3">
+                                                <div class="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                                                    <i data-lucide="package" class="w-4 h-4 text-primary-600"></i>
+                                                </div>
+                                                <div class="min-w-0">
+                                                    <p class="text-sm font-medium text-gray-700">Zone de collecte</p>
+                                                    <p class="text-sm text-gray-500">
+                                                        <i data-lucide="lock" class="w-3 h-3 inline"></i>
+                                                        Adresse masquée
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="flex items-start gap-3">
+                                                <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                                                    <i data-lucide="map-pin" class="w-4 h-4 text-green-600"></i>
+                                                </div>
+                                                <div class="min-w-0">
+                                                    <p class="text-sm font-medium text-gray-700">Zone de livraison</p>
+                                                    <p class="text-sm text-gray-500">
+                                                        <i data-lucide="lock" class="w-3 h-3 inline"></i>
+                                                        Adresse masquée
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        {# Afficher les adresses pour les candidats ou si show_limited_info est False #}
+                                        <div class="grid md:grid-cols-2 gap-4 mb-4">
+                                            <div class="flex items-start gap-3">
+                                                <div class="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                                                    <i data-lucide="package" class="w-4 h-4 text-primary-600"></i>
+                                                </div>
+                                                <div class="min-w-0">
+                                                    <p class="text-sm font-medium text-gray-700">Collecte</p>
+                                                    <p class="text-sm text-gray-500 truncate">{{ mission.pickup_address|truncatechars:50 }}</p>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="flex items-start gap-3">
+                                                <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                                                    <i data-lucide="map-pin" class="w-4 h-4 text-green-600"></i>
+                                                </div>
+                                                <div class="min-w-0">
+                                                    <p class="text-sm font-medium text-gray-700">Livraison</p>
+                                                    <p class="text-sm text-gray-500 truncate">{{ mission.delivery_address|truncatechars:50 }}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+
+                                    <!-- Mission Stats -->
+                                    <div class="flex items-center gap-6 text-sm text-gray-500 mb-4">
+                                        <span class="flex items-center">
+                                            <i data-lucide="route" class="w-4 h-4 mr-1"></i>
+                                            ~{{ mission.estimated_distance|default:"--" }} km
+                                        </span>
+                                        <span class="flex items-center">
+                                            <i data-lucide="clock" class="w-4 h-4 mr-1"></i>
+                                            ~{{ mission.estimated_duration|default:"--" }} min
+                                        </span>
+                                        <span class="flex items-center">
+                                            <i data-lucide="users" class="w-4 h-4 mr-1"></i>
+                                            {{ mission.candidats.count }} candidat{{ mission.candidats.count|pluralize }}
+                                        </span>
+                                    </div>
+
+                                    <!-- Actions -->
+                                    <div class="flex items-center justify-between">
+                                        {% if show_limited_info and mission.id not in user_has_applied %}
+                                            {# Pour les livreurs non candidats : pas de lien vers les détails #}
+                                            <span class="text-sm text-gray-500">
+                                                <i data-lucide="info" class="w-4 h-4 inline mr-1"></i>
+                                                Postulez pour voir les détails
+                                            </span>
+                                        {% else %}
+                                            <a href="{% url 'missions:detail' mission.id %}" class="btn-outline">
+                                                <i data-lucide="eye" class="w-4 h-4 mr-2"></i>
+                                                Voir détails
+                                            </a>
+                                        {% endif %}
+                                        
+                                        {% if mission.id in user_has_applied %}
+                                            <span class="btn-success cursor-not-allowed">
+                                                <i data-lucide="check" class="w-4 h-4 mr-2"></i>
+                                                Candidature envoyée
+                                            </span>
+                                        {% else %}
+                                            <form method="post" action="{% url 'missions:postuler' mission.id %}" class="inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn-primary">
+                                                    <i data-lucide="hand" class="w-4 h-4 mr-2"></i>
+                                                    Postuler
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Load More Button -->
+            <div class="text-center mt-8" data-aos="fade-up">
+                <button class="btn-outline" onclick="loadMoreMissions()">
+                    <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
+                    Charger plus de missions
+                </button>
+            </div>
+
+        {% else %}
+            <!-- Empty State -->
+            <div class="text-center py-12" data-aos="fade-up">
+                <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i data-lucide="search" class="w-12 h-12 text-gray-400"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">Aucune mission disponible</h3>
+                <p class="text-gray-600 mb-6 max-w-md mx-auto">
+                    Il n'y a actuellement aucune mission disponible qui correspond à vos critères. 
+                    Revenez plus tard ou ajustez vos filtres.
+                </p>
+                <button class="btn-primary" onclick="refreshMissions()">
+                    <i data-lucide="refresh-cw" class="w-4 h-4 mr-2"></i>
+                    Actualiser la liste
+                </button>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Quick Stats -->
+<section class="py-8 bg-gradient-to-r from-primary-50 to-blue-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6" data-aos="fade-up">
+            <div class="text-center">
+                <div class="text-2xl font-bold text-primary-600 mb-1">{{ missions.count }}</div>
+                <div class="text-sm text-gray-600">Missions disponibles</div>
+            </div>
+            <div class="text-center">
+                <div class="text-2xl font-bold text-primary-600 mb-1">
+                    {% if missions %}{{ missions|length|mul:15|div:missions|length|floatformat:0 }}{% else %}0{% endif %}
+                </div>
+                <div class="text-sm text-gray-600">Distance moyenne (km)</div>
+            </div>
+            <div class="text-center">
+                <div class="text-2xl font-bold text-primary-600 mb-1">
+                    {% if missions %}{{ missions.0.price|default:0|floatformat:0 }}{% else %}0{% endif %}
+                </div>
+                <div class="text-sm text-gray-600">Prix moyen (FCFA)</div>
+            </div>
+            <div class="text-center">
+                <div class="text-2xl font-bold text-primary-600 mb-1">98%</div>
+                <div class="text-sm text-gray-600">Taux de satisfaction</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Filter functionality
+    const filters = {
+        priority: document.getElementById('priority-filter'),
+        distance: document.getElementById('distance-filter'),
+        price: document.getElementById('price-filter')
+    };
+
+    Object.values(filters).forEach(filter => {
+        filter.addEventListener('change', applyFilters);
+    });
+
+    function applyFilters() {
+        const missions = document.querySelectorAll('.mission-card');
+        
+        missions.forEach(mission => {
+            let show = true;
+            
+            // Apply priority filter
+            const priorityFilter = filters.priority.value;
+            if (priorityFilter) {
+                const missionPriority = mission.querySelector('.priority-badge').textContent.toLowerCase().trim();
+                if (!missionPriority.includes(priorityFilter)) {
+                    show = false;
+                }
+            }
+
+            // Apply price filter
+            const priceFilter = filters.price.value;
+            if (priceFilter && show) {
+                const priceText = mission.querySelector('.text-2xl.font-bold.text-primary-600').textContent;
+                const price = parseInt(priceText.replace(/[^\d]/g, ''));
+                
+                switch(priceFilter) {
+                    case '0-1000':
+                        show = price <= 1000;
+                        break;
+                    case '1000-3000':
+                        show = price > 1000 && price <= 3000;
+                        break;
+                    case '3000-5000':
+                        show = price > 3000 && price <= 5000;
+                        break;
+                    case '5000+':
+                        show = price > 5000;
+                        break;
+                }
+            }
+
+            mission.style.display = show ? 'block' : 'none';
+        });
+
+        // Update count
+        const visibleMissions = document.querySelectorAll('.mission-card[style="display: block"], .mission-card:not([style*="display: none"])').length;
+        const countElement = document.querySelector('.text-sm.text-gray-500');
+        if (countElement) {
+            countElement.textContent = `${visibleMissions} mission${visibleMissions !== 1 ? 's' : ''}`;
+        }
+    }
+});
+
+function refreshMissions() {
+    // Show loading state
+    const refreshBtn = document.querySelector('button[onclick="refreshMissions()"]');
+    const originalContent = refreshBtn.innerHTML;
+    refreshBtn.innerHTML = '<i data-lucide="loader" class="w-4 h-4 mr-2 animate-spin"></i>Actualisation...';
+    refreshBtn.disabled = true;
+    
+    // Simulate refresh (in real app, this would reload the page or fetch new data)
+    setTimeout(() => {
+        location.reload();
+    }, 1000);
+}
+
+function loadMoreMissions() {
+    // This would typically load more missions via AJAX
+    const loadMoreBtn = document.querySelector('button[onclick="loadMoreMissions()"]');
+    loadMoreBtn.innerHTML = '<i data-lucide="loader" class="w-4 h-4 mr-2 animate-spin"></i>Chargement...';
+    loadMoreBtn.disabled = true;
+    
+    // Simulate loading
+    setTimeout(() => {
+        loadMoreBtn.innerHTML = '<i data-lucide="plus" class="w-4 h-4 mr-2"></i>Charger plus de missions';
+        loadMoreBtn.disabled = false;
+    }, 2000);
+}
+
+// Auto-refresh every 30 seconds
+setInterval(() => {
+    const indicator = document.createElement('div');
+    indicator.className = 'fixed top-20 right-4 bg-primary-100 text-primary-700 px-3 py-1 rounded-full text-sm z-40';
+    indicator.innerHTML = '<i data-lucide="refresh-cw" class="w-3 h-3 inline mr-1"></i>Mise à jour...';
+    document.body.appendChild(indicator);
+    
+    setTimeout(() => {
+        indicator.remove();
+    }, 2000);
+}, 30000);
+</script>
+
+<style>
+.filter-select {
+    @apply px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white;
+}
+
+.priority-badge {
+    @apply px-2 py-1 rounded-full text-xs font-medium;
+}
+
+.priority-normale {
+    @apply bg-gray-100 text-gray-700;
+}
+
+.priority-urgente {
+    @apply bg-yellow-100 text-yellow-700;
+}
+
+.priority-express {
+    @apply bg-red-100 text-red-700;
+}
+
+.mission-card:hover {
+    transform: translateY(-2px);
+}
+</style>
+{% endblock %}

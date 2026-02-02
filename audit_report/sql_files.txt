@@ -1,0 +1,8 @@
+C:\Users\hp\Documents\Livraison_Faso\clean_and_migrate_rbac.sql
+C:\Users\hp\Documents\Livraison_Faso\clean_rbac_complete.sql
+C:\Users\hp\Documents\Livraison_Faso\db.sqlite3
+C:\Users\hp\Documents\Livraison_Faso\fix_package_type.sql
+C:\Users\hp\Documents\Livraison_Faso\force_add_columns.sql
+C:\Users\hp\Documents\Livraison_Faso\force_fix_duration.sql
+C:\Users\hp\Documents\Livraison_Faso\PG_Local_creation.sql
+C:\Users\hp\Documents\Livraison_Faso\reset_rbac_manual.sql

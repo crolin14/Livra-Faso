@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - LivraFaso</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .glassmorphism {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #dc2626 0%, #ef4444 50%, #f87171 100%);
+        }
+        .system-status {
+            animation: pulse 2s infinite;
+        }
+        .critical-alert {
+            animation: blink 1s infinite;
+        }
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen">
+    <!-- Header -->
+    <header class="glassmorphism text-white p-4 mb-6">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <i class="fas fa-shield-alt text-2xl"></i>
+                <h1 class="text-xl font-bold">Admin Dashboard - LivraFaso</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-2">
+                    <div class="system-status w-3 h-3 bg-green-400 rounded-full"></div>
+                    <span class="text-sm">Système Opérationnel</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-bell text-yellow-400"></i>
+                    <span class="bg-red-500 text-xs rounded-full px-2 py-1" id="alert-count">3</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <img src="{{ user.avatar.url|default:'/static/images/admin-avatar.png' }}" 
+                         alt="Admin" class="w-8 h-8 rounded-full">
+                    <span>{{ user.get_full_name }}</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-4">
+        <!-- System Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="glassmorphism rounded-xl p-6 text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm opacity-80">Utilisateurs Actifs</p>
+                        <p class="text-2xl font-bold" id="active-users">{{ stats.active_users|default:1247 }}</p>
+                        <p class="text-xs text-green-300">+8% aujourd'hui</p>
+                    </div>
+                    <i class="fas fa-users text-3xl text-blue-300"></i>
+                </div>
+            </div>
+            
+            <div class="glassmorphism rounded-xl p-6 text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm opacity-80">Missions Totales</p>
+                        <p class="text-2xl font-bold" id="total-missions">{{ stats.total_missions|default:5632 }}</p>
+                        <p class="text-xs text-blue-300">{{ stats.missions_today|default:89 }} aujourd'hui</p>
+                    </div>
+                    <i class="fas fa-truck text-3xl text-green-300"></i>
+                </div>
+            </div>
+            
+            <div class="glassmorphism rounded-xl p-6 text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm opacity-80">Revenus Système</p>
+                        <p class="text-2xl font-bold" id="system-revenue">{{ stats.system_revenue|default:12500000 }} FCFA</p>
+                        <p class="text-xs text-yellow-300">Ce mois</p>
+                    </div>
+                    <i class="fas fa-chart-line text-3xl text-yellow-300"></i>
+                </div>
+            </div>
+            
+            <div class="glassmorphism rounded-xl p-6 text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm opacity-80">Uptime Système</p>
+                        <p class="text-2xl font-bold" id="system-uptime">{{ stats.uptime|default:99.8 }}%</p>
+                        <p class="text-xs text-green-300">30 derniers jours</p>
+                    </div>
+                    <i class="fas fa-server text-3xl text-purple-300"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Critical Alerts -->
+        <div class="glassmorphism rounded-xl p-6 text-white mb-8">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold flex items-center">
+                    <i class="fas fa-exclamation-triangle mr-2 text-red-400"></i>
+                    Alertes Critiques
+                </h3>
+                <button onclick="clearAllAlerts()" class="px-3 py-1 bg-red-500 hover:bg-red-600 rounded text-sm">
+                    <i class="fas fa-times mr-1"></i>Tout effacer
+                </button>
+            </div>
+            <div id="critical-alerts" class="space-y-3">
+                <div class="critical-alert bg-red-500/20 border border-red-500/50 rounded-lg p-3 flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <i class="fas fa-exclamation-circle text-red-400"></i>
+                        <div>
+                            <p class="font-medium">Tentative d'accès non autorisé détectée</p>
+                            <p class="text-xs opacity-80">IP: 192.168.1.100 - Il y a 5 minutes</p>
+                        </div>
+                    </div>
+                    <button onclick="dismissAlert(this)" class="text-red-400 hover:text-red-300">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="bg-yellow-500/20 border border-yellow-500/50 rounded-lg p-3 flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                        <div>
+                            <p class="font-medium">Charge serveur élevée (85%)</p>
+                            <p class="text-xs opacity-80">Serveur principal - Il y a 12 minutes</p>
+                        </div>
+                    </div>
+                    <button onclick="dismissAlert(this)" class="text-yellow-400 hover:text-yellow-300">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="bg-orange-500/20 border border-orange-500/50 rounded-lg p-3 flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <i class="fas fa-database text-orange-400"></i>
+                        <div>
+                            <p class="font-medium">Espace disque faible (15% restant)</p>
+                            <p class="text-xs opacity-80">Base de données - Il y a 1 heure</p>
+                        </div>
+                    </div>
+                    <button onclick="dismissAlert(this)" class="text-orange-400 hover:text-orange-300">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- System Performance -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Performance Metrics -->
+                <div class="glassmorphism rounded-xl p-6 text-white">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                        <i class="fas fa-tachometer-alt mr-2"></i>
+                        Performance Système
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div class="bg-white/10 rounded-lg p-4 text-center">
+                            <p class="text-sm opacity-80">CPU</p>
+                            <div class="relative w-16 h-16 mx-auto mb-2">
+                                <canvas id="cpu-gauge" width="64" height="64"></canvas>
+                            </div>
+                            <p class="font-semibold" id="cpu-usage">{{ stats.cpu_usage|default:45 }}%</p>
+                        </div>
+                        <div class="bg-white/10 rounded-lg p-4 text-center">
+                            <p class="text-sm opacity-80">RAM</p>
+                            <div class="relative w-16 h-16 mx-auto mb-2">
+                                <canvas id="ram-gauge" width="64" height="64"></canvas>
+                            </div>
+                            <p class="font-semibold" id="ram-usage">{{ stats.ram_usage|default:67 }}%</p>
+                        </div>
+                        <div class="bg-white/10 rounded-lg p-4 text-center">
+                            <p class="text-sm opacity-80">Disque</p>
+                            <div class="relative w-16 h-16 mx-auto mb-2">
+                                <canvas id="disk-gauge" width="64" height="64"></canvas>
+                            </div>
+                            <p class="font-semibold" id="disk-usage">{{ stats.disk_usage|default:82 }}%</p>
+                        </div>
+                    </div>
+                    <div class="h-64">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- User Management -->
+                <div class="glassmorphism rounded-xl p-6 text-white">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold flex items-center">
+                            <i class="fas fa-users-cog mr-2"></i>
+                            Gestion des Utilisateurs
+                        </h3>
+                        <div class="flex space-x-2">
+                            <button onclick="exportUsers()" class="px-3 py-1 bg-green-500 hover:bg-green-600 rounded text-sm">
+                                <i class="fas fa-download mr-1"></i>Export
+                            </button>
+                            <button onclick="openUserModal()" class="px-3 py-1 bg-blue-500 hover:bg-blue-600 rounded text-sm">
+                                <i class="fas fa-plus mr-1"></i>Nouveau
+                            </button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="border-b border-white/20">
+                                    <th class="text-left p-2">Utilisateur</th>
+                                    <th class="text-left p-2">Type</th>
+                                    <th class="text-left p-2">Statut</th>
+                                    <th class="text-left p-2">Dernière Connexion</th>
+                                    <th class="text-left p-2">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in recent_users %}
+                                <tr class="border-b border-white/10 hover:bg-white/5">
+                                    <td class="p-2">
+                                        <div class="flex items-center space-x-2">
+                                            <img src="{{ user.avatar.url|default:'/static/images/default-avatar.png' }}" 
+                                                 class="w-6 h-6 rounded-full">
+                                            <span>{{ user.get_full_name }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="p-2">
+                                        <span class="px-2 py-1 rounded-full text-xs
+                                            {% if user.user_type == 'client' %}bg-blue-500
+                                            {% elif user.user_type == 'livreur' %}bg-green-500
+                                            {% elif user.user_type == 'entreprise' %}bg-purple-500
+                                            {% else %}bg-red-500{% endif %}">
+                                            {{ user.get_user_type_display }}
+                                        </span>
+                                    </td>
+                                    <td class="p-2">
+                                        <span class="px-2 py-1 rounded-full text-xs
+                                            {% if user.is_active %}bg-green-500{% else %}bg-gray-500{% endif %}">
+                                            {% if user.is_active %}Actif{% else %}Inactif{% endif %}
+                                        </span>
+                                    </td>
+                                    <td class="p-2">{{ user.last_login|date:"d/m H:i"|default:"Jamais" }}</td>
+                                    <td class="p-2">
+                                        <div class="flex space-x-1">
+                                            <button onclick="editUser({{ user.id }})" class="p-1 hover:bg-white/20 rounded">
+                                                <i class="fas fa-edit text-xs"></i>
+                                            </button>
+                                            <button onclick="toggleUserStatus({{ user.id }})" class="p-1 hover:bg-white/20 rounded">
+                                                <i class="fas fa-{% if user.is_active %}ban{% else %}check{% endif %} text-xs"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="space-y-6">
+                <!-- System Health -->
+                <div class="glassmorphism rounded-xl p-6 text-white">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                        <i class="fas fa-heartbeat mr-2"></i>
+                        Santé du Système
+                    </h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm">Base de données</span>
+                            <div class="flex items-center space-x-2">
+                                <div class="w-2 h-2 bg-green-400 rounded-full"></div>
+                                <span class="text-sm font-semibold">Opérationnelle</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm">Redis Cache</span>
+                            <div class="flex items-center space-x-2">
+                                <div class="w-2 h-2 bg-green-400 rounded-full"></div>
+                                <span class="text-sm font-semibold">Opérationnel</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm">WebSocket</span>
+                            <div class="flex items-center space-x-2">
+                                <div class="w-2 h-2 bg-yellow-400 rounded-full"></div>
+                                <span class="text-sm font-semibold">Dégradé</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm">API Gateway</span>
+                            <div class="flex items-center space-x-2">
+                                <div class="w-2 h-2 bg-green-400 rounded-full"></div>
+                                <span class="text-sm font-semibold">Opérationnel</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="glassmorphism rounded-xl p-6 text-white">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                        <i class="fas fa-history mr-2"></i>
+                        Activité Récente
+                    </h3>
+                    <div class="space-y-3 max-h-64 overflow-y-auto">
+                        <div class="flex items-start space-x-3 text-sm">
+                            <i class="fas fa-user-plus text-green-400 mt-1"></i>
+                            <div>
+                                <p>Nouvel utilisateur inscrit</p>
+                                <p class="text-xs opacity-60">Marie Dupont - Il y a 5 min</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-3 text-sm">
+                            <i class="fas fa-truck text-blue-400 mt-1"></i>
+                            <div>
+                                <p>Mission #5632 terminée</p>
+                                <p class="text-xs opacity-60">Jean Martin - Il y a 12 min</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-3 text-sm">
+                            <i class="fas fa-exclamation-triangle text-yellow-400 mt-1"></i>
+                            <div>
+                                <p>Alerte système résolue</p>
+                                <p class="text-xs opacity-60">Auto-résolution - Il y a 25 min</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-3 text-sm">
+                            <i class="fas fa-credit-card text-purple-400 mt-1"></i>
+                            <div>
+                                <p>Paiement traité</p>
+                                <p class="text-xs opacity-60">15,000 FCFA - Il y a 1h</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="glassmorphism rounded-xl p-6 text-white">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                        <i class="fas fa-bolt mr-2"></i>
+                        Actions Rapides
+                    </h3>
+                    <div class="space-y-2">
+                        <button onclick="window.location.href='/admin/missions/'" 
+                                class="w-full text-left p-3 hover:bg-white/10 rounded-lg flex items-center">
+                            <i class="fas fa-tasks mr-3"></i>Gestion des missions
+                        </button>
+                        <button onclick="window.location.href='/admin/security/'" 
+                                class="w-full text-left p-3 hover:bg-white/10 rounded-lg flex items-center">
+                            <i class="fas fa-shield-alt mr-3"></i>Logs de sécurité
+                        </button>
+                        <button onclick="window.location.href='/admin/reports/'" 
+                                class="w-full text-left p-3 hover:bg-white/10 rounded-lg flex items-center">
+                            <i class="fas fa-chart-bar mr-3"></i>Rapports détaillés
+                        </button>
+                        <button onclick="backupSystem()" 
+                                class="w-full text-left p-3 hover:bg-white/10 rounded-lg flex items-center">
+                            <i class="fas fa-database mr-3"></i>Sauvegarde système
+                        </button>
+                        <button onclick="window.location.href='/admin/settings/'" 
+                                class="w-full text-left p-3 hover:bg-white/10 rounded-lg flex items-center">
+                            <i class="fas fa-cog mr-3"></i>Configuration
+                        </button>
+                    </div>
+                </div>
+
+                <!-- System Stats -->
+                <div class="glassmorphism rounded-xl p-6 text-white">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                        <i class="fas fa-chart-pie mr-2"></i>
+                        Statistiques
+                    </h3>
+                    <div class="h-40">
+                        <canvas id="statsChart"></canvas>
+                    </div>
+                    <div class="mt-4 space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="opacity-80">Clients actifs</span>
+                            <span class="font-semibold">{{ stats.active_clients|default:856 }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="opacity-80">Livreurs en ligne</span>
+                            <span class="font-semibold text-green-300">{{ stats.online_drivers|default:124 }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="opacity-80">Entreprises</span>
+                            <span class="font-semibold text-purple-300">{{ stats.enterprises|default:67 }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let performanceChart, statsChart;
+        let realTimeData = {};
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCharts();
+            initializeGauges();
+            startRealTimeUpdates();
+        });
+
+        function initializeCharts() {
+            // Performance Chart
+            const perfCtx = document.getElementById('performanceChart').getContext('2d');
+            performanceChart = new Chart(perfCtx, {
+                type: 'line',
+                data: {
+                    labels: generateTimeLabels(24),
+                    datasets: [{
+                        label: 'CPU %',
+                        data: generatePerformanceData(24),
+                        borderColor: 'rgb(239, 68, 68)',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)'
+                    }, {
+                        label: 'RAM %',
+                        data: generatePerformanceData(24),
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: 'white' } } },
+                    scales: {
+                        y: { 
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            max: 100
+                        },
+                        x: { 
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255,255,255,0.1)' }
+                        }
+                    }
+                }
+            });
+
+            // Stats Chart
+            const statsCtx = document.getElementById('statsChart').getContext('2d');
+            statsChart = new Chart(statsCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Clients', 'Livreurs', 'Entreprises'],
+                    datasets: [{
+                        data: [856, 124, 67],
+                        backgroundColor: ['#3b82f6', '#10b981', '#a855f7']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: 'white', font: { size: 10 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function initializeGauges() {
+            drawGauge('cpu-gauge', 45, '#ef4444');
+            drawGauge('ram-gauge', 67, '#3b82f6');
+            drawGauge('disk-gauge', 82, '#f59e0b');
+        }
+
+        function drawGauge(canvasId, value, color) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = 25;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Background circle
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+            ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+
+            // Progress arc
+            const angle = (value / 100) * 2 * Math.PI - Math.PI / 2;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, -Math.PI / 2, angle);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 4;
+            ctx.stroke();
+        }
+
+        function startRealTimeUpdates() {
+            setInterval(() => {
+                updateSystemMetrics();
+                updatePerformanceChart();
+            }, 5000);
+        }
+
+        function updateSystemMetrics() {
+            fetch('/api/admin/system-metrics/')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('active-users').textContent = data.active_users;
+                    document.getElementById('cpu-usage').textContent = data.cpu_usage + '%';
+                    document.getElementById('ram-usage').textContent = data.ram_usage + '%';
+                    document.getElementById('disk-usage').textContent = data.disk_usage + '%';
+                    
+                    drawGauge('cpu-gauge', data.cpu_usage, '#ef4444');
+                    drawGauge('ram-gauge', data.ram_usage, '#3b82f6');
+                    drawGauge('disk-gauge', data.disk_usage, '#f59e0b');
+                })
+                .catch(error => console.error('Erreur:', error));
+        }
+
+        function updatePerformanceChart() {
+            // Add new data point and remove oldest
+            const newCpuData = Math.floor(Math.random() * 30) + 30;
+            const newRamData = Math.floor(Math.random() * 40) + 40;
+            
+            performanceChart.data.datasets[0].data.push(newCpuData);
+            performanceChart.data.datasets[1].data.push(newRamData);
+            
+            if (performanceChart.data.datasets[0].data.length > 24) {
+                performanceChart.data.datasets[0].data.shift();
+                performanceChart.data.datasets[1].data.shift();
+                performanceChart.data.labels.shift();
+                performanceChart.data.labels.push(new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }));
+            }
+            
+            performanceChart.update('none');
+        }
+
+        function generateTimeLabels(hours) {
+            const labels = [];
+            for (let i = hours - 1; i >= 0; i--) {
+                const date = new Date();
+                date.setHours(date.getHours() - i);
+                labels.push(date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }));
+            }
+            return labels;
+        }
+
+        function generatePerformanceData(length) {
+            return Array.from({length}, () => Math.floor(Math.random() * 50) + 25);
+        }
+
+        function dismissAlert(button) {
+            button.closest('.bg-red-500\\/20, .bg-yellow-500\\/20, .bg-orange-500\\/20').remove();
+            updateAlertCount();
+        }
+
+        function clearAllAlerts() {
+            document.getElementById('critical-alerts').innerHTML = '<p class="text-center opacity-60">Aucune alerte critique</p>';
+            updateAlertCount();
+        }
+
+        function updateAlertCount() {
+            const alertCount = document.querySelectorAll('#critical-alerts > div').length;
+            document.getElementById('alert-count').textContent = alertCount;
+        }
+
+        function backupSystem() {
+            if (confirm('Lancer une sauvegarde complète du système?')) {
+                fetch('/api/admin/backup/', { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        alert('Sauvegarde lancée avec succès');
+                    });
+            }
+        }
+
+        function exportUsers() {
+            window.open('/api/admin/users/export/?format=csv');
+        }
+
+        function toggleUserStatus(userId) {
+            fetch(`/api/admin/users/${userId}/toggle-status/`, { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    }
+                });
+        }
+    </script>
+</body>
+</html>

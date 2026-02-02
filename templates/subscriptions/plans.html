@@ -1,0 +1,216 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Plans d'Abonnement - LivraFaso{% endblock %}
+
+{% block content %}
+<!-- Subscriptions Header -->
+<div class="bg-gradient-to-r from-primary-600 via-blue-600 to-purple-600 text-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div class="text-center">
+            <div class="flex items-center justify-center mb-6">
+                <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
+                    <i data-lucide="credit-card" class="w-12 h-12 text-white"></i>
+                </div>
+            </div>
+            <h1 class="text-4xl lg:text-5xl font-display font-bold mb-4">
+                Plans d'Abonnement
+            </h1>
+            <p class="text-xl text-blue-100 max-w-2xl mx-auto">
+                Des solutions adaptées à tous vos besoins de livraison
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Plans Section -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    {% if current_subscription %}
+    <div class="mb-12 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-8 border border-green-200">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <div class="bg-green-500 w-12 h-12 rounded-xl flex items-center justify-center mr-4">
+                    <i data-lucide="check-circle" class="w-6 h-6 text-white"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-green-800 mb-1">Abonnement Actuel</h3>
+                    <p class="text-green-600">{{ current_subscription.plan.name }} - {{ current_subscription.days_remaining }} jours restants</p>
+                </div>
+            </div>
+            <div class="text-right">
+                <p class="text-3xl font-bold text-green-800">{{ current_subscription.plan.price }} FCFA</p>
+                <p class="text-sm text-green-600">Expire le {{ current_subscription.end_date|date:"d/m/Y" }}</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="grid md:grid-cols-3 gap-8 mb-16">
+        {% for plan in plans %}
+        <div class="relative bg-white rounded-2xl shadow-xl overflow-hidden transform hover:scale-105 transition-all duration-300 border border-gray-200 {% if plan.plan_type == 'premium' %}ring-4 ring-primary-500 ring-opacity-50{% endif %}" data-aos="fade-up" data-aos-delay="{{ forloop.counter0|add:100 }}">
+            {% if plan.plan_type == 'premium' %}
+            <div class="absolute top-0 left-0 right-0 bg-gradient-to-r from-primary-500 to-purple-500 text-white text-center py-2 text-sm font-semibold">
+                ⭐ POPULAIRE
+            </div>
+            {% endif %}
+            
+            <div class="p-8 {% if plan.plan_type == 'premium' %}pt-12{% endif %}">
+                <!-- Plan Header -->
+                <div class="text-center mb-8">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-2">{{ plan.name }}</h3>
+                    <div class="flex items-center justify-center mb-4">
+                        <span class="text-4xl font-bold text-gray-900">{{ plan.price|floatformat:0 }}</span>
+                        <span class="text-gray-600 ml-2">FCFA</span>
+                    </div>
+                    <p class="text-sm text-gray-500">{{ plan.duration }} jours</p>
+                </div>
+
+                <!-- Features -->
+                <div class="mb-8">
+                    <ul class="space-y-3">
+                        {% for feature in plan.features|split:"," %}
+                        <li class="flex items-center">
+                            <i data-lucide="check" class="w-5 h-5 text-green-500 mr-3"></i>
+                            <span class="text-gray-700">{{ feature|trim }}</span>
+                        </li>
+                        {% endfor %}
+                        
+                        <li class="flex items-center">
+                            <i data-lucide="check" class="w-5 h-5 text-green-500 mr-3"></i>
+                            <span class="text-gray-700">{{ plan.max_missions_per_month }} missions/mois</span>
+                        </li>
+                        
+                        {% if plan.priority_support %}
+                        <li class="flex items-center">
+                            <i data-lucide="check" class="w-5 h-5 text-green-500 mr-3"></i>
+                            <span class="text-gray-700">Support prioritaire 24h/7j</span>
+                        </li>
+                        {% endif %}
+                        
+                        {% if plan.advanced_analytics %}
+                        <li class="flex items-center">
+                            <i data-lucide="check" class="w-5 h-5 text-green-500 mr-3"></i>
+                            <span class="text-gray-700">Analytics avancées</span>
+                        </li>
+                        {% endif %}
+                        
+                        {% if plan.multi_user_management %}
+                        <li class="flex items-center">
+                            <i data-lucide="check" class="w-5 h-5 text-green-500 mr-3"></i>
+                            <span class="text-gray-700">Gestion multi-utilisateurs</span>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+
+                <!-- CTA Button -->
+                <div class="text-center">
+                    {% if user.is_authenticated %}
+                        {% if current_subscription and current_subscription.plan.id == plan.id %}
+                            <button class="w-full bg-gray-300 text-gray-500 py-3 px-6 rounded-xl font-semibold cursor-not-allowed">
+                                Plan actuel
+                            </button>
+                        {% elif current_subscription %}
+                            <button class="w-full bg-gray-300 text-gray-500 py-3 px-6 rounded-xl font-semibold cursor-not-allowed">
+                                Déjà abonné
+                            </button>
+                        {% else %}
+                            <a href="{% url 'subscriptions:subscribe' plan.id %}" class="btn-primary w-full">
+                                <i data-lucide="credit-card" class="w-5 h-5 mr-2"></i>
+                                Souscrire maintenant
+                            </a>
+                        {% endif %}
+                    {% else %}
+                        <a href="{% url 'users:login' %}?next={% url 'subscriptions:subscribe' plan.id %}" class="btn-primary w-full">
+                            <i data-lucide="log-in" class="w-5 h-5 mr-2"></i>
+                            Se connecter pour souscrire
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- FAQ Section -->
+    <div class="bg-gradient-to-br from-gray-50 to-blue-50 rounded-3xl p-8 lg:p-12">
+        <div class="text-center mb-12">
+            <div class="flex items-center justify-center mb-6">
+                <div class="bg-primary-500 w-12 h-12 rounded-xl flex items-center justify-center">
+                    <i data-lucide="help-circle" class="w-6 h-6 text-white"></i>
+                </div>
+            </div>
+            <h2 class="text-3xl font-bold text-gray-900 mb-4">Questions Fréquentes</h2>
+            <p class="text-gray-600 max-w-2xl mx-auto">
+                Trouvez rapidement les réponses à vos questions sur nos plans d'abonnement
+            </p>
+        </div>
+        
+        <div class="max-w-4xl mx-auto space-y-6">
+            <div class="bg-white rounded-2xl shadow-lg p-8 border border-gray-200 hover:shadow-xl transition-shadow duration-300">
+                <div class="flex items-start">
+                    <div class="bg-primary-100 w-10 h-10 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+                        <i data-lucide="refresh-cw" class="w-5 h-5 text-primary-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Comment changer de plan ?</h3>
+                        <p class="text-gray-600">Vous pouvez changer de plan à tout moment depuis votre tableau de bord. Le nouveau plan prendra effet immédiatement.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-2xl shadow-lg p-8 border border-gray-200 hover:shadow-xl transition-shadow duration-300">
+                <div class="flex items-start">
+                    <div class="bg-red-100 w-10 h-10 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+                        <i data-lucide="x-circle" class="w-5 h-5 text-red-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Puis-je annuler mon abonnement ?</h3>
+                        <p class="text-gray-600">Oui, vous pouvez annuler votre abonnement à tout moment. Vous continuerez à bénéficier des services jusqu'à la fin de la période payée.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-2xl shadow-lg p-8 border border-gray-200 hover:shadow-xl transition-shadow duration-300">
+                <div class="flex items-start">
+                    <div class="bg-green-100 w-10 h-10 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+                        <i data-lucide="credit-card" class="w-5 h-5 text-green-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Quels sont les moyens de paiement acceptés ?</h3>
+                        <p class="text-gray-600">Nous acceptons les cartes bancaires, Orange Money, Moov Money et Wave pour le paiement de vos abonnements.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-2xl shadow-lg p-8 border border-gray-200 hover:shadow-xl transition-shadow duration-300">
+                <div class="flex items-start">
+                    <div class="bg-purple-100 w-10 h-10 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+                        <i data-lucide="gift" class="w-5 h-5 text-purple-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Y a-t-il une période d'essai gratuite ?</h3>
+                        <p class="text-gray-600">Oui, nous offrons une période d'essai gratuite de 7 jours pour tous nos nouveaux utilisateurs entreprise.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Section -->
+    <div class="text-center mt-16">
+        <h3 class="text-2xl font-bold text-gray-900 mb-4">Besoin d'aide ?</h3>
+        <p class="text-gray-600 mb-8">Notre équipe support est là pour vous accompagner</p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="{% url 'support:create_ticket' %}" class="btn-secondary">
+                <i data-lucide="message-circle" class="w-5 h-5 mr-2"></i>
+                Contacter le support
+            </a>
+            <a href="{% url 'public:faq' %}" class="btn-outline">
+                <i data-lucide="book-open" class="w-5 h-5 mr-2"></i>
+                Consulter la FAQ
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

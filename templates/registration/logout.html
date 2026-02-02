@@ -1,0 +1,105 @@
+{% extends 'base_ultra_modern.html' %}
+{% load static %}
+
+{% block title %}Déconnexion - LivraFaso{% endblock %}
+
+{% block content %}
+<section class="min-h-screen bg-gradient-to-br from-primary-50 via-blue-50 to-indigo-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+        <div class="text-center" data-aos="fade-up">
+            <!-- Logo -->
+            <div class="mx-auto h-16 w-16 bg-gradient-to-br from-primary-600 to-blue-600 rounded-2xl flex items-center justify-center mb-8 shadow-lg">
+                <i data-lucide="log-out" class="h-8 w-8 text-white"></i>
+            </div>
+            
+            <h2 class="text-3xl font-display font-bold text-gray-900 mb-2">
+                Déconnexion réussie
+            </h2>
+            <p class="text-gray-600 mb-8">
+                Vous avez été déconnecté avec succès de votre compte LivraFaso.
+            </p>
+        </div>
+
+        <!-- Logout Confirmation Card -->
+        <div class="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 p-8" data-aos="fade-up" data-aos-delay="100">
+            <div class="text-center space-y-6">
+                <!-- Success Icon -->
+                <div class="mx-auto w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
+                    <i data-lucide="check-circle" class="w-10 h-10 text-green-600"></i>
+                </div>
+
+                <div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">
+                        À bientôt !
+                    </h3>
+                    <p class="text-gray-600">
+                        Merci d'avoir utilisé LivraFaso. Votre session a été fermée en toute sécurité.
+                    </p>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="space-y-4">
+                    <a href="{% url 'users:login' %}" 
+                       class="w-full bg-gradient-to-r from-primary-600 to-blue-600 text-white py-3 px-6 rounded-xl font-medium hover:from-primary-700 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
+                        <i data-lucide="log-in" class="w-5 h-5"></i>
+                        Se reconnecter
+                    </a>
+                    
+                    <a href="{% url 'public:home' %}" 
+                       class="w-full bg-white text-gray-700 py-3 px-6 rounded-xl font-medium hover:bg-gray-50 transition-all duration-300 border border-gray-200 hover:border-gray-300 flex items-center justify-center gap-2">
+                        <i data-lucide="home" class="w-5 h-5"></i>
+                        Retour à l'accueil
+                    </a>
+                </div>
+
+                <!-- Security Note -->
+                <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mt-6">
+                    <div class="flex items-start gap-3">
+                        <i data-lucide="shield-check" class="w-5 h-5 text-blue-600 mt-0.5"></i>
+                        <div class="text-left">
+                            <p class="text-sm font-medium text-blue-900 mb-1">
+                                Sécurité
+                            </p>
+                            <p class="text-sm text-blue-700">
+                                Pour votre sécurité, fermez votre navigateur si vous utilisez un ordinateur partagé.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="text-center space-y-4" data-aos="fade-up" data-aos-delay="200">
+            <div class="flex justify-center space-x-6 text-sm">
+                <a href="{% url 'legal:terms' %}" class="text-gray-500 hover:text-primary-600 transition-colors">
+                    Conditions d'utilisation
+                </a>
+                <a href="{% url 'legal:privacy' %}" class="text-gray-500 hover:text-primary-600 transition-colors">
+                    Confidentialité
+                </a>
+                <a href="{% url 'public:contact' %}" class="text-gray-500 hover:text-primary-600 transition-colors">
+                    Support
+                </a>
+            </div>
+            
+            <p class="text-xs text-gray-400">
+                © 2024 LivraFaso. Tous droits réservés.
+            </p>
+        </div>
+    </div>
+</section>
+
+<script>
+    // Auto-redirect after 10 seconds (optional)
+    setTimeout(function() {
+        // Uncomment the line below if you want auto-redirect
+        // window.location.href = "{% url 'public:home' %}";
+    }, 10000);
+    
+    // Initialize Lucide icons
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+</script>
+{% endblock %}

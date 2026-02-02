@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}À propos - LivraFaso{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Hero Section -->
+    <div class="card mb-8">
+        <div class="gradient-header text-center">
+            <h1 class="heading-1 mb-4">
+                Notre <span class="text-yellow-400">Mission</span>
+            </h1>
+            <p class="text-lg opacity-90 max-w-3xl mx-auto">
+                Révolutionner la livraison au Burkina Faso en connectant entreprises et livreurs 
+                à travers une plateforme moderne et sécurisée.
+            </p>
+        </div>
+    </div>
+
+    <!-- Story Section -->
+    <div class="grid lg:grid-cols-2 gap-8 mb-8">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <i data-lucide="book-open" class="w-5 h-5"></i>
+                    Notre Histoire
+                </h2>
+            </div>
+            <div class="card-body">
+                <div class="space-y-4 text-slate-600">
+                    <p>
+                        LivraFaso est née d'un constat simple : les entreprises burkinabè avaient besoin 
+                        d'une solution moderne et fiable pour leurs livraisons, tandis que de nombreux 
+                        jeunes cherchaient des opportunités d'emploi flexibles.
+                    </p>
+                    <p>
+                        Fondée en 2024 à Ouagadougou, notre plateforme utilise les dernières technologies 
+                        pour créer un écosystème de livraison efficace, transparent et accessible à tous.
+                    </p>
+                    <p>
+                        Aujourd'hui, nous connectons des centaines d'entreprises avec des livreurs qualifiés 
+                        dans tout le Burkina Faso, contribuant ainsi au développement économique local.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="gradient-header text-center">
+                <h3 class="heading-3 mb-6">Nos Chiffres</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" data-countup="1250">0</div>
+                        <div class="stat-label">Livraisons réalisées</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" data-countup="150">0</div>
+                        <div class="stat-label">Livreurs partenaires</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" data-countup="300">0</div>
+                        <div class="stat-label">Entreprises clientes</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" data-countup="98">0</div>
+                        <div class="stat-label">% Satisfaction</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Values Section -->
+    <div class="card mb-8">
+        <div class="card-header text-center">
+            <h2 class="card-title">
+                <i data-lucide="heart" class="w-5 h-5"></i>
+                Nos Valeurs
+            </h2>
+            <p class="text-slate-600 mt-2">
+                Les principes qui guident notre action quotidienne
+            </p>
+        </div>
+        <div class="card-body">
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="text-center p-6 bg-slate-50 rounded-lg">
+                    <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="shield-check" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <h3 class="heading-4 mb-3">Fiabilité</h3>
+                    <p class="text-slate-600 text-sm">
+                        Nous garantissons des livraisons sécurisées et ponctuelles grâce à notre réseau 
+                        de livreurs vérifiés et notre technologie de suivi en temps réel.
+                    </p>
+                </div>
+
+                <div class="text-center p-6 bg-slate-50 rounded-lg">
+                    <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="users" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <h3 class="heading-4 mb-3">Communauté</h3>
+                    <p class="text-slate-600 text-sm">
+                        Nous créons des opportunités d'emploi pour les jeunes burkinabè tout en aidant 
+                        les entreprises locales à développer leur activité.
+                    </p>
+                </div>
+
+                <div class="text-center p-6 bg-slate-50 rounded-lg">
+                    <div class="w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="zap" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <h3 class="heading-4 mb-3">Innovation</h3>
+                    <p class="text-slate-600 text-sm">
+                        Nous utilisons les dernières technologies pour offrir une expérience utilisateur 
+                        moderne et intuitive, adaptée au contexte burkinabè.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Team Section -->
+    <div class="card mb-8">
+        <div class="card-header text-center">
+            <h2 class="card-title">
+                <i data-lucide="users" class="w-5 h-5"></i>
+                Notre Équipe
+            </h2>
+            <p class="text-slate-600 mt-2">
+                Des professionnels passionnés au service de votre réussite
+            </p>
+        </div>
+        <div class="card-body">
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="text-center p-6">
+                    <div class="w-24 h-24 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl font-bold text-white">AK</span>
+                    </div>
+                    <h3 class="heading-4 mb-2">Amadou Kaboré</h3>
+                    <p class="text-blue-600 font-medium mb-3">Fondateur & CEO</p>
+                    <p class="text-slate-600 text-sm">
+                        Entrepreneur passionné par l'innovation technologique et le développement économique du Burkina Faso.
+                    </p>
+                </div>
+
+                <div class="text-center p-6">
+                    <div class="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl font-bold text-white">FT</span>
+                    </div>
+                    <h3 class="heading-4 mb-2">Fatou Traoré</h3>
+                    <p class="text-blue-600 font-medium mb-3">Directrice Technique</p>
+                    <p class="text-slate-600 text-sm">
+                        Ingénieure logicielle experte en développement d'applications mobiles et web modernes.
+                    </p>
+                </div>
+
+                <div class="text-center p-6">
+                    <div class="w-24 h-24 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl font-bold text-white">IS</span>
+                    </div>
+                    <h3 class="heading-4 mb-2">Ibrahim Sawadogo</h3>
+                    <p class="text-blue-600 font-medium mb-3">Responsable Opérations</p>
+                    <p class="text-slate-600 text-sm">
+                        Spécialiste en logistique avec plus de 10 ans d'expérience dans la gestion des chaînes d'approvisionnement.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vision Section -->
+    <div class="card mb-8">
+        <div class="gradient-header text-center">
+            <h2 class="heading-2 mb-4">
+                Notre Vision
+            </h2>
+            <p class="text-lg opacity-90 mb-8 max-w-4xl mx-auto">
+                Devenir la plateforme de référence pour la livraison en Afrique de l'Ouest, 
+                en contribuant à la transformation digitale du secteur logistique.
+            </p>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">2025</div>
+                    <div class="stat-label">Expansion régionale</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">5000+</div>
+                    <div class="stat-label">Livreurs partenaires</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">24/7</div>
+                    <div class="stat-label">Service disponible</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact CTA -->
+    <div class="card">
+        <div class="card-body text-center">
+            <h2 class="heading-2 mb-4">
+                Rejoignez l'Aventure
+            </h2>
+            <p class="text-slate-600 mb-8 max-w-2xl mx-auto">
+                Que vous soyez une entreprise à la recherche de solutions de livraison ou 
+                un livreur souhaitant rejoindre notre équipe, nous sommes là pour vous accompagner.
+            </p>
+            
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="{% url 'users:register' %}" class="btn btn-primary">
+                    <i data-lucide="user-plus" class="w-5 h-5 mr-2"></i>
+                    Créer un compte
+                </a>
+                <a href="{% url 'public:contact' %}" class="btn btn-secondary">
+                    <i data-lucide="phone" class="w-5 h-5 mr-2"></i>
+                    Nous contacter
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Counter animation for stats
+    function animateCounters() {
+        const counters = document.querySelectorAll('[data-countup]');
+        counters.forEach(counter => {
+            const target = parseInt(counter.getAttribute('data-countup'));
+            const duration = 2000;
+            const step = target / (duration / 16);
+            let current = 0;
+            
+            const timer = setInterval(() => {
+                current += step;
+                if (current >= target) {
+                    current = target;
+                    clearInterval(timer);
+                }
+                counter.textContent = Math.floor(current) + (target === 98 ? '' : '');
+            }, 16);
+        });
+    }
+
+    // Trigger counter animation when stats section is in view
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                animateCounters();
+                observer.disconnect();
+            }
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const statsSection = document.querySelector('[data-countup]')?.closest('.card');
+        if (statsSection) {
+            observer.observe(statsSection);
+        }
+        lucide.createIcons();
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,123 @@
+{% extends "base_ultra_modern.html" %}
+{% load static %}
+
+{% block title %}Liste des Livreurs - LivraFaso{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <div class="bg-white shadow-xl rounded-2xl overflow-hidden mb-8">
+            <div class="bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-6">
+                <h1 class="text-3xl font-bold text-white">{{ title|default:"Livreurs Partenaires" }}</h1>
+                <p class="text-blue-100">Découvrez nos livreurs disponibles</p>
+            </div>
+        </div>
+
+        <!-- Filtres -->
+        <div class="bg-white shadow-lg rounded-xl p-6 mb-8">
+            <div class="flex flex-wrap gap-4 items-center">
+                <div class="flex items-center space-x-2">
+                    <i data-lucide="filter" class="w-5 h-5 text-gray-400"></i>
+                    <span class="font-medium text-gray-700">Filtres:</span>
+                </div>
+                
+                <button class="px-4 py-2 bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200 transition-colors">
+                    <i data-lucide="users" class="w-4 h-4 inline mr-2"></i>
+                    Tous ({{ livreurs|length }})
+                </button>
+                
+                <button class="px-4 py-2 bg-green-100 text-green-800 rounded-lg hover:bg-green-200 transition-colors">
+                    <i data-lucide="check-circle" class="w-4 h-4 inline mr-2"></i>
+                    Disponibles
+                </button>
+                
+                <button class="px-4 py-2 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 transition-colors">
+                    <i data-lucide="clock" class="w-4 h-4 inline mr-2"></i>
+                    Occupés
+                </button>
+            </div>
+        </div>
+
+        <!-- Liste des livreurs -->
+        {% if livreurs %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for livreur in livreurs %}
+                    <div class="bg-white shadow-lg rounded-xl overflow-hidden hover:shadow-xl transition-shadow">
+                        <!-- Avatar -->
+                        <div class="bg-gradient-to-br from-blue-500 to-purple-600 p-6 text-center">
+                            <div class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <i data-lucide="user" class="w-8 h-8 text-white"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-white">{{ livreur.get_full_name|default:livreur.username }}</h3>
+                            <p class="text-blue-100">Livreur</p>
+                        </div>
+
+                        <!-- Informations -->
+                        <div class="p-6">
+                            <div class="space-y-3">
+                                {% if livreur.livreur_profile %}
+                                    <div class="flex items-center space-x-3">
+                                        <i data-lucide="truck" class="w-4 h-4 text-gray-400"></i>
+                                        <span class="text-sm text-gray-600">{{ livreur.livreur_profile.vehicle_type|capfirst }}</span>
+                                    </div>
+                                    
+                                    <div class="flex items-center space-x-3">
+                                        <i data-lucide="activity" class="w-4 h-4 text-gray-400"></i>
+                                        <span class="text-sm">
+                                            {% if livreur.livreur_profile.is_available %}
+                                                <span class="text-green-600 font-medium">Disponible</span>
+                                            {% else %}
+                                                <span class="text-red-600 font-medium">Occupé</span>
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                {% endif %}
+                                
+                                {% if livreur.phone %}
+                                    <div class="flex items-center space-x-3">
+                                        <i data-lucide="phone" class="w-4 h-4 text-gray-400"></i>
+                                        <span class="text-sm text-gray-600">{{ livreur.phone }}</span>
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="flex items-center space-x-3">
+                                    <i data-lucide="calendar" class="w-4 h-4 text-gray-400"></i>
+                                    <span class="text-sm text-gray-600">Membre depuis {{ livreur.date_joined|date:"M Y" }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="mt-6 pt-4 border-t border-gray-200">
+                                <div class="flex space-x-2">
+                                    <button class="flex-1 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                                        <i data-lucide="message-circle" class="w-4 h-4 inline mr-2"></i>
+                                        Contacter
+                                    </button>
+                                    
+                                    <button class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">
+                                        <i data-lucide="eye" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="bg-white shadow-lg rounded-xl p-12 text-center">
+                <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i data-lucide="users" class="w-8 h-8 text-gray-400"></i>
+                </div>
+                <h3 class="text-xl font-medium text-gray-900 mb-2">Aucun livreur trouvé</h3>
+                <p class="text-gray-500">Il n'y a actuellement aucun livreur disponible.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<script>
+    lucide.createIcons();
+</script>
+{% endblock %}

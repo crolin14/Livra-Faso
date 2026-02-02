@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Historique des Transactions - LivraFaso{% endblock %}
+
+{% block extra_css %}
+<style>
+    .transaction-card {
+        @apply bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-4 hover:shadow-md transition-shadow;
+    }
+    .transaction-header {
+        @apply flex items-center justify-between mb-4;
+    }
+    .transaction-type {
+        @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
+    }
+    .transaction-type.recharge {
+        @apply bg-green-100 text-green-800;
+    }
+    .transaction-type.paiement {
+        @apply bg-blue-100 text-blue-800;
+    }
+    .transaction-type.remboursement {
+        @apply bg-yellow-100 text-yellow-800;
+    }
+    .transaction-type.bonus {
+        @apply bg-purple-100 text-purple-800;
+    }
+    .status-badge {
+        @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium;
+    }
+    .status-badge.reussie {
+        @apply bg-green-100 text-green-800;
+    }
+    .status-badge.en_attente {
+        @apply bg-yellow-100 text-yellow-800;
+    }
+    .status-badge.echouee {
+        @apply bg-red-100 text-red-800;
+    }
+    .status-badge.annulee {
+        @apply bg-gray-100 text-gray-800;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <div class="gradient-header">
+        <div class="container mx-auto px-4 py-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="heading-1 text-white mb-2">Historique des Transactions</h1>
+                    <p class="text-blue-100">Consultez l'historique de vos paiements et recharges</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="{% url 'client_dashboard:dashboard' %}" class="btn btn-white">
+                        <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>
+                        Retour au Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <!-- Sidebar avec filtres -->
+            <div class="lg:col-span-1">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="heading-3">Filtres</h3>
+                    </div>
+                    <div class="card-body">
+                        <form method="GET" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Type de transaction</label>
+                                <select name="type" class="form-select">
+                                    <option value="">Tous les types</option>
+                                    <option value="recharge" {% if type_filter == 'recharge' %}selected{% endif %}>Recharges</option>
+                                    <option value="paiement" {% if type_filter == 'paiement' %}selected{% endif %}>Paiements</option>
+                                    <option value="remboursement" {% if type_filter == 'remboursement' %}selected{% endif %}>Remboursements</option>
+                                    <option value="bonus" {% if type_filter == 'bonus' %}selected{% endif %}>Bonus</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Statut</label>
+                                <select name="status" class="form-select">
+                                    <option value="">Tous les statuts</option>
+                                    <option value="reussie" {% if status_filter == 'reussie' %}selected{% endif %}>Réussies</option>
+                                    <option value="en_attente" {% if status_filter == 'en_attente' %}selected{% endif %}>En attente</option>
+                                    <option value="echouee" {% if status_filter == 'echouee' %}selected{% endif %}>Échouées</option>
+                                    <option value="annulee" {% if status_filter == 'annulee' %}selected{% endif %}>Annulées</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Période</label>
+                                <select name="periode" class="form-select">
+                                    <option value="">Toute période</option>
+                                    <option value="today">Aujourd'hui</option>
+                                    <option value="week">Cette semaine</option>
+                                    <option value="month">Ce mois</option>
+                                    <option value="3months">3 derniers mois</option>
+                                </select>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-full">
+                                <i data-lucide="filter" class="w-4 h-4 mr-2"></i>
+                                Appliquer les filtres
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Statistiques rapides -->
+                <div class="card mt-6">
+                    <div class="card-header">
+                        <h3 class="heading-3">Résumé</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600">Total transactions</span>
+                                <span class="font-semibold">{{ transactions.count }}</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600">Réussies</span>
+                                <span class="font-semibold text-green-600">
+                                    {{ transactions|length|add:"-1"|add:"1" }}
+                                </span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600">En attente</span>
+                                <span class="font-semibold text-yellow-600">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Liste des transactions -->
+            <div class="lg:col-span-3">
+                {% if transactions %}
+                    <div class="space-y-4">
+                        {% for transaction in transactions %}
+                        <div class="transaction-card">
+                            <div class="transaction-header">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                                        {% if transaction.type_transaction == 'recharge' %}
+                                            <i data-lucide="plus-circle" class="w-6 h-6 text-blue-600"></i>
+                                        {% elif transaction.type_transaction == 'paiement' %}
+                                            <i data-lucide="credit-card" class="w-6 h-6 text-blue-600"></i>
+                                        {% elif transaction.type_transaction == 'remboursement' %}
+                                            <i data-lucide="rotate-ccw" class="w-6 h-6 text-blue-600"></i>
+                                        {% else %}
+                                            <i data-lucide="gift" class="w-6 h-6 text-blue-600"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <div class="flex items-center space-x-2">
+                                            <span class="transaction-type {{ transaction.type_transaction }}">
+                                                {{ transaction.get_type_transaction_display }}
+                                            </span>
+                                            <span class="status-badge {{ transaction.statut }}">
+                                                {{ transaction.get_statut_display }}
+                                            </span>
+                                        </div>
+                                        <p class="text-sm text-gray-600 mt-1">
+                                            {{ transaction.created_at|date:"d/m/Y à H:i" }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-2xl font-bold {% if transaction.type_transaction == 'recharge' or transaction.type_transaction == 'remboursement' %}text-green-600{% else %}text-red-600{% endif %}">
+                                        {% if transaction.type_transaction == 'recharge' or transaction.type_transaction == 'remboursement' %}+{% else %}-{% endif %}{{ transaction.montant|floatformat:0 }} FCFA
+                                    </div>
+                                    {% if transaction.moyen_paiement_nom %}
+                                        <p class="text-sm text-gray-500">{{ transaction.moyen_paiement_nom }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            {% if transaction.description %}
+                            <div class="mb-4">
+                                <p class="text-gray-700">{{ transaction.description }}</p>
+                            </div>
+                            {% endif %}
+
+                            {% if transaction.mission_title %}
+                            <div class="mb-4">
+                                <div class="flex items-center space-x-2">
+                                    <i data-lucide="package" class="w-4 h-4 text-gray-500"></i>
+                                    <span class="text-sm text-gray-600">Mission:</span>
+                                    <span class="text-sm font-medium">{{ transaction.mission_title }}</span>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if transaction.reference_externe %}
+                            <div class="border-t pt-4">
+                                <div class="flex items-center justify-between text-sm text-gray-500">
+                                    <span>Référence: {{ transaction.reference_externe }}</span>
+                                    {% if transaction.statut == 'en_attente' %}
+                                        <button class="text-blue-600 hover:text-blue-800" onclick="verifierStatut({{ transaction.id }})">
+                                            Vérifier le statut
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if transactions.has_other_pages %}
+                    <div class="mt-8 flex justify-center">
+                        <nav class="flex items-center space-x-2">
+                            {% if transactions.has_previous %}
+                                <a href="?page={{ transactions.previous_page_number }}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" 
+                                   class="px-3 py-2 text-sm text-gray-500 hover:text-gray-700">
+                                    Précédent
+                                </a>
+                            {% endif %}
+
+                            {% for num in transactions.paginator.page_range %}
+                                {% if num == transactions.number %}
+                                    <span class="px-3 py-2 text-sm bg-blue-600 text-white rounded">{{ num }}</span>
+                                {% else %}
+                                    <a href="?page={{ num }}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" 
+                                       class="px-3 py-2 text-sm text-gray-500 hover:text-gray-700">{{ num }}</a>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if transactions.has_next %}
+                                <a href="?page={{ transactions.next_page_number }}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" 
+                                   class="px-3 py-2 text-sm text-gray-500 hover:text-gray-700">
+                                    Suivant
+                                </a>
+                            {% endif %}
+                        </nav>
+                    </div>
+                    {% endif %}
+                {% else %}
+                    <div class="card text-center py-12">
+                        <i data-lucide="receipt" class="w-16 h-16 text-gray-300 mx-auto mb-4"></i>
+                        <h3 class="heading-3 text-gray-500 mb-2">Aucune transaction</h3>
+                        <p class="text-gray-400 mb-6">Vous n'avez encore effectué aucune transaction.</p>
+                        <a href="{% url 'client_dashboard:dashboard' %}" class="btn btn-primary">
+                            Commencer une livraison
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialiser Lucide icons
+    lucide.createIcons();
+
+    // Fonction pour vérifier le statut d'une transaction
+    function verifierStatut(transactionId) {
+        fetch(`/client/paiement/statut/${transactionId}/`, {
+            method: 'GET',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Recharger la page pour afficher le nouveau statut
+                location.reload();
+            } else {
+                alert('Erreur lors de la vérification du statut');
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            alert('Erreur lors de la vérification du statut');
+        });
+    }
+
+    // Auto-refresh pour les transactions en attente
+    const transactionsEnAttente = document.querySelectorAll('.status-badge.en_attente');
+    if (transactionsEnAttente.length > 0) {
+        // Rafraîchir la page toutes les 30 secondes s'il y a des transactions en attente
+        setTimeout(() => {
+            location.reload();
+        }, 30000);
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Paiement Mission Courses{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="card mb-6">
+        <div class="card-header">
+            <h1 class="card-title">
+                <i data-lucide="credit-card" class="w-5 h-5"></i>
+                Paiement de la mission
+            </h1>
+        </div>
+        <div class="card-body">
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold mb-2">{{ mission.titre }}</h3>
+                <p class="text-slate-600">{{ mission.nombre_etapes }} étapes • {{ mission.distance_totale_km|default:0 }} km</p>
+            </div>
+
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <div class="flex justify-between items-center">
+                    <span class="text-lg font-semibold text-slate-900">Montant à payer:</span>
+                    <span class="text-2xl font-bold text-blue-600">{{ mission.prix_total }} FCFA</span>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <div class="flex justify-between mb-2">
+                    <span class="text-slate-600">Solde disponible:</span>
+                    <span class="font-medium {% if portefeuille.solde_total >= mission.prix_total %}text-green-600{% else %}text-red-600{% endif %}">
+                        {{ portefeuille.solde_total }} FCFA
+                    </span>
+                </div>
+                {% if portefeuille.solde_total < mission.prix_total %}
+                <div class="bg-red-50 border border-red-200 rounded-lg p-4 mt-4">
+                    <p class="text-red-600 mb-2">Solde insuffisant !</p>
+                    <a href="{% url 'client_dashboard_payment:recharger_portefeuille' %}" class="btn btn-primary btn-sm">
+                        Recharger mon portefeuille
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+            {% if portefeuille.solde_total >= mission.prix_total %}
+            <form method="POST" class="space-y-4">
+                {% csrf_token %}
+                
+                <div class="bg-slate-50 border border-slate-200 rounded-lg p-4">
+                    <h4 class="font-medium mb-3">Moyen de paiement</h4>
+                    <div class="space-y-2">
+                        <label class="flex items-center space-x-3 cursor-pointer">
+                            <input type="radio" name="payment_method" value="portefeuille" checked class="form-radio">
+                            <span>Portefeuille ({{ portefeuille.solde_total }} FCFA disponible)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="flex space-x-4">
+                    <a href="{% url 'client_dashboard:creer_mission_courses' %}?step=3" class="btn btn-secondary flex-1">
+                        Annuler
+                    </a>
+                    <button type="submit" class="btn btn-primary flex-1">
+                        <i data-lucide="check" class="w-4 h-4 mr-2"></i>
+                        Confirmer le paiement
+                    </button>
+                </div>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    lucide.createIcons();
+});
+</script>
+{% endblock %}
+

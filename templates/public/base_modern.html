@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}LivraFaso{% endblock %}</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    
+    <!-- Custom Styles -->
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .nav-link {
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-1px);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.6s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="glass-effect fixed w-full top-0 z-50">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <!-- Logo -->
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
+                        <i data-lucide="truck" class="w-5 h-5 text-purple-600"></i>
+                    </div>
+                    <span class="text-white font-bold text-xl">LivraFaso</span>
+                </div>
+                
+                <!-- Navigation Links -->
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="/" class="nav-link text-white hover:text-purple-200 px-3 py-2 rounded-lg">Accueil</a>
+                    <a href="/about/" class="nav-link text-white hover:text-purple-200 px-3 py-2 rounded-lg">À propos</a>
+                    <a href="/faq/" class="nav-link text-white hover:text-purple-200 px-3 py-2 rounded-lg">FAQ</a>
+                    
+                    {% if user.is_authenticated %}
+                        <a href="/dashboard/" class="nav-link text-white hover:text-purple-200 px-3 py-2 rounded-lg">Dashboard</a>
+                        {% if user.is_staff %}
+                            <a href="/admin-dashboard/" class="nav-link text-white hover:text-purple-200 px-3 py-2 rounded-lg">Admin</a>
+                        {% endif %}
+                        <div class="flex items-center space-x-3">
+                            <span class="text-white text-sm">{{ user.first_name|default:user.username }}</span>
+                            <a href="/logout/" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm transition duration-300">
+                                Déconnexion
+                            </a>
+                        </div>
+                    {% else %}
+                        <a href="/login/" class="text-white hover:text-purple-200 px-3 py-2 rounded-lg">Connexion</a>
+                        <a href="/register/" class="btn-primary text-white px-4 py-2 rounded-lg">Inscription</a>
+                    {% endif %}
+                </div>
+                
+                <!-- Mobile Menu Button -->
+                <div class="md:hidden">
+                    <button id="mobile-menu-btn" class="text-white">
+                        <i data-lucide="menu" class="w-6 h-6"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Mobile Menu -->
+            <div id="mobile-menu" class="hidden md:hidden pb-4">
+                <div class="flex flex-col space-y-2">
+                    <a href="/" class="nav-link text-white hover:text-purple-200 px-3 py-2 rounded-lg">Accueil</a>
+                    <a href="/about/" class="nav-link text-white hover:text-purple-200 px-3 py-2 rounded-lg">À propos</a>
+                    <a href="/faq/" class="nav-link text-white hover:text-purple-200 px-3 py-2 rounded-lg">FAQ</a>
+                    
+                    {% if user.is_authenticated %}
+                        <a href="/dashboard/" class="nav-link text-white hover:text-purple-200 px-3 py-2 rounded-lg">Dashboard</a>
+                        {% if user.is_staff %}
+                            <a href="/admin-dashboard/" class="nav-link text-white hover:text-purple-200 px-3 py-2 rounded-lg">Admin</a>
+                        {% endif %}
+                        <div class="border-t border-white/20 pt-2 mt-2">
+                            <span class="text-white text-sm block px-3 py-1">{{ user.first_name|default:user.username }}</span>
+                            <a href="/logout/" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-sm block mt-2">
+                                Déconnexion
+                            </a>
+                        </div>
+                    {% else %}
+                        <a href="/login/" class="text-white hover:text-purple-200 px-3 py-2 rounded-lg">Connexion</a>
+                        <a href="/register/" class="btn-primary text-white px-3 py-2 rounded-lg">Inscription</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <main class="pt-20 min-h-screen animate-fade-in">
+        {% if messages %}
+            <div class="container mx-auto px-4 py-4">
+                {% for message in messages %}
+                    <div class="glass-effect rounded-lg p-4 mb-4 {{ message.tags|default:'bg-blue-500' }} text-white">
+                        <div class="flex items-center">
+                            <i data-lucide="info" class="w-5 h-5 mr-2"></i>
+                            {{ message }}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Footer -->
+    <footer class="glass-effect mt-16">
+        <div class="container mx-auto px-4 py-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <!-- Company Info -->
+                <div>
+                    <div class="flex items-center space-x-2 mb-4">
+                        <div class="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
+                            <i data-lucide="truck" class="w-5 h-5 text-purple-600"></i>
+                        </div>
+                        <span class="text-white font-bold text-xl">LivraFaso</span>
+                    </div>
+                    <p class="text-gray-300 text-sm">
+                        Votre partenaire de confiance pour les livraisons au Burkina Faso.
+                    </p>
+                </div>
+                
+                <!-- Quick Links -->
+                <div>
+                    <h3 class="text-white font-semibold mb-4">Liens Rapides</h3>
+                    <ul class="space-y-2">
+                        <li><a href="/" class="text-gray-300 hover:text-white text-sm transition duration-300">Accueil</a></li>
+                        <li><a href="/about/" class="text-gray-300 hover:text-white text-sm transition duration-300">À propos</a></li>
+                        <li><a href="/faq/" class="text-gray-300 hover:text-white text-sm transition duration-300">FAQ</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Services -->
+                <div>
+                    <h3 class="text-white font-semibold mb-4">Services</h3>
+                    <ul class="space-y-2">
+                        <li><span class="text-gray-300 text-sm">Livraison Express</span></li>
+                        <li><span class="text-gray-300 text-sm">Livraison Programmée</span></li>
+                        <li><span class="text-gray-300 text-sm">Livraison Entreprise</span></li>
+                    </ul>
+                </div>
+                
+                <!-- Contact -->
+                <div>
+                    <h3 class="text-white font-semibold mb-4">Contact</h3>
+                    <ul class="space-y-2">
+                        <li class="text-gray-300 text-sm flex items-center">
+                            <i data-lucide="phone" class="w-4 h-4 mr-2"></i>
+                            +226 XX XX XX XX
+                        </li>
+                        <li class="text-gray-300 text-sm flex items-center">
+                            <i data-lucide="mail" class="w-4 h-4 mr-2"></i>
+                            contact@livrafaso.bf
+                        </li>
+                        <li class="text-gray-300 text-sm flex items-center">
+                            <i data-lucide="map-pin" class="w-4 h-4 mr-2"></i>
+                            Ouagadougou, Burkina Faso
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-white/20 mt-8 pt-8 text-center">
+                <p class="text-gray-300 text-sm">
+                    © 2024 LivraFaso. Tous droits réservés.
+                </p>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Scripts -->
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+        
+        // Mobile menu toggle
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        
+        if (mobileMenuBtn && mobileMenu) {
+            mobileMenuBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+        }
+        
+        // Auto-hide messages after 5 seconds
+        const messages = document.querySelectorAll('[class*="alert"]');
+        messages.forEach(message => {
+            setTimeout(() => {
+                message.style.transition = 'opacity 0.5s ease';
+                message.style.opacity = '0';
+                setTimeout(() => {
+                    message.remove();
+                }, 500);
+            }, 5000);
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

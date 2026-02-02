@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Mon Profil - LivraFaso{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="profile-card">
+        <!-- Gradient Header -->
+        <div class="gradient-header">
+            <div class="flex items-center space-x-4">
+                <div class="profile-avatar">
+                    <i data-lucide="user" class="w-8 h-8"></i>
+                </div>
+                <div>
+                    <h1 class="profile-name">{{ user.get_full_name|default:user.username }}</h1>
+                    <p class="profile-role">{{ user.user_type|capfirst }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="profile-body">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Informations personnelles -->
+                <div class="space-y-6">
+                    <h2 class="heading-3 mb-6">Informations personnelles</h2>
+                        
+                    <div class="profile-info">
+                        <div class="info-item">
+                            <i data-lucide="user" class="info-icon"></i>
+                            <span class="info-label">Nom d'utilisateur</span>
+                            <span class="info-value">{{ user.username }}</span>
+                        </div>
+                        
+                        <div class="info-item">
+                            <i data-lucide="mail" class="info-icon"></i>
+                            <span class="info-label">Email</span>
+                            <span class="info-value">{{ user.email }}</span>
+                        </div>
+                        
+                        {% if user.phone %}
+                        <div class="info-item">
+                            <i data-lucide="phone" class="info-icon"></i>
+                            <span class="info-label">Téléphone</span>
+                            <span class="info-value">{{ user.phone }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="info-item">
+                            <i data-lucide="calendar" class="info-icon"></i>
+                            <span class="info-label">Membre depuis</span>
+                            <span class="info-value">{{ user.date_joined|date:"d F Y" }}</span>
+                        </div>
+                    </div>
+                    </div>
+
+                <!-- Profil spécifique -->
+                <div class="space-y-6">
+                    {% if user.user_type == 'livreur' and livreur_profile %}
+                        <h2 class="heading-3 mb-6">Profil Livreur</h2>
+                        <div class="profile-info">
+                            <div class="info-item">
+                                <i data-lucide="truck" class="info-icon"></i>
+                                <span class="info-label">Type de véhicule</span>
+                                <span class="info-value">{{ livreur_profile.vehicle_type|capfirst }}</span>
+                            </div>
+                            
+                            <div class="info-item">
+                                <i data-lucide="activity" class="info-icon"></i>
+                                <span class="info-label">Statut</span>
+                                <span class="info-value">
+                                    {% if livreur_profile.is_available %}
+                                        <span class="badge badge-success">Disponible</span>
+                                    {% else %}
+                                        <span class="badge badge-danger">Indisponible</span>
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    {% elif user.user_type == 'entreprise' and entreprise_profile %}
+                        <h2 class="heading-3 mb-6">Profil Entreprise</h2>
+                        <div class="profile-info">
+                            <div class="info-item">
+                                <i data-lucide="building" class="info-icon"></i>
+                                <span class="info-label">Nom de l'entreprise</span>
+                                <span class="info-value">{{ entreprise_profile.company_name }}</span>
+                            </div>
+                            
+                            {% if entreprise_profile.address %}
+                            <div class="info-item">
+                                <i data-lucide="map-pin" class="info-icon"></i>
+                                <span class="info-label">Adresse</span>
+                                <span class="info-value">{{ entreprise_profile.address }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                    </div>
+                </div>
+
+            </div>
+            
+            <!-- Actions -->
+            <div class="mt-8 pt-6 border-t border-slate-200">
+                <div class="flex flex-wrap gap-4">
+                    <a href="{% url 'users:edit_profile' %}" class="btn btn-primary">
+                        <i data-lucide="edit" class="w-4 h-4"></i>
+                        Modifier le profil
+                    </a>
+                    
+                    {% if user.user_type == 'livreur' %}
+                    <a href="{% url 'users:simulate_location' %}" class="btn btn-success">
+                        <i data-lucide="map-pin" class="w-4 h-4"></i>
+                        Mettre à jour position
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

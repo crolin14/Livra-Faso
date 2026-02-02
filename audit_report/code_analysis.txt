@@ -1,0 +1,88 @@
+=== RAPPORT ANALYSE CODE ===
+Projet : C:\Users\hp\Documents\Livraison_Faso
+
+- [LOGIQUE] Template manquant pour la view : admin/dashboard_admin.html
+- [LOGIQUE] Template manquant pour la view : admin/users_management.html
+- [LOGIQUE] Template manquant pour la view : admin/missions_management.html
+- [LOGIQUE] Template manquant pour la view : admin/system_config.html
+- [LOGIQUE] Template manquant pour la view : admin/reports.html
+- [LOGIQUE] Template manquant pour la view : admin/security.html
+- [LOGIQUE] Template manquant pour la view : admin/dashboard_admin.html
+- [LOGIQUE] Template manquant pour la view : admin/users_management.html
+- [LOGIQUE] Template manquant pour la view : admin/missions_management_complete.html
+- [LOGIQUE] Template manquant pour la view : admin/system_config.html
+- [LOGIQUE] Template manquant pour la view : admin/reports_complete.html
+- [LOGIQUE] Template manquant pour la view : admin/security_logs_complete.html
+- [LOGIQUE] Template manquant pour la view : chat/dashboard_chat.html
+- [LOGIQUE] Template manquant pour la view : chat/conversation_detail.html
+- [LOGIQUE] Template manquant pour la view : cms/dashboard.html
+- [LOGIQUE] Template manquant pour la view : cms/pages_list.html
+- [LOGIQUE] Template manquant pour la view : cms/page_editor.html
+- [LOGIQUE] Template manquant pour la view : cms/blocks_library.html
+- [LOGIQUE] Template manquant pour la view : cms/media_library.html
+- [LOGIQUE] Template manquant pour la view : legal/terms.html
+- [LOGIQUE] Template manquant pour la view : legal/privacy.html
+- [LOGIQUE] Template manquant pour la view : location/dashboard.html
+- [LOGIQUE] Template manquant pour la view : location/mission_tracking.html
+- [LOGIQUE] Template manquant pour la view : location/history.html
+- [LOGIQUE] Template manquant pour la view : location/alerts.html
+- [LOGIQUE] Template manquant pour la view : location/geofences.html
+- [LOGIQUE] Template manquant pour la view : missions/missions_disponibles_modern.html
+- [LOGIQUE] Template manquant pour la view : missions/mission_list.html
+- [LOGIQUE] Template manquant pour la view : missions/create_mission_modern.html
+- [LOGIQUE] Template manquant pour la view : missions/create_mission_modern.html
+- [LOGIQUE] Template manquant pour la view : missions/create_mission_modern.html
+- [LOGIQUE] Template manquant pour la view : missions/create_mission_modern.html
+- [LOGIQUE] Template manquant pour la view : missions/mission_detail_modern.html
+- [LOGIQUE] Template manquant pour la view : missions/mission_tracking.html
+- [LOGIQUE] Template manquant pour la view : missions/enterprise_mission_list.html
+- [LOGIQUE] Template manquant pour la view : promotions/admin/campaigns_list.html
+- [LOGIQUE] Template manquant pour la view : promotions/admin/campaign_detail.html
+- [LOGIQUE] Template manquant pour la view : promotions/admin/campaign_analytics.html
+- [LOGIQUE] Template manquant pour la view : promotions/admin/codes_list.html
+- [LOGIQUE] Template manquant pour la view : promotions/admin/usage_list.html
+- [LOGIQUE] Template manquant pour la view : promotions/admin/analytics_dashboard.html
+- [LOGIQUE] Template manquant pour la view : promotions/admin/campaign_form.html
+- [LOGIQUE] Template manquant pour la view : promotions/admin/campaign_form.html
+- [LOGIQUE] Template manquant pour la view : promotions/admin/code_form.html
+- [LOGIQUE] Template manquant pour la view : public/home_modern.html
+- [LOGIQUE] Template manquant pour la view : public/about_modern.html
+- [LOGIQUE] Template manquant pour la view : public/contact_modern.html
+- [LOGIQUE] Template manquant pour la view : public/faq_modern.html
+- [LOGIQUE] Template manquant pour la view : dashboards/client_dashboard.html
+- [LOGIQUE] Template manquant pour la view : dashboards/livreur_dashboard.html
+- [LOGIQUE] Template manquant pour la view : dashboards/entreprise_dashboard.html
+- [LOGIQUE] Template manquant pour la view : public/dashboard_modern.html
+- [LOGIQUE] Template manquant pour la view : public/dashboard_statistics.html
+- [LOGIQUE] Template manquant pour la view : admin_dashboard.html
+- [LOGIQUE] Template manquant pour la view : ratings/user_ratings.html
+- [LOGIQUE] Template manquant pour la view : ratings/rate_user.html
+- [LOGIQUE] Template manquant pour la view : ratings/rate_mission.html
+- [LOGIQUE] Template manquant pour la view : subscriptions/plans.html
+- [LOGIQUE] Template manquant pour la view : subscriptions/plan_list.html
+- [LOGIQUE] Template manquant pour la view : subscriptions/subscribe.html
+- [LOGIQUE] Template manquant pour la view : subscriptions/payment.html
+- [LOGIQUE] Template manquant pour la view : subscriptions/payment_history.html
+- [LOGIQUE] Template manquant pour la view : support/ticket_list.html
+- [LOGIQUE] Template manquant pour la view : support/ticket_detail.html
+- [LOGIQUE] Template manquant pour la view : support/create_ticket.html
+- [LOGIQUE] Template manquant pour la view : support/admin/ticket_list.html
+- [LOGIQUE] Template manquant pour la view : support/admin/dashboard.html
+- [LOGIQUE] Template manquant pour la view : support/knowledge_base.html
+- [LOGIQUE] Template manquant pour la view : support/knowledge_article.html
+- [LOGIQUE] Template manquant pour la view : dashboards/client_dashboard.html
+- [LOGIQUE] Template manquant pour la view : dashboards/livreur_dashboard.html
+- [LOGIQUE] Template manquant pour la view : dashboards/entreprise_dashboard.html
+- [LOGIQUE] Template manquant pour la view : dashboards/admin_dashboard.html
+- [LOGIQUE] Template manquant pour la view : users/profile.html
+- [LOGIQUE] Template manquant pour la view : users/edit_profile.html
+- [LOGIQUE] Template manquant pour la view : users/simulate_location.html
+- [LOGIQUE] Template manquant pour la view : users/livreur_list.html
+- [LOGIQUE] Template manquant pour la view : users/login.html
+- [LOGIQUE] Template manquant pour la view : users/register_modern.html
+- [UI] Formulaire sans bouton submit : client_dashboard_modern.html
+- [UI] Formulaire sans bouton submit : change_form.html
+- [UI] Formulaire sans bouton submit : change_list.html
+- [UI] Formulaire sans bouton submit : base.html
+- [FRONT] Fichier vide détecté : tailwindcss.js
+- [FRONT] Fichier vide détecté : tailwindcss.js

@@ -1,0 +1,176 @@
+{% extends "base_ultra_modern.html" %}
+{% load static %}
+
+{% block title %}Plans d'Abonnement - LivraFaso{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-gray-900 mb-4">Choisissez votre plan</h1>
+            <p class="text-xl text-gray-600">Des solutions adaptées à tous vos besoins de livraison</p>
+        </div>
+
+        <!-- Plans d'abonnement -->
+        {% if plans %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+                {% for plan in plans %}
+                    <div class="bg-white shadow-xl rounded-2xl overflow-hidden hover:shadow-2xl transition-shadow duration-300 {% if plan.is_popular %}ring-4 ring-blue-500 relative{% endif %}">
+                        {% if plan.is_popular %}
+                            <div class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                                <span class="bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-medium">
+                                    Plus populaire
+                                </span>
+                            </div>
+                        {% endif %}
+
+                        <!-- Header du plan -->
+                        <div class="bg-gradient-to-br from-blue-600 to-purple-600 px-8 py-6 text-center">
+                            <h3 class="text-2xl font-bold text-white mb-2">{{ plan.name }}</h3>
+                            <div class="text-white">
+                                <span class="text-4xl font-bold">{{ plan.price }}</span>
+                                <span class="text-lg">FCFA</span>
+                                <span class="text-sm opacity-80">/{{ plan.get_duration_display }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Contenu du plan -->
+                        <div class="p-8">
+                            <p class="text-gray-600 mb-6">{{ plan.description }}</p>
+
+                            <!-- Fonctionnalités -->
+                            <ul class="space-y-3 mb-8">
+                                {% if plan.max_missions %}
+                                    <li class="flex items-center space-x-3">
+                                        <i data-lucide="check" class="w-5 h-5 text-green-500"></i>
+                                        <span>{{ plan.max_missions }} missions par mois</span>
+                                    </li>
+                                {% else %}
+                                    <li class="flex items-center space-x-3">
+                                        <i data-lucide="infinity" class="w-5 h-5 text-green-500"></i>
+                                        <span>Missions illimitées</span>
+                                    </li>
+                                {% endif %}
+
+                                <li class="flex items-center space-x-3">
+                                    <i data-lucide="truck" class="w-5 h-5 text-green-500"></i>
+                                    <span>Suivi en temps réel</span>
+                                </li>
+
+                                <li class="flex items-center space-x-3">
+                                    <i data-lucide="headphones" class="w-5 h-5 text-green-500"></i>
+                                    <span>Support client {% if plan.priority_support %}prioritaire{% else %}standard{% endif %}</span>
+                                </li>
+
+                                {% if plan.analytics %}
+                                    <li class="flex items-center space-x-3">
+                                        <i data-lucide="bar-chart" class="w-5 h-5 text-green-500"></i>
+                                        <span>Analyses avancées</span>
+                                    </li>
+                                {% endif %}
+
+                                {% if plan.api_access %}
+                                    <li class="flex items-center space-x-3">
+                                        <i data-lucide="code" class="w-5 h-5 text-green-500"></i>
+                                        <span>Accès API</span>
+                                    </li>
+                                {% endif %}
+
+                                {% if plan.custom_branding %}
+                                    <li class="flex items-center space-x-3">
+                                        <i data-lucide="palette" class="w-5 h-5 text-green-500"></i>
+                                        <span>Branding personnalisé</span>
+                                    </li>
+                                {% endif %}
+                            </ul>
+
+                            <!-- Bouton d'abonnement -->
+                            {% if current_subscription and current_subscription.plan == plan %}
+                                <button class="w-full py-3 px-6 bg-gray-100 text-gray-600 font-medium rounded-lg cursor-not-allowed">
+                                    <i data-lucide="check-circle" class="w-4 h-4 inline mr-2"></i>
+                                    Plan actuel
+                                </button>
+                            {% else %}
+                                <a href="{% url 'subscriptions:subscribe' plan.id %}" 
+                                   class="w-full inline-flex items-center justify-center py-3 px-6 {% if plan.is_popular %}bg-blue-600 hover:bg-blue-700{% else %}bg-gray-900 hover:bg-gray-800{% endif %} text-white font-medium rounded-lg transition-colors">
+                                    Choisir ce plan
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-12">
+                <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i data-lucide="credit-card" class="w-8 h-8 text-gray-400"></i>
+                </div>
+                <h3 class="text-xl font-medium text-gray-900 mb-2">Aucun plan disponible</h3>
+                <p class="text-gray-500">Les plans d'abonnement seront bientôt disponibles.</p>
+            </div>
+        {% endif %}
+
+        <!-- FAQ Abonnements -->
+        <div class="bg-white shadow-lg rounded-xl p-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">Questions fréquentes</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Puis-je changer de plan ?</h3>
+                    <p class="text-gray-600">Oui, vous pouvez upgrader ou downgrader votre plan à tout moment. Les changements prennent effet immédiatement.</p>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Comment annuler mon abonnement ?</h3>
+                    <p class="text-gray-600">Vous pouvez annuler votre abonnement depuis votre tableau de bord. L'accès reste actif jusqu'à la fin de la période payée.</p>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Quels moyens de paiement acceptez-vous ?</h3>
+                    <p class="text-gray-600">Nous acceptons les cartes bancaires, Mobile Money (Orange Money, Moov Money) et les virements bancaires.</p>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Y a-t-il une période d'essai ?</h3>
+                    <p class="text-gray-600">Oui, tous nos plans incluent une période d'essai gratuite de 14 jours sans engagement.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Garanties -->
+        <div class="mt-12 text-center">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="flex flex-col items-center">
+                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                        <i data-lucide="shield-check" class="w-6 h-6 text-green-600"></i>
+                    </div>
+                    <h3 class="font-semibold text-gray-900 mb-2">Sécurisé</h3>
+                    <p class="text-gray-600 text-sm">Paiements sécurisés et données protégées</p>
+                </div>
+                
+                <div class="flex flex-col items-center">
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                        <i data-lucide="clock" class="w-6 h-6 text-blue-600"></i>
+                    </div>
+                    <h3 class="font-semibold text-gray-900 mb-2">Support 24/7</h3>
+                    <p class="text-gray-600 text-sm">Assistance disponible à tout moment</p>
+                </div>
+                
+                <div class="flex flex-col items-center">
+                    <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-4">
+                        <i data-lucide="refresh-cw" class="w-6 h-6 text-purple-600"></i>
+                    </div>
+                    <h3 class="font-semibold text-gray-900 mb-2">Flexible</h3>
+                    <p class="text-gray-600 text-sm">Changez ou annulez à tout moment</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<script>
+    lucide.createIcons();
+</script>
+{% endblock %}

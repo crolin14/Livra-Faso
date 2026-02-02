@@ -1,0 +1,84 @@
+{% extends 'base_ultra_modern.html' %}
+{% load static %}
+
+{% block title %}Dashboard Admin - LivraFaso{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Dashboard Administrateur</h1>
+            <p class="text-gray-600 mt-2">Vue d'ensemble du système</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div class="p-3 bg-blue-100 rounded-xl">
+                    <i data-lucide="users" class="w-6 h-6 text-blue-600"></i>
+                </div>
+            </div>
+            <h3 class="text-3xl font-bold text-gray-900 mb-1">{{ total_users|default:0 }}</h3>
+            <p class="text-sm text-gray-600">Utilisateurs Total</p>
+        </div>
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div class="p-3 bg-purple-100 rounded-xl">
+                    <i data-lucide="package" class="w-6 h-6 text-purple-600"></i>
+                </div>
+            </div>
+            <h3 class="text-3xl font-bold text-gray-900 mb-1">{{ total_missions|default:0 }}</h3>
+            <p class="text-sm text-gray-600">Missions Total</p>
+        </div>
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div class="p-3 bg-orange-100 rounded-xl">
+                    <i data-lucide="truck" class="w-6 h-6 text-orange-600"></i>
+                </div>
+            </div>
+            <h3 class="text-3xl font-bold text-gray-900 mb-1">{{ active_missions|default:0 }}</h3>
+            <p class="text-sm text-gray-600">Missions Actives</p>
+        </div>
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div class="p-3 bg-green-100 rounded-xl">
+                    <i data-lucide="dollar-sign" class="w-6 h-6 text-green-600"></i>
+                </div>
+            </div>
+            <h3 class="text-3xl font-bold text-gray-900 mb-1">{{ total_revenue|default:0|floatformat:0 }}</h3>
+            <p class="text-sm text-gray-600">FCFA Revenus</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <a href="{% url 'admin_dashboard:users' %}" class="flex items-center justify-between p-4 bg-white rounded-xl shadow hover:shadow-lg transition">
+            <div class="flex items-center">
+                <i data-lucide="users" class="w-5 h-5 text-blue-600 mr-3"></i>
+                <span class="font-medium text-gray-900">Gérer Utilisateurs</span>
+            </div>
+            <i data-lucide="chevron-right" class="w-5 h-5 text-gray-400"></i>
+        </a>
+        <a href="{% url 'admin_dashboard:missions' %}" class="flex items-center justify-between p-4 bg-white rounded-xl shadow hover:shadow-lg transition">
+            <div class="flex items-center">
+                <i data-lucide="package" class="w-5 h-5 text-purple-600 mr-3"></i>
+                <span class="font-medium text-gray-900">Gérer Missions</span>
+            </div>
+            <i data-lucide="chevron-right" class="w-5 h-5 text-gray-400"></i>
+        </a>
+        <a href="{% url 'admin_dashboard:security' %}" class="flex items-center justify-between p-4 bg-white rounded-xl shadow hover:shadow-lg transition">
+            <div class="flex items-center">
+                <i data-lucide="shield" class="w-5 h-5 text-red-600 mr-3"></i>
+                <span class="font-medium text-gray-900">Logs Sécurité</span>
+            </div>
+            <i data-lucide="chevron-right" class="w-5 h-5 text-gray-400"></i>
+        </a>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    lucide.createIcons();
+});
+</script>
+{% endblock %}

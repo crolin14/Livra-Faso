@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Analytics - LivraFaso</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <style>
+        .glassmorphism {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #c084fc 100%);
+        }
+        .metric-card:hover {
+            transform: translateY(-4px);
+            transition: all 0.3s ease;
+        }
+        .heatmap-cell {
+            transition: all 0.3s ease;
+        }
+        .heatmap-cell:hover {
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen">
+    <!-- Header -->
+    <header class="glassmorphism text-white p-4 mb-6">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <i class="fas fa-chart-bar text-2xl"></i>
+                <h1 class="text-xl font-bold">Enterprise Analytics</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <select id="period-selector" class="px-3 py-1 bg-white/10 border border-white/20 rounded text-white">
+                    <option value="7d">7 derniers jours</option>
+                    <option value="30d" selected>30 derniers jours</option>
+                    <option value="90d">90 derniers jours</option>
+                    <option value="1y">1 an</option>
+                </select>
+                <button onclick="exportReport()" class="px-4 py-2 bg-green-500 hover:bg-green-600 rounded-lg">
+                    <i class="fas fa-download mr-2"></i>Export PDF
+                </button>
+                <button onclick="window.location.href='/entreprise/dashboard/'" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg">
+                    <i class="fas fa-arrow-left mr-2"></i>Retour
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-4">
+        <!-- Advanced KPIs -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="metric-card glassmorphism rounded-xl p-6 text-white">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-sm font-medium opacity-80">Revenus Totaux</h3>
+                    <i class="fas fa-money-bill-wave text-2xl text-green-400"></i>
+                </div>
+                <p class="text-3xl font-bold mb-2">{{ analytics.total_revenue|default:0 }} FCFA</p>
+                <div class="flex items-center text-sm">
+                    <span class="text-green-300 mr-2">+{{ analytics.revenue_growth|default:15.2 }}%</span>
+                    <span class="opacity-60">vs période précédente</span>
+                </div>
+            </div>
+
+            <div class="metric-card glassmorphism rounded-xl p-6 text-white">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-sm font-medium opacity-80">Coût par Livraison</h3>
+                    <i class="fas fa-calculator text-2xl text-blue-400"></i>
+                </div>
+                <p class="text-3xl font-bold mb-2">{{ analytics.cost_per_delivery|default:2500 }} FCFA</p>
+                <div class="flex items-center text-sm">
+                    <span class="text-red-300 mr-2">+{{ analytics.cost_increase|default:3.1 }}%</span>
+                    <span class="opacity-60">vs période précédente</span>
+                </div>
+            </div>
+
+            <div class="metric-card glassmorphism rounded-xl p-6 text-white">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-sm font-medium opacity-80">Temps Moyen</h3>
+                    <i class="fas fa-stopwatch text-2xl text-yellow-400"></i>
+                </div>
+                <p class="text-3xl font-bold mb-2">{{ analytics.avg_delivery_time|default:2.3 }}h</p>
+                <div class="flex items-center text-sm">
+                    <span class="text-green-300 mr-2">-{{ analytics.time_improvement|default:8.5 }}%</span>
+                    <span class="opacity-60">amélioration</span>
+                </div>
+            </div>
+
+            <div class="metric-card glassmorphism rounded-xl p-6 text-white">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-sm font-medium opacity-80">ROI Logistique</h3>
+                    <i class="fas fa-chart-line text-2xl text-purple-400"></i>
+                </div>
+                <p class="text-3xl font-bold mb-2">{{ analytics.logistics_roi|default:245 }}%</p>
+                <div class="flex items-center text-sm">
+                    <span class="text-green-300 mr-2">+{{ analytics.roi_growth|default:12.3 }}%</span>
+                    <span class="opacity-60">croissance</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Advanced Charts Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- Revenue Trend Analysis -->
+            <div class="glassmorphism rounded-xl p-6 text-white">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold">Analyse des Revenus</h3>
+                    <div class="flex space-x-2">
+                        <button onclick="toggleChartType('revenue')" class="px-3 py-1 bg-white/10 hover:bg-white/20 rounded text-xs">
+                            <i class="fas fa-exchange-alt mr-1"></i>Type
+                        </button>
+                        <button onclick="exportChart('revenue')" class="px-3 py-1 bg-blue-500 hover:bg-blue-600 rounded text-xs">
+                            <i class="fas fa-download mr-1"></i>PNG
+                        </button>
+                    </div>
+                </div>
+                <div class="h-80">
+                    <canvas id="revenueAnalysisChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Performance Heatmap -->
+            <div class="glassmorphism rounded-xl p-6 text-white">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold">Heatmap Performance</h3>
+                    <select id="heatmap-metric" class="px-3 py-1 bg-white/10 border border-white/20 rounded text-white text-xs">
+                        <option value="deliveries">Livraisons</option>
+                        <option value="revenue">Revenus</option>
+                        <option value="satisfaction">Satisfaction</option>
+                    </select>
+                </div>
+                <div id="performance-heatmap" class="h-80 grid grid-cols-7 gap-1">
+                    <!-- Heatmap cells will be generated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Analytics -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Geographic Distribution -->
+            <div class="glassmorphism rounded-xl p-6 text-white">
+                <h3 class="text-lg font-semibold mb-4 flex items-center">
+                    <i class="fas fa-map-marked-alt mr-2"></i>
+                    Distribution Géographique
+                </h3>
+                <div class="h-64">
+                    <canvas id="geoChart"></canvas>
+                </div>
+                <div class="mt-4 space-y-2 text-sm">
+                    {% for zone in analytics.top_zones %}
+                    <div class="flex justify-between items-center">
+                        <span class="opacity-80">{{ zone.name }}</span>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-16 bg-gray-600 rounded-full h-2">
+                                <div class="bg-purple-400 h-2 rounded-full" style="width: {{ zone.percentage }}%"></div>
+                            </div>
+                            <span class="font-semibold">{{ zone.count }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Customer Segmentation -->
+            <div class="glassmorphism rounded-xl p-6 text-white">
+                <h3 class="text-lg font-semibold mb-4 flex items-center">
+                    <i class="fas fa-users mr-2"></i>
+                    Segmentation Clients
+                </h3>
+                <div class="h-64">
+                    <canvas id="segmentationChart"></canvas>
+                </div>
+                <div class="mt-4 space-y-3">
+                    <div class="flex justify-between items-center p-2 bg-white/10 rounded">
+                        <span class="text-sm">Clients Premium</span>
+                        <span class="font-semibold text-yellow-300">{{ analytics.premium_clients|default:23 }}%</span>
+                    </div>
+                    <div class="flex justify-between items-center p-2 bg-white/10 rounded">
+                        <span class="text-sm">Clients Réguliers</span>
+                        <span class="font-semibold text-blue-300">{{ analytics.regular_clients|default:45 }}%</span>
+                    </div>
+                    <div class="flex justify-between items-center p-2 bg-white/10 rounded">
+                        <span class="text-sm">Nouveaux Clients</span>
+                        <span class="font-semibold text-green-300">{{ analytics.new_clients|default:32 }}%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Predictive Analytics -->
+            <div class="glassmorphism rounded-xl p-6 text-white">
+                <h3 class="text-lg font-semibold mb-4 flex items-center">
+                    <i class="fas fa-crystal-ball mr-2"></i>
+                    Prédictions IA
+                </h3>
+                <div class="space-y-4">
+                    <div class="bg-white/10 rounded-lg p-4">
+                        <h5 class="font-medium mb-2 text-blue-300">Demande Prévue (7j)</h5>
+                        <p class="text-2xl font-bold">+{{ analytics.predicted_demand|default:18 }}%</p>
+                        <p class="text-xs opacity-80">Basé sur tendances saisonnières</p>
+                    </div>
+                    <div class="bg-white/10 rounded-lg p-4">
+                        <h5 class="font-medium mb-2 text-green-300">Revenus Projetés</h5>
+                        <p class="text-xl font-bold">{{ analytics.projected_revenue|default:2850000 }} FCFA</p>
+                        <p class="text-xs opacity-80">Fin de mois</p>
+                    </div>
+                    <div class="bg-white/10 rounded-lg p-4">
+                        <h5 class="font-medium mb-2 text-yellow-300">Zones à Optimiser</h5>
+                        <div class="space-y-1 text-sm">
+                            {% for zone in analytics.optimization_zones %}
+                            <div class="flex justify-between">
+                                <span>{{ zone.name }}</span>
+                                <span class="text-red-300">-{{ zone.efficiency }}%</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Advanced Metrics Table -->
+        <div class="glassmorphism rounded-xl p-6 text-white mb-8">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">Métriques Détaillées</h3>
+                <div class="flex space-x-2">
+                    <input type="text" id="metrics-search" placeholder="Rechercher..." 
+                           class="px-3 py-1 bg-white/10 border border-white/20 rounded text-white placeholder-white/60 text-sm">
+                    <button onclick="exportMetrics()" class="px-3 py-1 bg-green-500 hover:bg-green-600 rounded text-sm">
+                        <i class="fas fa-file-excel mr-1"></i>CSV
+                    </button>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-white/20">
+                            <th class="text-left p-3">Métrique</th>
+                            <th class="text-left p-3">Valeur Actuelle</th>
+                            <th class="text-left p-3">Période Précédente</th>
+                            <th class="text-left p-3">Évolution</th>
+                            <th class="text-left p-3">Objectif</th>
+                            <th class="text-left p-3">Performance</th>
+                        </tr>
+                    </thead>
+                    <tbody id="metrics-table">
+                        <tr class="border-b border-white/10 hover:bg-white/5">
+                            <td class="p-3">Taux de Conversion</td>
+                            <td class="p-3 font-semibold">{{ analytics.conversion_rate|default:3.2 }}%</td>
+                            <td class="p-3 opacity-80">2.8%</td>
+                            <td class="p-3 text-green-300">+14.3%</td>
+                            <td class="p-3">4.0%</td>
+                            <td class="p-3">
+                                <div class="w-16 bg-gray-600 rounded-full h-2">
+                                    <div class="bg-yellow-400 h-2 rounded-full" style="width: 80%"></div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="border-b border-white/10 hover:bg-white/5">
+                            <td class="p-3">Temps Moyen de Réponse</td>
+                            <td class="p-3 font-semibold">{{ analytics.response_time|default:12 }} min</td>
+                            <td class="p-3 opacity-80">15 min</td>
+                            <td class="p-3 text-green-300">-20%</td>
+                            <td class="p-3">10 min</td>
+                            <td class="p-3">
+                                <div class="w-16 bg-gray-600 rounded-full h-2">
+                                    <div class="bg-blue-400 h-2 rounded-full" style="width: 83%"></div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="border-b border-white/10 hover:bg-white/5">
+                            <td class="p-3">Satisfaction Client</td>
+                            <td class="p-3 font-semibold">{{ analytics.customer_satisfaction|default:4.6 }}/5</td>
+                            <td class="p-3 opacity-80">4.4/5</td>
+                            <td class="p-3 text-green-300">+4.5%</td>
+                            <td class="p-3">4.8/5</td>
+                            <td class="p-3">
+                                <div class="w-16 bg-gray-600 rounded-full h-2">
+                                    <div class="bg-green-400 h-2 rounded-full" style="width: 92%"></div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Comparative Analysis -->
+        <div class="glassmorphism rounded-xl p-6 text-white">
+            <h3 class="text-lg font-semibold mb-4 flex items-center">
+                <i class="fas fa-balance-scale mr-2"></i>
+                Analyse Comparative Multi-Périodes
+            </h3>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="h-64">
+                    <canvas id="comparativeChart"></canvas>
+                </div>
+                <div class="space-y-4">
+                    <div class="bg-white/10 rounded-lg p-4">
+                        <h5 class="font-medium mb-2">Tendances Identifiées</h5>
+                        <ul class="text-sm space-y-1">
+                            <li class="flex items-center"><i class="fas fa-arrow-up text-green-400 mr-2"></i>Croissance constante des revenus</li>
+                            <li class="flex items-center"><i class="fas fa-arrow-down text-red-400 mr-2"></i>Augmentation des coûts logistiques</li>
+                            <li class="flex items-center"><i class="fas fa-arrow-up text-blue-400 mr-2"></i>Amélioration de la satisfaction</li>
+                            <li class="flex items-center"><i class="fas fa-minus text-yellow-400 mr-2"></i>Stabilité du temps de livraison</li>
+                        </ul>
+                    </div>
+                    <div class="bg-white/10 rounded-lg p-4">
+                        <h5 class="font-medium mb-2">Recommandations IA</h5>
+                        <ul class="text-sm space-y-1">
+                            <li>• Optimiser les routes pour réduire les coûts</li>
+                            <li>• Augmenter la capacité en zone Nord</li>
+                            <li>• Implémenter la livraison express</li>
+                            <li>• Former les livreurs sur la satisfaction client</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let charts = {};
+        let currentPeriod = '30d';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCharts();
+            generateHeatmap();
+            setupEventListeners();
+            loadAnalyticsData();
+        });
+
+        function initializeCharts() {
+            // Revenue Analysis Chart
+            const revenueCtx = document.getElementById('revenueAnalysisChart').getContext('2d');
+            charts.revenue = new Chart(revenueCtx, {
+                type: 'line',
+                data: {
+                    labels: generateDateLabels(30),
+                    datasets: [{
+                        label: 'Revenus',
+                        data: generateSampleData(30, 50000, 150000),
+                        borderColor: 'rgb(168, 85, 247)',
+                        backgroundColor: 'rgba(168, 85, 247, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: 'Prédiction',
+                        data: generatePredictionData(30),
+                        borderColor: 'rgb(34, 197, 94)',
+                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                        borderDash: [5, 5],
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: 'white' } }
+                    },
+                    scales: {
+                        y: { 
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255,255,255,0.1)' }
+                        },
+                        x: { 
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255,255,255,0.1)' }
+                        }
+                    }
+                }
+            });
+
+            // Geographic Distribution Chart
+            const geoCtx = document.getElementById('geoChart').getContext('2d');
+            charts.geo = new Chart(geoCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Centre-Ville', 'Banlieue Nord', 'Banlieue Sud', 'Zone Industrielle'],
+                    datasets: [{
+                        data: [35, 25, 20, 20],
+                        backgroundColor: ['#a855f7', '#3b82f6', '#10b981', '#f59e0b']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: 'white', font: { size: 10 } }
+                        }
+                    }
+                }
+            });
+
+            // Customer Segmentation Chart
+            const segmentCtx = document.getElementById('segmentationChart').getContext('2d');
+            charts.segmentation = new Chart(segmentCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Premium', 'Régulier', 'Nouveau', 'Inactif'],
+                    datasets: [{
+                        label: 'Clients',
+                        data: [23, 45, 32, 12],
+                        backgroundColor: ['#f59e0b', '#3b82f6', '#10b981', '#6b7280']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { 
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255,255,255,0.1)' }
+                        },
+                        x: { 
+                            ticks: { color: 'white' },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+
+            // Comparative Chart
+            const compCtx = document.getElementById('comparativeChart').getContext('2d');
+            charts.comparative = new Chart(compCtx, {
+                type: 'radar',
+                data: {
+                    labels: ['Revenus', 'Satisfaction', 'Rapidité', 'Coûts', 'Qualité'],
+                    datasets: [{
+                        label: 'Période Actuelle',
+                        data: [85, 92, 78, 65, 88],
+                        borderColor: 'rgb(168, 85, 247)',
+                        backgroundColor: 'rgba(168, 85, 247, 0.2)'
+                    }, {
+                        label: 'Période Précédente',
+                        data: [75, 85, 82, 70, 80],
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: 'white' } }
+                    },
+                    scales: {
+                        r: {
+                            ticks: { color: 'white' },
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            pointLabels: { color: 'white' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function generateHeatmap() {
+            const heatmapContainer = document.getElementById('performance-heatmap');
+            const days = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+            const hours = Array.from({length: 24}, (_, i) => i);
+            
+            heatmapContainer.innerHTML = '';
+            heatmapContainer.className = 'h-80 grid grid-cols-24 gap-1';
+            
+            for (let hour = 0; hour < 24; hour++) {
+                for (let day = 0; day < 7; day++) {
+                    const intensity = Math.random();
+                    const cell = document.createElement('div');
+                    cell.className = `heatmap-cell rounded-sm cursor-pointer`;
+                    cell.style.backgroundColor = `rgba(168, 85, 247, ${intensity})`;
+                    cell.title = `${days[day]} ${hour}h: ${Math.round(intensity * 100)}%`;
+                    heatmapContainer.appendChild(cell);
+                }
+            }
+        }
+
+        function setupEventListeners() {
+            document.getElementById('period-selector').addEventListener('change', function(e) {
+                currentPeriod = e.target.value;
+                loadAnalyticsData();
+            });
+
+            document.getElementById('heatmap-metric').addEventListener('change', function(e) {
+                generateHeatmap();
+            });
+
+            document.getElementById('metrics-search').addEventListener('input', function(e) {
+                filterMetricsTable(e.target.value);
+            });
+        }
+
+        function loadAnalyticsData() {
+            fetch(`/api/entreprise/analytics/?period=${currentPeriod}`)
+                .then(response => response.json())
+                .then(data => {
+                    updateCharts(data);
+                    updateMetrics(data);
+                })
+                .catch(error => console.error('Erreur:', error));
+        }
+
+        function generateDateLabels(days) {
+            const labels = [];
+            for (let i = days - 1; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                labels.push(date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }));
+            }
+            return labels;
+        }
+
+        function generateSampleData(length, min, max) {
+            return Array.from({length}, () => Math.floor(Math.random() * (max - min) + min));
+        }
+
+        function generatePredictionData(length) {
+            const base = generateSampleData(length, 50000, 150000);
+            return base.map((value, index) => index > length - 7 ? value * 1.1 : null);
+        }
+
+        function exportReport() {
+            window.open(`/api/entreprise/analytics/export/?period=${currentPeriod}&format=pdf`);
+        }
+
+        function exportChart(chartType) {
+            const canvas = charts[chartType].canvas;
+            const url = canvas.toDataURL('image/png');
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${chartType}_chart.png`;
+            a.click();
+        }
+
+        function exportMetrics() {
+            window.open(`/api/entreprise/analytics/metrics/export/?period=${currentPeriod}&format=csv`);
+        }
+
+        function toggleChartType(chartType) {
+            const chart = charts[chartType];
+            chart.config.type = chart.config.type === 'line' ? 'bar' : 'line';
+            chart.update();
+        }
+
+        function filterMetricsTable(query) {
+            const rows = document.querySelectorAll('#metrics-table tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(query.toLowerCase()) ? '' : 'none';
+            });
+        }
+    </script>
+</body>
+</html>

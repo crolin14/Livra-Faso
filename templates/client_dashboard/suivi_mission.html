@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Suivi Mission #{{ mission.id }} - LivraFaso{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="card mb-8">
+        <div class="gradient-header">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="heading-1 mb-2">Suivi de Mission</h1>
+                    <p class="text-lg opacity-90">{{ mission.title }}</p>
+                </div>
+                <a href="{% url 'client_dashboard:mes_livraisons' %}" class="btn btn-secondary">
+                    <i data-lucide="arrow-left" class="w-5 h-5 mr-2"></i>
+                    Retour
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Informations principales -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Timeline de suivi -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i data-lucide="map-pin" class="w-5 h-5"></i>
+                        Historique de la Mission
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        {% for event in tracking_events %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker">
+                                {% if event.icon %}
+                                    <i data-lucide="{{ event.icon }}" class="w-5 h-5"></i>
+                                {% else %}
+                                    <i data-lucide="circle" class="w-5 h-5"></i>
+                                {% endif %}
+                            </div>
+                            <div class="timeline-content">
+                                <h3 class="font-semibold text-slate-900">{{ event.description|default:event.status }}</h3>
+                                <p class="text-sm text-slate-600">{{ event.timestamp|date:"d/m/Y H:i" }}</p>
+                                {% if event.location %}
+                                <p class="text-sm text-slate-500 mt-1">
+                                    <i data-lucide="map-pin" class="w-4 h-4 inline"></i>
+                                    {{ event.location }}
+                                </p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-center py-8 text-slate-500">
+                            <i data-lucide="info" class="w-12 h-12 mx-auto mb-4 text-slate-400"></i>
+                            <p>Aucun événement de suivi disponible</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Carte de localisation (si disponible) -->
+            {% if mission.livreur %}
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i data-lucide="map" class="w-5 h-5"></i>
+                        Localisation en Temps Réel
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <div id="map-container" class="h-64 bg-slate-100 rounded-lg flex items-center justify-center">
+                        <p class="text-slate-500">Carte de localisation (à intégrer)</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="space-y-6">
+            <!-- Statut de la mission -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Statut</h2>
+                </div>
+                <div class="card-body">
+                    <div class="text-center">
+                        <span class="badge badge-lg {% if mission.status == 'livree' %}badge-success{% elif mission.status == 'en_cours' %}badge-warning{% elif mission.status == 'acceptee' %}badge-info{% elif mission.status == 'annulee' %}badge-danger{% else %}badge-secondary{% endif %}">
+                            {{ mission.get_status_display }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informations de livraison -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Détails</h2>
+                </div>
+                <div class="card-body space-y-4">
+                    <div>
+                        <label class="text-sm font-medium text-slate-600">Prix</label>
+                        <p class="text-lg font-bold text-slate-900">{{ mission.price|floatformat:0 }} FCFA</p>
+                    </div>
+                    
+                    <div>
+                        <label class="text-sm font-medium text-slate-600">Adresse de départ</label>
+                        <p class="text-slate-900">{{ mission.pickup_address }}</p>
+                    </div>
+                    
+                    <div>
+                        <label class="text-sm font-medium text-slate-600">Adresse de livraison</label>
+                        <p class="text-slate-900">{{ mission.delivery_address }}</p>
+                    </div>
+                    
+                    {% if mission.livreur %}
+                    <div>
+                        <label class="text-sm font-medium text-slate-600">Livreur</label>
+                        <p class="text-slate-900">{{ mission.livreur.get_full_name|default:mission.livreur.username }}</p>
+                        <a href="{% url 'client_dashboard:mission_chat' mission.id %}" class="btn btn-sm btn-primary mt-2">
+                            <i data-lucide="message-circle" class="w-4 h-4 mr-1"></i>
+                            Contacter
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Actions</h2>
+                </div>
+                <div class="card-body space-y-2">
+                    <a href="{% url 'client_dashboard:detail_mission' mission.id %}" class="btn btn-outline w-full">
+                        <i data-lucide="info" class="w-4 h-4 mr-2"></i>
+                        Voir les détails
+                    </a>
+                    {% if mission.status == 'en_attente' %}
+                    <form method="POST" action="{% url 'client_dashboard:annuler_mission' mission.id %}" onsubmit="return confirm('Êtes-vous sûr de vouloir annuler cette mission ?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger w-full">
+                            <i data-lucide="x" class="w-4 h-4 mr-2"></i>
+                            Annuler la mission
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.timeline {
+    position: relative;
+    padding-left: 2rem;
+}
+
+.timeline-item {
+    position: relative;
+    padding-bottom: 2rem;
+    padding-left: 2rem;
+}
+
+.timeline-item:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 0.5rem;
+    top: 2rem;
+    bottom: -1rem;
+    width: 2px;
+    background: #e2e8f0;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    background: #3b82f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.timeline-content {
+    background: #f8fafc;
+    padding: 1rem;
+    border-radius: 0.5rem;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    lucide.createIcons();
+</script>
+{% endblock %}
+

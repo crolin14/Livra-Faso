@@ -1,0 +1,390 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Nouvelle Livraison - LivraFaso{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="card mb-8">
+        <div class="gradient-header text-center">
+            <h1 class="heading-1 mb-2">Nouvelle Livraison</h1>
+            <p class="text-lg opacity-90">Créez votre mission de livraison en quelques étapes</p>
+        </div>
+    </div>
+
+    <!-- Formulaire de création -->
+    <div class="card">
+        <div class="card-body">
+            <form method="POST" id="mission-form" class="space-y-6">
+                {% csrf_token %}
+                <div>
+                    <label for="title" class="block text-sm font-medium text-gray-700 mb-2">Titre de la mission *</label>
+                    <input type="text" id="title" name="title" required class="form-input" placeholder="Ex: Livraison documents urgents">
+                </div>
+
+                <div>
+                    <label for="description" class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                    <textarea id="description" name="description" rows="3" class="form-textarea" placeholder="Décrivez votre mission en détail..."></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="pickup_address" class="block text-sm font-medium text-gray-700 mb-2">Adresse de départ *</label>
+                        <textarea id="pickup_address" name="pickup_address" required rows="2" class="form-textarea" placeholder="Adresse complète de récupération"></textarea>
+                    </div>
+
+                    <div>
+                        <label for="delivery_address" class="block text-sm font-medium text-gray-700 mb-2">Adresse de livraison *</label>
+                        <textarea id="delivery_address" name="delivery_address" required rows="2" class="form-textarea" placeholder="Adresse complète de livraison"></textarea>
+                    </div>
+                </div>
+                {% if adresses_favorites %}
+                <div class="form-group mt-4">
+                    <label for="id_adresse_favorite" class="block text-sm font-medium text-gray-700 mb-2">Utiliser une adresse favorite</label>
+                    <div class="relative">
+                        <select id="id_adresse_favorite" name="adresse_favorite" class="form-control">
+                            <option value="">-- Sélectionner --</option>
+                            {% for adresse in adresses_favorites %}
+                            <option value="{{ adresse.adresse_complete }}" data-instructions="{{ adresse.instructions }}">
+                                {{ adresse.nom }} - {{ adresse.get_type_adresse_display }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div>
+        <label for="estimated_price" class="block text-sm font-medium text-gray-700 mb-2">Prix estimé (FCFA)</label>
+        <input type="number" id="estimated_price" name="estimated_price" min="0" step="100" class="form-input" placeholder="Ex: 2000">
+    </div>
+
+    <input type="hidden" id="price" name="price" value="">
+
+    <div>
+        <label for="priority" class="block text-sm font-medium text-gray-700 mb-2">Priorité</label>
+        <select id="priority" name="priority" class="form-select">
+            <option value="normal">Normale</option>
+            <option value="urgent">Urgente</option>
+            <option value="express">Express</option>
+        </select>
+    </div>
+</div>
+
+<script>
+document.getElementById('mission-form').addEventListener('submit', function() {
+    document.getElementById('price').value = document.getElementById('estimated_price').value;
+});
+</script>
+
+
+                <div class="flex justify-end space-x-4">
+                    <a href="{% url 'client_dashboard:dashboard' %}" class="btn btn-secondary">
+                        Annuler
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
+                        Créer la mission
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialiser Lucide icons
+    lucide.createIcons();
+</script>
+{% endblock %}
+
+
+                <!-- Étape 3: Prix et Paiement -->
+                <div class="form-step" data-step="3">
+                    <div class="flex items-center mb-6">
+                        <div class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold mr-3">3</div>
+                        <h2 class="text-xl font-semibold text-slate-900">Prix et Paiement</h2>
+                    </div>
+                    
+                    <div class="space-y-6">
+                        <!-- Estimation automatique -->
+                        <div class="p-6 bg-yellow-50 rounded-lg">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-medium text-slate-900">Estimation Automatique</h3>
+                                <button type="button" onclick="calculatePrice()" class="btn btn-secondary btn-sm">
+                                    <i data-lucide="calculator" class="w-4 h-4 mr-2"></i>
+                                    Calculer
+                                </button>
+                            </div>
+                            
+                            <div id="priceEstimation" class="hidden">
+                                <div class="grid grid-cols-3 gap-4 text-center">
+                                    <div>
+                                        <div class="text-2xl font-bold text-blue-600" id="estimatedPrice">-</div>
+                                        <div class="text-sm text-slate-600">Prix estimé (FCFA)</div>
+                                    </div>
+                                    <div>
+                                        <div class="text-2xl font-bold text-green-600" id="estimatedTime">-</div>
+                                        <div class="text-sm text-slate-600">Délai (min)</div>
+                                    </div>
+                                    <div>
+                                        <div class="text-2xl font-bold text-purple-600" id="estimatedDistance">-</div>
+                                        <div class="text-sm text-slate-600">Distance (km)</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Prix manuel -->
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Prix proposé (FCFA) *</label>
+                            <input type="number" name="price" step="50" class="input" placeholder="Ex: 2000" required>
+                            <p class="text-sm text-slate-500 mt-1">Le prix final sera négocié avec le livreur</p>
+                        </div>
+                        
+                        <!-- Méthode de paiement -->
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Méthode de paiement préférée</label>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                <label class="payment-option">
+                                    <input type="radio" name="payment_method" value="orange_money" class="sr-only">
+                                    <div class="payment-card">
+                                        <i data-lucide="smartphone" class="w-6 h-6 text-orange-600"></i>
+                                        <span class="text-sm font-medium">Orange Money</span>
+                                    </div>
+                                </label>
+                                
+                                <label class="payment-option">
+                                    <input type="radio" name="payment_method" value="moov_money" class="sr-only">
+                                    <div class="payment-card">
+                                        <i data-lucide="smartphone" class="w-6 h-6 text-blue-600"></i>
+                                        <span class="text-sm font-medium">Moov Money</span>
+                                    </div>
+                                </label>
+                                
+                                <label class="payment-option">
+                                    <input type="radio" name="payment_method" value="wave" class="sr-only">
+                                    <div class="payment-card">
+                                        <i data-lucide="smartphone" class="w-6 h-6 text-purple-600"></i>
+                                        <span class="text-sm font-medium">Wave</span>
+                                    </div>
+                                </label>
+                                
+                                <label class="payment-option">
+                                    <input type="radio" name="payment_method" value="especes" class="sr-only">
+                                    <div class="payment-card">
+                                        <i data-lucide="banknote" class="w-6 h-6 text-green-600"></i>
+                                        <span class="text-sm font-medium">Espèces</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation -->
+                <div class="flex justify-between mt-8 pt-6 border-t border-slate-200">
+                    <button type="button" id="prevBtn" onclick="changeStep(-1)" class="btn btn-secondary" style="display: none;">
+                        <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>
+                        Précédent
+                    </button>
+                    
+                    <div class="flex space-x-3">
+                        <button type="button" id="nextBtn" onclick="changeStep(1)" class="btn btn-primary">
+                            Suivant
+                            <i data-lucide="arrow-right" class="w-4 h-4 ml-2"></i>
+                        </button>
+                        
+                        <button type="submit" id="submitBtn" class="btn btn-primary" style="display: none;">
+                            <i data-lucide="check" class="w-4 h-4 mr-2"></i>
+                            Créer la Mission
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-step {
+    display: none;
+}
+
+.form-step.active {
+    display: block;
+}
+
+.payment-option input:checked + .payment-card {
+    border-color: #3B82F6;
+    background-color: #EFF6FF;
+}
+
+.payment-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    border: 2px solid #E2E8F0;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    gap: 0.5rem;
+}
+
+.payment-card:hover {
+    border-color: #CBD5E1;
+    background-color: #F8FAFC;
+}
+</style>
+
+
+<script>
+let currentStep = 1;
+const totalSteps = 3;
+
+document.addEventListener('DOMContentLoaded', function() {
+    lucide.createIcons();
+    
+    // Pré-remplir avec les données d'estimation si disponibles
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('pickup_address')) {
+        document.querySelector('[name="pickup_address"]').value = urlParams.get('pickup_address');
+        document.querySelector('[name="delivery_address"]').value = urlParams.get('delivery_address');
+        document.querySelector('[name="package_type"]').value = urlParams.get('package_type') || 'colis_petit';
+        document.querySelector('[name="priority"]').value = urlParams.get('priority') || 'normale';
+        
+        if (urlParams.get('prix_estime')) {
+            document.querySelector('[name="price"]').value = urlParams.get('prix_estime');
+        }
+    }
+});
+
+function changeStep(direction) {
+    const currentStepEl = document.querySelector(`[data-step="${currentStep}"]`);
+    
+    if (direction === 1) {
+        // Validation avant de passer à l'étape suivante
+        if (!validateStep(currentStep)) {
+            return;
+        }
+        
+        if (currentStep < totalSteps) {
+            currentStep++;
+        }
+    } else {
+        if (currentStep > 1) {
+            currentStep--;
+        }
+    }
+    
+    // Masquer toutes les étapes
+    document.querySelectorAll('.form-step').forEach(step => {
+        step.classList.remove('active');
+    });
+    
+    // Afficher l'étape courante
+    document.querySelector(`[data-step="${currentStep}"]`).classList.add('active');
+    
+    // Gérer les boutons
+    updateNavigationButtons();
+}
+
+function updateNavigationButtons() {
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    prevBtn.style.display = currentStep > 1 ? 'block' : 'none';
+    nextBtn.style.display = currentStep < totalSteps ? 'block' : 'none';
+    submitBtn.style.display = currentStep === totalSteps ? 'block' : 'none';
+}
+
+function validateStep(step) {
+    const stepEl = document.querySelector(`[data-step="${step}"]`);
+    const requiredFields = stepEl.querySelectorAll('[required]');
+    
+    for (let field of requiredFields) {
+        if (!field.value.trim()) {
+            field.focus();
+            field.classList.add('border-red-500');
+            setTimeout(() => field.classList.remove('border-red-500'), 3000);
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+function fillAddress(address, type) {
+    if (address) {
+        const option = event.target.selectedOptions[0];
+        const instructions = option.dataset.instructions || '';
+        
+        document.querySelector(`[name="${type}_address"]`).value = address;
+        document.querySelector(`[name="${type}_instructions"]`).value = instructions;
+    }
+}
+
+function calculatePrice() {
+    const formData = new FormData(document.getElementById('missionForm'));
+    const data = Object.fromEntries(formData.entries());
+    
+    if (!data.pickup_address || !data.delivery_address) {
+        alert('Veuillez remplir les adresses avant de calculer le prix');
+        return;
+    }
+    
+    fetch('{% url "client_dashboard:estimation_prix" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            document.getElementById('estimatedPrice').textContent = result.prix_estime.toLocaleString();
+            document.getElementById('estimatedTime').textContent = result.delai_estime;
+            document.getElementById('estimatedDistance').textContent = result.distance_km;
+            document.getElementById('priceEstimation').classList.remove('hidden');
+            
+            // Pré-remplir le prix
+            document.querySelector('[name="price"]').value = result.prix_estime;
+        } else {
+            alert('Erreur lors du calcul: ' + result.error);
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        alert('Erreur de connexion');
+    });
+}
+
+// Gestion de la soumission du formulaire
+document.getElementById('missionForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    if (!validateStep(totalSteps)) {
+        return;
+    }
+    
+    const submitBtn = document.getElementById('submitBtn');
+    const originalText = submitBtn.innerHTML;
+    
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i data-lucide="loader" class="w-4 h-4 mr-2 animate-spin"></i>Création...';
+    
+    // Soumettre le formulaire
+    this.submit();
+});
+</script>
+

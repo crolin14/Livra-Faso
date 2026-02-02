@@ -1,0 +1,414 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Mes Missions - LivraFaso{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="card mb-8">
+        <div class="gradient-header">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="heading-1 mb-2">Mes Missions</h1>
+                    <p class="text-lg opacity-90">Gérez toutes vos commandes et livraisons</p>
+                </div>
+                <a href="{% url 'client_dashboard:nouvelle_livraison' %}" class="btn btn-secondary">
+                    <i data-lucide="plus" class="w-5 h-5 mr-2"></i>
+                    Nouvelle Livraison
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Onglets de navigation -->
+    <div class="card mb-6">
+        <div class="card-body">
+            <div class="flex flex-wrap border-b border-slate-200">
+                <button onclick="showSection('envoi-colis')" id="tab-envoi-colis" class="tab-button active px-6 py-3 text-sm font-medium border-b-2 border-blue-600 text-blue-600">
+                    <i data-lucide="package" class="w-5 h-5 inline mr-2"></i>
+                    Envoi Colis
+                </button>
+                <button onclick="showSection('courses')" id="tab-courses" class="tab-button px-6 py-3 text-sm font-medium text-slate-600 hover:text-blue-600">
+                    <i data-lucide="shopping-cart" class="w-5 h-5 inline mr-2"></i>
+                    Faire mes Courses
+                </button>
+                <button onclick="showSection('expedition')" id="tab-expedition" class="tab-button px-6 py-3 text-sm font-medium text-slate-600 hover:text-blue-600">
+                    <i data-lucide="truck" class="w-5 h-5 inline mr-2"></i>
+                    Expédition de Colis
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 1: Envoi Colis -->
+    <div id="section-envoi-colis" class="mission-section">
+        <div class="card mb-6">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <i data-lucide="package" class="w-5 h-5"></i>
+                    Mes Envois de Colis
+                </h2>
+            </div>
+            <div class="card-body">
+                <!-- Filtres -->
+                <div class="mb-6">
+                    <div class="flex flex-wrap items-center gap-4">
+                        <div class="flex items-center space-x-2">
+                            <i data-lucide="filter" class="w-5 h-5 text-slate-600"></i>
+                            <span class="font-medium text-slate-900">Filtrer par statut:</span>
+                        </div>
+                        
+                        <div class="flex flex-wrap gap-2">
+                            <a href="?status=all&section=envoi-colis" class="filter-btn {% if status_filter == 'all' %}active{% endif %}">
+                                Tous
+                            </a>
+                            {% for value, label in status_choices %}
+                            <a href="?status={{ value }}&section=envoi-colis" class="filter-btn {% if status_filter == value %}active{% endif %}">
+                                {{ label }}
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Liste des envois -->
+                {% if page_obj.object_list %}
+                    <div class="space-y-4">
+                        {% for mission in page_obj.object_list %}
+                        <div class="mission-card">
+                            <div class="flex items-start justify-between">
+                                <!-- Informations principales -->
+                                <div class="flex items-start space-x-4">
+                                    <div class="mission-icon">
+                                        {% if mission.status == 'livree' %}
+                                            <i data-lucide="check-circle" class="w-6 h-6 text-green-600"></i>
+                                        {% elif mission.status == 'en_cours' %}
+                                            <i data-lucide="truck" class="w-6 h-6 text-blue-600"></i>
+                                        {% elif mission.status == 'acceptee' %}
+                                            <i data-lucide="clock" class="w-6 h-6 text-yellow-600"></i>
+                                        {% elif mission.status == 'annulee' %}
+                                            <i data-lucide="x-circle" class="w-6 h-6 text-red-600"></i>
+                                        {% else %}
+                                            <i data-lucide="package" class="w-6 h-6 text-slate-600"></i>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="flex-1">
+                                        <div class="flex items-center space-x-3 mb-2">
+                                            <h3 class="text-lg font-semibold text-slate-900">{{ mission.title }}</h3>
+                                            <span class="badge {% if mission.status == 'livree' %}badge-success{% elif mission.status == 'en_cours' %}badge-warning{% elif mission.status == 'acceptee' %}badge-info{% elif mission.status == 'annulee' %}badge-danger{% else %}badge-secondary{% endif %}">
+                                                {{ mission.get_status_display }}
+                                            </span>
+                                            <span class="badge badge-outline">{{ mission.get_priority_display }}</span>
+                                        </div>
+                                        
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-600 mb-3">
+                                            <div class="flex items-center">
+                                                <i data-lucide="map-pin" class="w-4 h-4 mr-2 text-green-600"></i>
+                                                <span class="truncate">{{ mission.pickup_address|truncatechars:50 }}</span>
+                                            </div>
+                                            <div class="flex items-center">
+                                                <i data-lucide="target" class="w-4 h-4 mr-2 text-blue-600"></i>
+                                                <span class="truncate">{{ mission.delivery_address|truncatechars:50 }}</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="flex items-center space-x-6 text-sm text-slate-500">
+                                            <div class="flex items-center">
+                                                <i data-lucide="calendar" class="w-4 h-4 mr-1"></i>
+                                                <span>{{ mission.created_at|date:"d/m/Y H:i" }}</span>
+                                            </div>
+                                            <div class="flex items-center">
+                                                <i data-lucide="package" class="w-4 h-4 mr-1"></i>
+                                                <span>{{ mission.get_package_type_display }}</span>
+                                            </div>
+                                            {% if mission.livreur %}
+                                            <div class="flex items-center">
+                                                <i data-lucide="user" class="w-4 h-4 mr-1"></i>
+                                                <span>{{ mission.livreur.get_full_name|default:mission.livreur.username }}</span>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Prix et actions -->
+                                <div class="text-right">
+                                    <div class="text-2xl font-bold text-slate-900 mb-2">
+                                        {{ mission.price|floatformat:0 }} FCFA
+                                    </div>
+                                    
+                                    <div class="flex items-center space-x-2">
+                                        {% if mission.status in 'en_attente,acceptee,en_cours' %}
+                                            <a href="{% url 'client_dashboard:suivi_mission' mission.id %}" class="btn btn-sm btn-outline">
+                                                <i data-lucide="map-pin" class="w-4 h-4 mr-1"></i>
+                                                Suivre
+                                            </a>
+                                            {% if mission.livreur %}
+                                            <a href="{% url 'client_dashboard:mission_chat' mission.id %}" class="btn btn-sm btn-primary">
+                                                <i data-lucide="message-circle" class="w-4 h-4 mr-1"></i>
+                                                Chat
+                                            </a>
+                                            {% endif %}
+                                        {% endif %}
+                                        
+                                        {% if mission.status == 'en_attente' %}
+                                            <button onclick="cancelMission({{ mission.id }})" class="btn btn-danger btn-sm">
+                                                <i data-lucide="x" class="w-4 h-4 mr-1"></i>
+                                                Annuler
+                                            </button>
+                                        {% endif %}
+                                        
+                                        <a href="{% url 'client_dashboard:detail_mission' mission.id %}" class="btn btn-secondary btn-sm">
+                                            <i data-lucide="info" class="w-4 h-4"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Pagination -->
+                    {% if page_obj.has_other_pages %}
+                    <div class="flex items-center justify-between mt-8 pt-6 border-t border-slate-200">
+                        <div class="text-sm text-slate-600">
+                            Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}
+                        </div>
+                        
+                        <div class="flex items-center space-x-2">
+                            {% if page_obj.has_previous %}
+                                <a href="?page={{ page_obj.previous_page_number }}{% if status_filter != 'all' %}&status={{ status_filter }}{% endif %}&section=envoi-colis" 
+                                   class="btn btn-secondary btn-sm">
+                                    <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                                </a>
+                            {% endif %}
+                            
+                            {% if page_obj.has_next %}
+                                <a href="?page={{ page_obj.next_page_number }}{% if status_filter != 'all' %}&status={{ status_filter }}{% endif %}&section=envoi-colis" 
+                                   class="btn btn-secondary btn-sm">
+                                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                {% else %}
+                    <div class="text-center py-12">
+                        <i data-lucide="package" class="w-24 h-24 text-slate-300 mx-auto mb-6"></i>
+                        <h3 class="text-xl font-medium text-slate-900 mb-2">Aucun envoi de colis</h3>
+                        <p class="text-slate-600 mb-6">Créez votre première mission d'envoi de colis</p>
+                        <a href="{% url 'client_dashboard:nouvelle_livraison' %}" class="btn btn-primary">
+                            <i data-lucide="plus" class="w-5 h-5 mr-2"></i>
+                            Nouvelle Livraison
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 2: Faire mes Courses -->
+    <div id="section-courses" class="mission-section hidden">
+        <div class="card mb-6">
+            <div class="card-header">
+                <div class="flex items-center justify-between">
+                    <h2 class="card-title">
+                        <i data-lucide="shopping-cart" class="w-5 h-5"></i>
+                        Mes Courses
+                    </h2>
+                    <a href="{% url 'client_dashboard:faire_courses' %}" class="btn btn-secondary btn-sm">
+                        <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
+                        Nouvelle Liste
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if listes_courses %}
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {% for liste in listes_courses %}
+                        <div class="border border-slate-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+                            <div class="flex items-start justify-between mb-4">
+                                <h3 class="text-lg font-semibold text-slate-900">{{ liste.nom }}</h3>
+                                {% if liste.is_favorite %}
+                                <i data-lucide="star" class="w-5 h-5 text-yellow-500 fill-current"></i>
+                                {% endif %}
+                            </div>
+                            
+                            {% if liste.description %}
+                            <p class="text-sm text-slate-600 mb-4">{{ liste.description|truncatechars:80 }}</p>
+                            {% endif %}
+                            
+                            <div class="space-y-2 mb-4">
+                                <div class="flex items-center justify-between text-sm">
+                                    <span class="text-slate-600">Articles:</span>
+                                    <span class="font-medium">{{ liste.total_items }}</span>
+                                </div>
+                                {% if liste.budget_max %}
+                                <div class="flex items-center justify-between text-sm">
+                                    <span class="text-slate-600">Budget:</span>
+                                    <span class="font-medium">{{ liste.budget_max|floatformat:0 }} FCFA</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="flex items-center space-x-2">
+                                <a href="{% url 'client_dashboard:detail_liste_courses' liste.id %}" class="btn btn-outline btn-sm flex-1">
+                                    <i data-lucide="eye" class="w-4 h-4 mr-1"></i>
+                                    Voir
+                                </a>
+                                <a href="{% url 'client_dashboard:faire_courses' %}?liste_id={{ liste.id }}" class="btn btn-primary btn-sm">
+                                    <i data-lucide="edit" class="w-4 h-4"></i>
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-12">
+                        <i data-lucide="shopping-cart" class="w-24 h-24 text-slate-300 mx-auto mb-6"></i>
+                        <h3 class="text-xl font-medium text-slate-900 mb-2">Aucune liste de courses</h3>
+                        <p class="text-slate-600 mb-6">Créez votre première liste de courses</p>
+                        <a href="{% url 'client_dashboard:faire_courses' %}" class="btn btn-primary">
+                            <i data-lucide="plus" class="w-5 h-5 mr-2"></i>
+                            Nouvelle Liste de Courses
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 3: Expédition de Colis -->
+    <div id="section-expedition" class="mission-section hidden">
+        <div class="card mb-6">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <i data-lucide="truck" class="w-5 h-5"></i>
+                    Mes Expéditions
+                </h2>
+            </div>
+            <div class="card-body">
+                <div class="text-center py-12">
+                    <i data-lucide="truck" class="w-24 h-24 text-slate-300 mx-auto mb-6"></i>
+                    <h3 class="text-xl font-medium text-slate-900 mb-2">Expéditions de Colis</h3>
+                    <p class="text-slate-600 mb-6">Gérez vos expéditions de colis vers d'autres destinations</p>
+                    <a href="{% url 'client_dashboard:nouvelle_livraison' %}" class="btn btn-primary">
+                        <i data-lucide="plus" class="w-5 h-5 mr-2"></i>
+                        Nouvelle Expédition
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.tab-button {
+    transition: all 0.2s;
+}
+
+.tab-button.active {
+    border-bottom-color: #2563eb;
+    color: #2563eb;
+}
+
+.mission-section {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.filter-btn {
+    @apply px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors;
+}
+
+.filter-btn.active {
+    @apply bg-blue-600 text-white border-blue-600;
+}
+
+.mission-card {
+    @apply p-6 bg-white border border-slate-200 rounded-lg hover:shadow-md transition-shadow;
+}
+
+.mission-icon {
+    @apply w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    lucide.createIcons();
+    
+    // Afficher la section par défaut selon l'URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const section = urlParams.get('section') || 'envoi-colis';
+    showSection(section);
+});
+
+function showSection(sectionName) {
+    // Masquer toutes les sections
+    document.querySelectorAll('.mission-section').forEach(section => {
+        section.classList.add('hidden');
+    });
+    
+    // Désactiver tous les onglets
+    document.querySelectorAll('.tab-button').forEach(button => {
+        button.classList.remove('active', 'border-b-2', 'border-blue-600', 'text-blue-600');
+        button.classList.add('text-slate-600');
+    });
+    
+    // Afficher la section sélectionnée
+    const section = document.getElementById('section-' + sectionName);
+    if (section) {
+        section.classList.remove('hidden');
+    }
+    
+    // Activer l'onglet correspondant
+    const tab = document.getElementById('tab-' + sectionName);
+    if (tab) {
+        tab.classList.add('active', 'border-b-2', 'border-blue-600', 'text-blue-600');
+        tab.classList.remove('text-slate-600');
+    }
+    
+    // Mettre à jour l'URL sans recharger la page
+    const url = new URL(window.location);
+    url.searchParams.set('section', sectionName);
+    window.history.pushState({}, '', url);
+    
+    lucide.createIcons();
+}
+
+function cancelMission(missionId) {
+    if (confirm('Êtes-vous sûr de vouloir annuler cette mission ?')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/client-dashboard/mission/${missionId}/annuler/`;
+        
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (csrfToken) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'csrfmiddlewaretoken';
+            input.value = csrfToken.value;
+            form.appendChild(input);
+        }
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
+{% endblock %}

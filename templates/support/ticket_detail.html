@@ -1,0 +1,553 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Ticket #{{ ticket.ticket_number }} - Support LivraFaso{% endblock %}
+
+{% block extra_css %}
+<style>
+.ticket-priority-high { border-left: 4px solid #ef4444; }
+.ticket-priority-medium { border-left: 4px solid #f59e0b; }
+.ticket-priority-low { border-left: 4px solid #10b981; }
+.ticket-priority-critical { border-left: 4px solid #dc2626; }
+.ticket-status-open { background-color: #fef3c7; color: #92400e; }
+.ticket-status-in_progress { background-color: #dbeafe; color: #1e40af; }
+.ticket-status-resolved { background-color: #d1fae5; color: #065f46; }
+.ticket-status-closed { background-color: #f3f4f6; color: #374151; }
+.ticket-status-waiting_customer { background-color: #fde68a; color: #92400e; }
+.message-user { background-color: #f8fafc; border-left: 4px solid #3b82f6; }
+.message-agent { background-color: #f0fdf4; border-left: 4px solid #10b981; }
+.message-system { background-color: #fafafa; border-left: 4px solid #6b7280; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Support Header -->
+<div class="bg-gradient-to-r from-primary-600 via-blue-600 to-purple-600 text-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div class="text-center">
+            <div class="flex items-center justify-center mb-6">
+                <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
+                    <i data-lucide="message-square" class="w-12 h-12 text-white"></i>
+                </div>
+            </div>
+            <h1 class="text-4xl lg:text-5xl font-display font-bold mb-4">
+                Ticket #{{ ticket.ticket_number }}
+            </h1>
+            <p class="text-xl text-blue-100 max-w-2xl mx-auto">
+                {{ ticket.title }}
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <!-- Navigation -->
+    <div class="mb-8">
+        <a href="{% url 'support:ticket_list' %}" class="btn-outline inline-flex items-center">
+            <i data-lucide="arrow-left" class="w-5 h-5 mr-2"></i>
+            Retour aux tickets
+        </a>
+    </div>
+
+    <div class="grid lg:grid-cols-3 gap-8">
+        <!-- Contenu principal -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Détails du ticket -->
+            <div class="bg-white rounded-2xl shadow-xl border border-gray-200 ticket-priority-{{ ticket.priority }} p-8" data-aos="fade-up">
+                <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-6 mb-8">
+                    <div class="flex-1">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ ticket.title }}</h2>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <span class="badge badge-{{ ticket.status }}">
+                                {{ ticket.get_status_display }}
+                            </span>
+                            <span class="badge badge-priority-{{ ticket.priority }}">
+                                {{ ticket.get_priority_display }}
+                            </span>
+                            {% if ticket.is_escalated %}
+                                <span class="bg-gradient-to-r from-red-100 to-pink-100 text-red-800 px-4 py-2 rounded-xl text-sm font-medium border border-red-200">
+                                    <i data-lucide="alert-triangle" class="w-4 h-4 mr-1 inline"></i>
+                                    Escaladé
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if can_manage %}
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            {% if ticket.status != 'resolved' and ticket.status != 'closed' %}
+                                <button onclick="resolveTicket()" class="btn-success">
+                                    <i data-lucide="check" class="w-4 h-4 mr-2"></i>
+                                    Résoudre
+                                </button>
+                            {% endif %}
+                            
+                            {% if not ticket.is_escalated %}
+                                <button onclick="escalateTicket()" class="btn-warning">
+                                    <i data-lucide="alert-triangle" class="w-4 h-4 mr-2"></i>
+                                    Escalader
+                                </button>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="bg-gray-50 rounded-xl p-6 mt-6">
+                    <div class="prose prose-gray max-w-none">
+                        <p class="text-gray-700 leading-relaxed">{{ ticket.description|linebreaks }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Messages -->
+            <div class="bg-white rounded-2xl shadow-xl border border-gray-200 p-8" data-aos="fade-up" data-aos-delay="100">
+                <div class="flex items-center mb-6">
+                    <div class="bg-primary-100 w-10 h-10 rounded-xl flex items-center justify-center mr-3">
+                        <i data-lucide="message-circle" class="w-5 h-5 text-primary-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900">Conversation</h3>
+                </div>
+                
+                <div class="space-y-6">
+                    {% for message in messages %}
+                        <div class="message-{{ message.message_type }} rounded-2xl p-6 border-l-4">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 rounded-2xl flex items-center justify-center
+                                        {% if message.message_type == 'user' %}bg-blue-100{% elif message.message_type == 'agent' %}bg-green-100{% else %}bg-gray-100{% endif %}">
+                                        {% if message.message_type == 'user' %}
+                                            <i data-lucide="user" class="w-6 h-6 text-blue-600"></i>
+                                        {% elif message.message_type == 'agent' %}
+                                            <i data-lucide="headphones" class="w-6 h-6 text-green-600"></i>
+                                        {% else %}
+                                            <i data-lucide="settings" class="w-6 h-6 text-gray-600"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <p class="font-semibold text-gray-900 text-lg">{{ message.author_name }}</p>
+                                        <p class="text-sm text-gray-500 flex items-center">
+                                            <i data-lucide="clock" class="w-4 h-4 mr-1"></i>
+                                            {{ message.created_at|date:"d/m/Y H:i" }}
+                                        </p>
+                                    </div>
+                                </div>
+                                
+                                {% if message.message_type == 'agent' and not message.is_public %}
+                                    <span class="bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-800 px-3 py-1 rounded-xl text-xs font-medium border border-yellow-200">
+                                        <i data-lucide="eye-off" class="w-3 h-3 mr-1 inline"></i>
+                                        Note interne
+                                    </span>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="prose prose-gray max-w-none ml-16">
+                                <p class="text-gray-700 leading-relaxed">{{ message.content|linebreaks }}</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Formulaire de réponse -->
+            {% if ticket.status != 'closed' %}
+                <div class="bg-white rounded-2xl shadow-xl border border-gray-200 p-8" data-aos="fade-up" data-aos-delay="200">
+                    <div class="flex items-center mb-6">
+                        <div class="bg-green-100 w-10 h-10 rounded-xl flex items-center justify-center mr-3">
+                            <i data-lucide="reply" class="w-5 h-5 text-green-600"></i>
+                        </div>
+                        <h4 class="text-xl font-bold text-gray-900">Ajouter une réponse</h4>
+                    </div>
+                    
+                    <form method="post" action="{% url 'support:add_message' ticket.id %}">
+                        {% csrf_token %}
+                        
+                        {% if can_manage and templates %}
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Modèles de réponse
+                                </label>
+                                <select id="templateSelect" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                                    <option value="">Sélectionner un modèle...</option>
+                                    {% for template in templates %}
+                                        <option value="{{ template.content }}" data-subject="{{ template.subject }}">
+                                            {{ template.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="mb-4">
+                            <textarea name="content" 
+                                      id="messageContent"
+                                      rows="6" 
+                                      required
+                                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                                      placeholder="Tapez votre message..."></textarea>
+                        </div>
+                        
+                        {% if can_manage %}
+                            <div class="mb-4">
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="is_internal" class="rounded border-gray-300 text-primary-600 focus:ring-primary-500">
+                                    <span class="ml-2 text-sm text-gray-700">Note interne (non visible par l'utilisateur)</span>
+                                </label>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="flex gap-4">
+                            <button type="submit" 
+                                    class="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                                <i data-lucide="send" class="w-4 h-4 mr-2 inline"></i>
+                                Envoyer
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            {% endif %}
+
+            <!-- Évaluation de satisfaction -->
+            {% if ticket.status == 'resolved' and ticket.user == request.user and not ticket.satisfaction_rating %}
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                    <h4 class="text-lg font-semibold text-blue-900 mb-4">Évaluez notre support</h4>
+                    <p class="text-blue-800 mb-4">Votre ticket a été résolu. Aidez-nous à améliorer notre service en évaluant votre expérience.</p>
+                    
+                    <form method="post" action="{% url 'support:submit_satisfaction' ticket.id %}">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-blue-900 mb-2">Note (1-5 étoiles)</label>
+                            <div class="flex gap-2" id="ratingStars">
+                                {% for i in "12345" %}
+                                    <button type="button" 
+                                            class="star-rating w-8 h-8 text-gray-300 hover:text-yellow-400 transition-colors" 
+                                            data-rating="{{ i }}">
+                                        <i data-lucide="star" class="w-6 h-6"></i>
+                                    </button>
+                                {% endfor %}
+                            </div>
+                            <input type="hidden" name="rating" id="ratingInput" required>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="comment" class="block text-sm font-medium text-blue-900 mb-2">
+                                Commentaire (optionnel)
+                            </label>
+                            <textarea name="comment" 
+                                      id="comment"
+                                      rows="3" 
+                                      class="w-full px-3 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                      placeholder="Partagez votre expérience..."></textarea>
+                        </div>
+                        
+                        <button type="submit" 
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                            Soumettre l'évaluation
+                        </button>
+                    </form>
+                </div>
+            {% elif ticket.satisfaction_rating %}
+                <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div class="flex items-center">
+                        <i data-lucide="check-circle" class="w-5 h-5 text-green-600 mr-2"></i>
+                        <span class="text-green-800 font-medium">
+                            Évaluation soumise: {{ ticket.satisfaction_rating }}/5 étoiles
+                        </span>
+                    </div>
+                    {% if ticket.satisfaction_comment %}
+                        <p class="text-green-700 mt-2 text-sm">{{ ticket.satisfaction_comment }}</p>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="space-y-6">
+            <!-- Informations du ticket -->
+            <div class="bg-white rounded-lg shadow-sm border p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Informations</h3>
+                
+                <div class="space-y-4 text-sm">
+                    <div>
+                        <span class="text-gray-500">Catégorie:</span>
+                        <p class="font-medium">{{ ticket.category.name }}</p>
+                    </div>
+                    
+                    <div>
+                        <span class="text-gray-500">Créé le:</span>
+                        <p class="font-medium">{{ ticket.created_at|date:"d/m/Y H:i" }}</p>
+                    </div>
+                    
+                    {% if ticket.assigned_to %}
+                        <div>
+                            <span class="text-gray-500">Assigné à:</span>
+                            <p class="font-medium">{{ ticket.assigned_to.get_full_name }}</p>
+                        </div>
+                    {% endif %}
+                    
+                    {% if ticket.first_response_at %}
+                        <div>
+                            <span class="text-gray-500">Première réponse:</span>
+                            <p class="font-medium">{{ ticket.first_response_at|date:"d/m/Y H:i" }}</p>
+                        </div>
+                    {% endif %}
+                    
+                    {% if ticket.resolved_at %}
+                        <div>
+                            <span class="text-gray-500">Résolu le:</span>
+                            <p class="font-medium">{{ ticket.resolved_at|date:"d/m/Y H:i" }}</p>
+                        </div>
+                    {% endif %}
+                    
+                    <div>
+                        <span class="text-gray-500">Source:</span>
+                        <p class="font-medium">{{ ticket.get_source_display }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLA -->
+            <div class="bg-white rounded-lg shadow-sm border p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">SLA</h3>
+                
+                <div class="space-y-4 text-sm">
+                    <div>
+                        <span class="text-gray-500">Réponse attendue avant:</span>
+                        <p class="font-medium">{{ ticket.sla_response_due|date:"d/m/Y H:i" }}</p>
+                    </div>
+                    
+                    <div>
+                        <span class="text-gray-500">Résolution attendue avant:</span>
+                        <p class="font-medium">{{ ticket.sla_resolution_due|date:"d/m/Y H:i" }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions rapides pour les agents -->
+            {% if can_manage %}
+                <div class="bg-white rounded-lg shadow-sm border p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Actions</h3>
+                    
+                    <div class="space-y-3">
+                        {% if not ticket.assigned_to %}
+                            <button onclick="assignToMe()" 
+                                    class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                                M'assigner ce ticket
+                            </button>
+                        {% endif %}
+                        
+                        {% if ticket.status == 'open' %}
+                            <button onclick="markInProgress()" 
+                                    class="w-full bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                                Marquer en cours
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modals -->
+{% if can_manage %}
+    <!-- Modal de résolution -->
+    <div id="resolveModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Résoudre le ticket</h3>
+            <form id="resolveForm">
+                <div class="mb-4">
+                    <label for="resolutionNotes" class="block text-sm font-medium text-gray-700 mb-2">
+                        Notes de résolution
+                    </label>
+                    <textarea id="resolutionNotes" 
+                              rows="4" 
+                              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                              placeholder="Décrivez comment le problème a été résolu..."></textarea>
+                </div>
+                <div class="flex gap-4">
+                    <button type="submit" 
+                            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                        Résoudre
+                    </button>
+                    <button type="button" 
+                            onclick="closeModal('resolveModal')" 
+                            class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors">
+                        Annuler
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal d'escalade -->
+    <div id="escalateModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Escalader le ticket</h3>
+            <form id="escalateForm">
+                <div class="mb-4">
+                    <label for="escalationReason" class="block text-sm font-medium text-gray-700 mb-2">
+                        Raison de l'escalade
+                    </label>
+                    <textarea id="escalationReason" 
+                              rows="4" 
+                              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                              placeholder="Expliquez pourquoi ce ticket doit être escaladé..."></textarea>
+                </div>
+                <div class="flex gap-4">
+                    <button type="submit" 
+                            class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                        Escalader
+                    </button>
+                    <button type="button" 
+                            onclick="closeModal('escalateModal')" 
+                            class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors">
+                        Annuler
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Modèles de réponse
+    const templateSelect = document.getElementById('templateSelect');
+    const messageContent = document.getElementById('messageContent');
+    
+    if (templateSelect) {
+        templateSelect.addEventListener('change', function() {
+            if (this.value) {
+                messageContent.value = this.value;
+                this.value = '';
+            }
+        });
+    }
+    
+    // Évaluation par étoiles
+    const stars = document.querySelectorAll('.star-rating');
+    const ratingInput = document.getElementById('ratingInput');
+    
+    stars.forEach(star => {
+        star.addEventListener('click', function() {
+            const rating = parseInt(this.dataset.rating);
+            ratingInput.value = rating;
+            
+            stars.forEach((s, index) => {
+                const icon = s.querySelector('i');
+                if (index < rating) {
+                    s.classList.remove('text-gray-300');
+                    s.classList.add('text-yellow-400');
+                    icon.setAttribute('fill', 'currentColor');
+                } else {
+                    s.classList.remove('text-yellow-400');
+                    s.classList.add('text-gray-300');
+                    icon.removeAttribute('fill');
+                }
+            });
+        });
+    });
+    
+    // Initialiser Lucide icons
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+});
+
+{% if can_manage %}
+// Fonctions pour les agents
+function resolveTicket() {
+    document.getElementById('resolveModal').classList.remove('hidden');
+    document.getElementById('resolveModal').classList.add('flex');
+}
+
+function escalateTicket() {
+    document.getElementById('escalateModal').classList.remove('hidden');
+    document.getElementById('escalateModal').classList.add('flex');
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.add('hidden');
+    document.getElementById(modalId).classList.remove('flex');
+}
+
+function assignToMe() {
+    if (confirm('Voulez-vous vous assigner ce ticket ?')) {
+        fetch(`/support/api/ticket/{{ ticket.id }}/assign/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+                assigned_to: {{ request.user.id }}
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Erreur: ' + data.error);
+            }
+        });
+    }
+}
+
+// Formulaire de résolution
+document.getElementById('resolveForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const notes = document.getElementById('resolutionNotes').value;
+    
+    fetch(`/support/api/ticket/{{ ticket.id }}/resolve/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({
+            resolution_notes: notes
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Erreur: ' + data.error);
+        }
+    });
+});
+
+// Formulaire d'escalade
+document.getElementById('escalateForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const reason = document.getElementById('escalationReason').value;
+    
+    fetch(`/support/api/ticket/{{ ticket.id }}/escalate/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({
+            reason: reason
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Erreur: ' + data.error);
+        }
+    });
+});
+{% endif %}
+</script>
+{% endblock %}

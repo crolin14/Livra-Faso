@@ -1,0 +1,235 @@
+{% extends "base_ultra_modern.html" %}
+{% load static %}
+
+{% block title %}Suivi Mission #{{ mission.id }} - LivraFaso{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <div class="bg-white shadow-xl rounded-2xl overflow-hidden mb-8">
+            <div class="bg-gradient-to-r from-green-600 to-blue-600 px-8 py-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-3xl font-bold text-white">Suivi Mission #{{ mission.id }}</h1>
+                        <p class="text-green-100">Suivez votre livraison en temps réel</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="px-4 py-2 bg-white bg-opacity-20 rounded-full text-white font-medium">
+                            {{ mission.get_status_display }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Carte et suivi -->
+            <div class="lg:col-span-2 space-y-8">
+                <!-- Carte de suivi -->
+                <div class="bg-white shadow-lg rounded-xl overflow-hidden">
+                    <div class="p-6 border-b border-gray-200">
+                        <h2 class="text-xl font-bold text-gray-900">Localisation en temps réel</h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="bg-gray-100 rounded-lg h-96 flex items-center justify-center">
+                            <div class="text-center">
+                                <i data-lucide="map" class="w-16 h-16 text-gray-400 mx-auto mb-4"></i>
+                                <p class="text-gray-600">Carte de suivi interactive</p>
+                                <p class="text-sm text-gray-500">Intégration Google Maps/OpenStreetMap</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Historique des événements -->
+                <div class="bg-white shadow-lg rounded-xl overflow-hidden">
+                    <div class="p-6 border-b border-gray-200">
+                        <h2 class="text-xl font-bold text-gray-900">Historique de la mission</h2>
+                    </div>
+                    <div class="p-6">
+                        {% if tracking_events %}
+                            <div class="space-y-6">
+                                {% for event in tracking_events %}
+                                    <div class="flex items-start space-x-4">
+                                        <div class="flex-shrink-0">
+                                            <div class="w-10 h-10 bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center">
+                                                {% if event.event_type == 'created' %}
+                                                    <i data-lucide="plus" class="w-5 h-5 text-white"></i>
+                                                {% elif event.event_type == 'accepted' %}
+                                                    <i data-lucide="check" class="w-5 h-5 text-white"></i>
+                                                {% elif event.event_type == 'pickup' %}
+                                                    <i data-lucide="package" class="w-5 h-5 text-white"></i>
+                                                {% elif event.event_type == 'delivery' %}
+                                                    <i data-lucide="truck" class="w-5 h-5 text-white"></i>
+                                                {% else %}
+                                                    <i data-lucide="activity" class="w-5 h-5 text-white"></i>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="flex-1">
+                                            <div class="flex items-center justify-between">
+                                                <h3 class="text-lg font-medium text-gray-900">{{ event.get_event_type_display }}</h3>
+                                                <span class="text-sm text-gray-500">{{ event.timestamp|date:"d M Y H:i" }}</span>
+                                            </div>
+                                            {% if event.description %}
+                                                <p class="text-gray-600 mt-1">{{ event.description }}</p>
+                                            {% endif %}
+                                            {% if event.location %}
+                                                <p class="text-sm text-gray-500 mt-1">
+                                                    <i data-lucide="map-pin" class="w-4 h-4 inline mr-1"></i>
+                                                    {{ event.location }}
+                                                </p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-8">
+                                <i data-lucide="clock" class="w-12 h-12 text-gray-400 mx-auto mb-4"></i>
+                                <p class="text-gray-600">Aucun événement de suivi pour le moment</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informations de la mission -->
+            <div class="space-y-6">
+                <!-- Détails de la mission -->
+                <div class="bg-white shadow-lg rounded-xl p-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">Détails de la mission</h2>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <p class="text-sm text-gray-500">Adresse de collecte</p>
+                            <p class="font-medium">{{ mission.pickup_address }}</p>
+                        </div>
+                        
+                        <div>
+                            <p class="text-sm text-gray-500">Adresse de livraison</p>
+                            <p class="font-medium">{{ mission.delivery_address }}</p>
+                        </div>
+                        
+                        <div>
+                            <p class="text-sm text-gray-500">Prix</p>
+                            <p class="font-medium text-green-600">{{ mission.price }} FCFA</p>
+                        </div>
+                        
+                        {% if mission.estimated_delivery_time %}
+                        <div>
+                            <p class="text-sm text-gray-500">Livraison estimée</p>
+                            <p class="font-medium">{{ mission.estimated_delivery_time|date:"d M Y H:i" }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Livreur assigné -->
+                {% if mission.livreur %}
+                <div class="bg-white shadow-lg rounded-xl p-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">Livreur assigné</h2>
+                    
+                    <div class="flex items-center space-x-4 mb-4">
+                        <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                            <i data-lucide="user" class="w-6 h-6 text-white"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-medium text-gray-900">{{ mission.livreur.get_full_name|default:mission.livreur.username }}</h3>
+                            {% if mission.livreur.phone %}
+                                <p class="text-sm text-gray-500">{{ mission.livreur.phone }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if mission.livreur.livreur_profile %}
+                        <div class="space-y-2">
+                            <div class="flex items-center space-x-2">
+                                <i data-lucide="truck" class="w-4 h-4 text-gray-400"></i>
+                                <span class="text-sm text-gray-600">{{ mission.livreur.livreur_profile.vehicle_type|capfirst }}</span>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <div class="mt-4 space-y-2">
+                        <button class="w-full px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                            <i data-lucide="phone" class="w-4 h-4 inline mr-2"></i>
+                            Appeler le livreur
+                        </button>
+                        <button class="w-full px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors">
+                            <i data-lucide="message-circle" class="w-4 h-4 inline mr-2"></i>
+                            Envoyer un message
+                        </button>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Documents -->
+                {% if documents %}
+                <div class="bg-white shadow-lg rounded-xl p-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">Documents</h2>
+                    
+                    <div class="space-y-3">
+                        {% for document in documents %}
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    <i data-lucide="file" class="w-5 h-5 text-gray-400"></i>
+                                    <div>
+                                        <p class="font-medium text-gray-900">{{ document.name }}</p>
+                                        <p class="text-sm text-gray-500">{{ document.uploaded_at|date:"d M Y" }}</p>
+                                    </div>
+                                </div>
+                                <a href="{{ document.file.url }}" 
+                                   class="text-blue-600 hover:text-blue-800">
+                                    <i data-lucide="download" class="w-4 h-4"></i>
+                                </a>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Actions -->
+                <div class="bg-white shadow-lg rounded-xl p-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">Actions</h2>
+                    
+                    <div class="space-y-3">
+                        <a href="{% url 'missions:detail' mission.id %}" 
+                           class="w-full inline-flex items-center justify-center px-4 py-2 bg-gray-600 text-white font-medium rounded-lg hover:bg-gray-700 transition-colors">
+                            <i data-lucide="eye" class="w-4 h-4 mr-2"></i>
+                            Voir détails complets
+                        </a>
+                        
+                        {% if mission.status == 'en_cours' %}
+                        <button class="w-full px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors">
+                            <i data-lucide="x-circle" class="w-4 h-4 inline mr-2"></i>
+                            Signaler un problème
+                        </button>
+                        {% endif %}
+                        
+                        <button class="w-full px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                            <i data-lucide="share" class="w-4 h-4 inline mr-2"></i>
+                            Partager le suivi
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<script>
+    lucide.createIcons();
+    
+    // Simulation de mise à jour en temps réel
+    function updateTracking() {
+        // Ici, vous pourriez faire un appel AJAX pour récupérer les dernières données
+        console.log('Mise à jour du suivi...');
+    }
+    
+    // Mettre à jour toutes les 30 secondes
+    setInterval(updateTracking, 30000);
+</script>
+{% endblock %}

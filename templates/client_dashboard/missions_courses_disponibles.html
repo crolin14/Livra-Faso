@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Missions de Courses Disponibles{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="card mb-6">
+        <div class="card-header">
+            <h1 class="card-title">
+                <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+                Missions de Courses Disponibles
+            </h1>
+        </div>
+    </div>
+
+    {% if missions %}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {% for mission in missions %}
+        <div class="card hover:shadow-lg transition-shadow">
+            <div class="card-header">
+                <div class="flex items-center justify-between">
+                    <h2 class="card-title text-lg">{{ mission.titre }}</h2>
+                    <span class="badge badge-info">{{ mission.nombre_etapes }} étapes</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="space-y-3">
+                    <!-- Distance -->
+                    <div class="flex items-center space-x-2">
+                        <i data-lucide="map-pin" class="w-4 h-4 text-slate-500"></i>
+                        <span class="text-sm text-slate-600">Distance totale:</span>
+                        <span class="font-medium">{{ mission.distance_totale_km|default:"N/A" }} km</span>
+                    </div>
+
+                    <!-- Délai -->
+                    <div class="flex items-center space-x-2">
+                        <i data-lucide="clock" class="w-4 h-4 text-slate-500"></i>
+                        <span class="text-sm text-slate-600">Délai maximum:</span>
+                        <span class="font-medium">
+                            {% if mission.delai_type == 'heure_limite' %}
+                                Avant {{ mission.heure_limite|date:"H:i" }}
+                            {% else %}
+                                {{ mission.duree_max_minutes }} min
+                            {% endif %}
+                        </span>
+                    </div>
+
+                    <!-- Gain estimé -->
+                    <div class="flex items-center space-x-2">
+                        <i data-lucide="dollar-sign" class="w-4 h-4 text-green-500"></i>
+                        <span class="text-sm text-slate-600">Gain estimé:</span>
+                        <span class="font-bold text-green-600">{{ mission.prix_total }} FCFA</span>
+                    </div>
+
+                    <!-- Nombre de candidats -->
+                    <div class="flex items-center space-x-2">
+                        <i data-lucide="users" class="w-4 h-4 text-slate-500"></i>
+                        <span class="text-sm text-slate-600">{{ mission.candidats.count }} candidat{{ mission.candidats.count|pluralize }}</span>
+                    </div>
+
+                    <!-- Informations limitées si pas encore candidat -->
+                    {% if request.user.id not in user_has_applied %}
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-4">
+                        <p class="text-sm text-yellow-800">
+                            <i data-lucide="info" class="w-4 h-4 inline mr-1"></i>
+                            Postulez pour voir tous les détails de la mission
+                        </p>
+                    </div>
+                    {% else %}
+                    <!-- Informations complètes si candidat -->
+                    <div class="border-t border-slate-200 pt-3 mt-3">
+                        <h4 class="font-medium mb-2">Étapes:</h4>
+                        <div class="space-y-1">
+                            {% for etape in mission.etapes.all|slice:":3" %}
+                            <div class="text-sm text-slate-600">
+                                {{ etape.numero_ordre }}. {{ etape.get_type_etape_display }} - {{ etape.adresse|truncatewords:5 }}
+                            </div>
+                            {% endfor %}
+                            {% if mission.nombre_etapes > 3 %}
+                            <div class="text-sm text-slate-500">... et {{ mission.nombre_etapes|add:"-3" }} autre{{ mission.nombre_etapes|add:"-3"|pluralize }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-footer">
+                {% if request.user.id not in user_has_applied %}
+                <form method="POST" action="{% url 'client_dashboard:postuler_mission_courses' mission.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary w-full">
+                        <i data-lucide="send" class="w-4 h-4 mr-2"></i>
+                        Postuler à cette mission
+                    </button>
+                </form>
+                {% else %}
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
+                    <p class="text-sm text-blue-800">
+                        <i data-lucide="check-circle" class="w-4 h-4 inline mr-1"></i>
+                        Vous avez déjà postulé à cette mission
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="card-body text-center py-12">
+            <i data-lucide="inbox" class="w-16 h-16 text-slate-300 mx-auto mb-4"></i>
+            <p class="text-slate-600 text-lg">Aucune mission de courses disponible pour le moment.</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    lucide.createIcons();
+});
+</script>
+{% endblock %}
+

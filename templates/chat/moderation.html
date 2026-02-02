@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modération Chat - Admin LivraFaso</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .message-preview {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .action-btn {
+            transition: all 0.2s ease;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-screen">
+    <!-- Header -->
+    <div class="glass-effect p-4 mb-6">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <a href="{% url 'admin_dashboard:dashboard' %}" class="text-indigo-600 hover:text-indigo-800 transition-colors">
+                    <i class="fas fa-arrow-left text-xl"></i>
+                </a>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800">Modération Chat</h1>
+                    <p class="text-gray-600">Surveillance et modération des conversations</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <button id="refresh-btn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                    <i class="fas fa-sync-alt mr-2"></i>
+                    Actualiser
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 space-y-6">
+        <!-- Statistiques -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div class="stat-card rounded-2xl p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm">Total Conversations</p>
+                        <p class="text-2xl font-bold text-gray-800">{{ stats.total_conversations }}</p>
+                    </div>
+                    <div class="bg-blue-500 bg-opacity-20 p-3 rounded-full">
+                        <i class="fas fa-comments text-blue-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stat-card rounded-2xl p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm">Total Messages</p>
+                        <p class="text-2xl font-bold text-gray-800">{{ stats.total_messages }}</p>
+                    </div>
+                    <div class="bg-green-500 bg-opacity-20 p-3 rounded-full">
+                        <i class="fas fa-envelope text-green-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stat-card rounded-2xl p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm">Conversations Actives</p>
+                        <p class="text-2xl font-bold text-gray-800">{{ stats.active_conversations }}</p>
+                    </div>
+                    <div class="bg-yellow-500 bg-opacity-20 p-3 rounded-full">
+                        <i class="fas fa-fire text-yellow-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stat-card rounded-2xl p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm">Messages Signalés</p>
+                        <p class="text-2xl font-bold text-red-600" id="flagged-count">0</p>
+                    </div>
+                    <div class="bg-red-500 bg-opacity-20 p-3 rounded-full">
+                        <i class="fas fa-flag text-red-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtres et Recherche -->
+        <div class="glass-effect rounded-2xl p-6">
+            <div class="flex flex-col md:flex-row gap-4">
+                <div class="flex-1">
+                    <input type="text" id="search-input" placeholder="Rechercher dans les messages..." 
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                </div>
+                <div class="flex gap-2">
+                    <select id="filter-type" class="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                        <option value="">Tous les types</option>
+                        <option value="text">Texte</option>
+                        <option value="image">Images</option>
+                        <option value="file">Fichiers</option>
+                    </select>
+                    <select id="filter-status" class="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                        <option value="">Tous les statuts</option>
+                        <option value="normal">Normal</option>
+                        <option value="flagged">Signalé</option>
+                        <option value="hidden">Masqué</option>
+                    </select>
+                    <button id="search-btn" class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Messages Récents -->
+            <div class="glass-effect rounded-2xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-bold text-gray-800">Messages Récents</h2>
+                    <span class="text-sm text-gray-600">Dernières 20 messages</span>
+                </div>
+                
+                <div class="space-y-4 max-h-96 overflow-y-auto">
+                    {% for message in recent_messages %}
+                    <div class="bg-white bg-opacity-50 rounded-lg p-4 border border-gray-200">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="font-medium text-gray-800">{{ message.user.get_full_name }}</span>
+                                    <span class="text-xs text-gray-500">{{ message.user.user_type|default:"client" }}</span>
+                                    <span class="text-xs text-gray-500">•</span>
+                                    <span class="text-xs text-gray-500">{{ message.created_at|date:"d/m H:i" }}</span>
+                                </div>
+                                <p class="text-sm text-gray-700 message-preview">{{ message.content }}</p>
+                                {% if message.conversation.mission %}
+                                <div class="mt-2">
+                                    <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                        Mission #{{ message.conversation.mission.id }}
+                                    </span>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="flex gap-1 ml-4">
+                                <button class="action-btn text-blue-600 hover:text-blue-800 p-1" 
+                                        onclick="viewMessage({{ message.id }})" title="Voir">
+                                    <i class="fas fa-eye text-sm"></i>
+                                </button>
+                                <button class="action-btn text-yellow-600 hover:text-yellow-800 p-1" 
+                                        onclick="flagMessage({{ message.id }})" title="Signaler">
+                                    <i class="fas fa-flag text-sm"></i>
+                                </button>
+                                <button class="action-btn text-red-600 hover:text-red-800 p-1" 
+                                        onclick="hideMessage({{ message.id }})" title="Masquer">
+                                    <i class="fas fa-eye-slash text-sm"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center text-gray-500 py-8">
+                        <i class="fas fa-comments text-4xl mb-4 opacity-50"></i>
+                        <p>Aucun message récent</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Conversations Actives -->
+            <div class="glass-effect rounded-2xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-bold text-gray-800">Top Conversations</h2>
+                    <span class="text-sm text-gray-600">Par nombre de messages</span>
+                </div>
+                
+                <div class="space-y-4 max-h-96 overflow-y-auto">
+                    {% for conversation in top_conversations %}
+                    <div class="bg-white bg-opacity-50 rounded-lg p-4 border border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <h3 class="font-medium text-gray-800">{{ conversation.title }}</h3>
+                                    {% if conversation.mission %}
+                                    <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                                        Mission #{{ conversation.mission.id }}
+                                    </span>
+                                    {% endif %}
+                                </div>
+                                <div class="flex items-center gap-4 text-sm text-gray-600">
+                                    <span><i class="fas fa-envelope mr-1"></i>{{ conversation.message_count }} messages</span>
+                                    <span><i class="fas fa-users mr-1"></i>{{ conversation.participants.count }} participants</span>
+                                </div>
+                            </div>
+                            <div class="flex gap-1">
+                                <button class="action-btn text-blue-600 hover:text-blue-800 p-2" 
+                                        onclick="viewConversation({{ conversation.id }})" title="Voir conversation">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                {% if conversation.mission %}
+                                <a href="{% url 'chat:mission_chat' conversation.mission.id %}" 
+                                   class="action-btn text-green-600 hover:text-green-800 p-2" title="Rejoindre chat">
+                                    <i class="fas fa-comments"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center text-gray-500 py-8">
+                        <i class="fas fa-chart-bar text-4xl mb-4 opacity-50"></i>
+                        <p>Aucune conversation trouvée</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Graphiques d'Activité -->
+        <div class="glass-effect rounded-2xl p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Activité Chat (7 derniers jours)</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                    <canvas id="messagesChart" width="400" height="200"></canvas>
+                </div>
+                <div>
+                    <canvas id="conversationsChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Détails Message -->
+    <div id="message-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-96 overflow-y-auto">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-bold text-gray-800">Détails du Message</h3>
+                    <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div id="message-details">
+                    <!-- Contenu chargé dynamiquement -->
+                </div>
+                <div class="flex gap-3 mt-6">
+                    <button id="modal-flag-btn" class="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition-colors">
+                        <i class="fas fa-flag mr-2"></i>Signaler
+                    </button>
+                    <button id="modal-hide-btn" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors">
+                        <i class="fas fa-eye-slash mr-2"></i>Masquer
+                    </button>
+                    <button id="modal-delete-btn" class="bg-red-700 text-white px-4 py-2 rounded-lg hover:bg-red-800 transition-colors">
+                        <i class="fas fa-trash mr-2"></i>Supprimer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class ChatModeration {
+            constructor() {
+                this.currentMessageId = null;
+                this.initializeCharts();
+                this.bindEvents();
+                this.loadFlaggedCount();
+            }
+            
+            bindEvents() {
+                // Recherche
+                document.getElementById('search-btn').addEventListener('click', () => this.performSearch());
+                document.getElementById('search-input').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.performSearch();
+                });
+                
+                // Actualisation
+                document.getElementById('refresh-btn').addEventListener('click', () => {
+                    window.location.reload();
+                });
+                
+                // Modal
+                document.getElementById('modal-flag-btn').addEventListener('click', () => {
+                    this.moderateMessage(this.currentMessageId, 'flag');
+                });
+                
+                document.getElementById('modal-hide-btn').addEventListener('click', () => {
+                    this.moderateMessage(this.currentMessageId, 'hide');
+                });
+                
+                document.getElementById('modal-delete-btn').addEventListener('click', () => {
+                    if (confirm('Êtes-vous sûr de vouloir supprimer ce message ?')) {
+                        this.moderateMessage(this.currentMessageId, 'delete');
+                    }
+                });
+            }
+            
+            initializeCharts() {
+                // Graphique des messages
+                const messagesCtx = document.getElementById('messagesChart').getContext('2d');
+                new Chart(messagesCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
+                        datasets: [{
+                            label: 'Messages',
+                            data: [12, 19, 3, 5, 2, 3, 9], // Données d'exemple
+                            borderColor: 'rgb(99, 102, 241)',
+                            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Messages par jour'
+                            }
+                        }
+                    }
+                });
+                
+                // Graphique des conversations
+                const conversationsCtx = document.getElementById('conversationsChart').getContext('2d');
+                new Chart(conversationsCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
+                        datasets: [{
+                            label: 'Nouvelles conversations',
+                            data: [2, 4, 1, 3, 1, 2, 3], // Données d'exemple
+                            backgroundColor: 'rgba(34, 197, 94, 0.8)',
+                            borderColor: 'rgb(34, 197, 94)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Nouvelles conversations par jour'
+                            }
+                        }
+                    }
+                });
+            }
+            
+            performSearch() {
+                const query = document.getElementById('search-input').value;
+                const type = document.getElementById('filter-type').value;
+                const status = document.getElementById('filter-status').value;
+                
+                const params = new URLSearchParams();
+                if (query) params.append('q', query);
+                if (type) params.append('type', type);
+                if (status) params.append('status', status);
+                
+                fetch(`/chat/api/search/?${params}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        this.displaySearchResults(data.messages);
+                    })
+                    .catch(error => {
+                        console.error('Erreur recherche:', error);
+                        this.showNotification('Erreur lors de la recherche', 'error');
+                    });
+            }
+            
+            displaySearchResults(messages) {
+                // Implémenter l'affichage des résultats de recherche
+                console.log('Résultats de recherche:', messages);
+            }
+            
+            loadFlaggedCount() {
+                // Simuler le chargement du nombre de messages signalés
+                // À implémenter avec une vraie API
+                document.getElementById('flagged-count').textContent = '3';
+            }
+            
+            moderateMessage(messageId, action) {
+                const reason = prompt('Raison de la modération (optionnel):');
+                
+                fetch('/chat/api/moderate-message/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': this.getCsrfToken()
+                    },
+                    body: JSON.stringify({
+                        message_id: messageId,
+                        action: action,
+                        reason: reason || ''
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        this.showNotification('Action effectuée avec succès', 'success');
+                        this.closeModal();
+                        setTimeout(() => window.location.reload(), 1000);
+                    } else {
+                        this.showNotification('Erreur lors de la modération', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur modération:', error);
+                    this.showNotification('Erreur serveur', 'error');
+                });
+            }
+            
+            showNotification(message, type) {
+                const notification = document.createElement('div');
+                notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg text-white z-50 ${
+                    type === 'success' ? 'bg-green-500' : 'bg-red-500'
+                }`;
+                notification.textContent = message;
+                
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.remove();
+                }, 3000);
+            }
+            
+            closeModal() {
+                document.getElementById('message-modal').classList.add('hidden');
+                this.currentMessageId = null;
+            }
+            
+            getCsrfToken() {
+                return document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+            }
+        }
+        
+        // Fonctions globales pour les boutons
+        function viewMessage(messageId) {
+            const moderation = new ChatModeration();
+            moderation.currentMessageId = messageId;
+            
+            // Simuler le chargement des détails du message
+            document.getElementById('message-details').innerHTML = `
+                <div class="space-y-4">
+                    <div><strong>ID:</strong> ${messageId}</div>
+                    <div><strong>Contenu:</strong> Message de test...</div>
+                    <div><strong>Utilisateur:</strong> John Doe</div>
+                    <div><strong>Date:</strong> ${new Date().toLocaleString()}</div>
+                    <div><strong>Mission:</strong> #123</div>
+                </div>
+            `;
+            
+            document.getElementById('message-modal').classList.remove('hidden');
+        }
+        
+        function flagMessage(messageId) {
+            const moderation = new ChatModeration();
+            moderation.moderateMessage(messageId, 'flag');
+        }
+        
+        function hideMessage(messageId) {
+            const moderation = new ChatModeration();
+            moderation.moderateMessage(messageId, 'hide');
+        }
+        
+        function viewConversation(conversationId) {
+            // Rediriger vers la vue détaillée de la conversation
+            window.open(`/chat/conversation/${conversationId}/`, '_blank');
+        }
+        
+        function closeModal() {
+            document.getElementById('message-modal').classList.add('hidden');
+        }
+        
+        // Initialiser la modération
+        document.addEventListener('DOMContentLoaded', function() {
+            new ChatModeration();
+        });
+    </script>
+</body>
+</html>

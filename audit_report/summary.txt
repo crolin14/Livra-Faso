@@ -1,0 +1,18 @@
+=============================== 
+      AUDIT PROJET LIVRAISON_FASO   
+=============================== 
+Date : 26/08/2025 17:39:56,69 
+Racine projet : C:\Users\hp\Documents\Livraison_Faso 
+ 
+Arborescence complète : project_tree.txt 
+Fichiers Django : django_files.txt 
+Templates HTML : templates_list.txt 
+CSS/SCSS/SASS : static_files_css.txt 
+JS/TS : static_files_js.txt 
+Images : static_files_images.txt 
+SQL : sql_files.txt 
+Migrations Django : migrations.txt 
+requirements.txt trouvé et copié 
+ 
+============================================ 
+AUDIT TERMINE - Consultez le dossier audit_report et audit_report.zip 

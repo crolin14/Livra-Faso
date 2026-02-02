@@ -1,0 +1,255 @@
+{% extends "base_ultra_modern.html" %}
+{% load static %}
+
+{% block title %}S'abonner au plan {{ plan.name }} - LivraFaso{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Finaliser votre abonnement</h1>
+            <p class="text-gray-600">Vous êtes sur le point de vous abonner au plan <strong>{{ plan.name }}</strong></p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Formulaire d'abonnement -->
+            <div class="lg:col-span-2">
+                <div class="bg-white shadow-lg rounded-xl overflow-hidden">
+                    <!-- Étapes -->
+                    <div class="bg-gray-50 px-6 py-4 border-b">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-4">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">1</div>
+                                    <span class="text-sm font-medium text-blue-600">Informations</span>
+                                </div>
+                                <div class="w-8 h-px bg-gray-300"></div>
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center text-sm font-medium">2</div>
+                                    <span class="text-sm text-gray-600">Paiement</span>
+                                </div>
+                                <div class="w-8 h-px bg-gray-300"></div>
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center text-sm font-medium">3</div>
+                                    <span class="text-sm text-gray-600">Confirmation</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Formulaire -->
+                    <form method="post" class="p-6 space-y-6">
+                        {% csrf_token %}
+                        
+                        <!-- Messages d'erreur -->
+                        {% if form.errors %}
+                            <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                                <div class="flex">
+                                    <i data-lucide="alert-circle" class="w-5 h-5 text-red-400 mr-3 mt-0.5"></i>
+                                    <div>
+                                        <h3 class="text-sm font-medium text-red-800">Erreurs dans le formulaire</h3>
+                                        <ul class="mt-2 text-sm text-red-700 list-disc list-inside">
+                                            {% for field, errors in form.errors.items %}
+                                                {% for error in errors %}
+                                                    <li>{{ error }}</li>
+                                                {% endfor %}
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <!-- Informations de facturation -->
+                        <div>
+                            <h2 class="text-lg font-semibold text-gray-900 mb-4">Informations de facturation</h2>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Prénom *</label>
+                                    <input type="text" name="first_name" value="{{ form.first_name.value|default:'' }}" 
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                                           required>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Nom *</label>
+                                    <input type="text" name="last_name" value="{{ form.last_name.value|default:'' }}" 
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                                           required>
+                                </div>
+                            </div>
+
+                            <div class="mt-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                                <input type="email" name="email" value="{{ form.email.value|default:user.email }}" 
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                                       required>
+                            </div>
+
+                            <div class="mt-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Téléphone *</label>
+                                <input type="tel" name="phone" value="{{ form.phone.value|default:user.phone }}" 
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                                       required>
+                            </div>
+
+                            <div class="mt-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Adresse</label>
+                                <textarea name="address" rows="3" 
+                                          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">{{ form.address.value|default:'' }}</textarea>
+                            </div>
+                        </div>
+
+                        <!-- Méthode de paiement -->
+                        <div>
+                            <h2 class="text-lg font-semibold text-gray-900 mb-4">Méthode de paiement</h2>
+                            
+                            <div class="space-y-3">
+                                <label class="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                                    <input type="radio" name="payment_method" value="card" class="mr-3" checked>
+                                    <div class="flex items-center space-x-3">
+                                        <i data-lucide="credit-card" class="w-5 h-5 text-gray-600"></i>
+                                        <span class="font-medium">Carte bancaire</span>
+                                    </div>
+                                </label>
+                                
+                                <label class="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                                    <input type="radio" name="payment_method" value="mobile_money" class="mr-3">
+                                    <div class="flex items-center space-x-3">
+                                        <i data-lucide="smartphone" class="w-5 h-5 text-gray-600"></i>
+                                        <span class="font-medium">Mobile Money</span>
+                                    </div>
+                                </label>
+                                
+                                <label class="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                                    <input type="radio" name="payment_method" value="bank_transfer" class="mr-3">
+                                    <div class="flex items-center space-x-3">
+                                        <i data-lucide="building" class="w-5 h-5 text-gray-600"></i>
+                                        <span class="font-medium">Virement bancaire</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Conditions -->
+                        <div class="border-t pt-6">
+                            <label class="flex items-start space-x-3">
+                                <input type="checkbox" name="accept_terms" class="mt-1" required>
+                                <span class="text-sm text-gray-600">
+                                    J'accepte les <a href="{% url 'legal:terms' %}" class="text-blue-600 hover:underline">conditions d'utilisation</a> 
+                                    et la <a href="{% url 'legal:privacy' %}" class="text-blue-600 hover:underline">politique de confidentialité</a>
+                                </span>
+                            </label>
+                        </div>
+
+                        <!-- Boutons -->
+                        <div class="flex items-center justify-between pt-6 border-t">
+                            <a href="{% url 'subscriptions:plan_list' %}" 
+                               class="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium">
+                                <i data-lucide="arrow-left" class="w-4 h-4 inline mr-2"></i>
+                                Retour aux plans
+                            </a>
+                            
+                            <button type="submit" 
+                                    class="px-8 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                                Continuer vers le paiement
+                                <i data-lucide="arrow-right" class="w-4 h-4 inline ml-2"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Résumé de la commande -->
+            <div class="lg:col-span-1">
+                <div class="bg-white shadow-lg rounded-xl p-6 sticky top-8">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Résumé de votre commande</h2>
+                    
+                    <!-- Plan sélectionné -->
+                    <div class="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-4 mb-6">
+                        <h3 class="font-semibold text-gray-900 mb-2">{{ plan.name }}</h3>
+                        <p class="text-sm text-gray-600 mb-3">{{ plan.description }}</p>
+                        
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-600">Prix</span>
+                            <span class="font-semibold">{{ plan.price }} FCFA</span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between mt-1">
+                            <span class="text-sm text-gray-600">Période</span>
+                            <span class="text-sm">{{ plan.get_duration_display }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Fonctionnalités incluses -->
+                    <div class="mb-6">
+                        <h4 class="font-medium text-gray-900 mb-3">Inclus dans ce plan :</h4>
+                        <ul class="space-y-2 text-sm">
+                            {% if plan.max_missions %}
+                                <li class="flex items-center space-x-2">
+                                    <i data-lucide="check" class="w-4 h-4 text-green-500"></i>
+                                    <span>{{ plan.max_missions }} missions/mois</span>
+                                </li>
+                            {% else %}
+                                <li class="flex items-center space-x-2">
+                                    <i data-lucide="infinity" class="w-4 h-4 text-green-500"></i>
+                                    <span>Missions illimitées</span>
+                                </li>
+                            {% endif %}
+                            
+                            <li class="flex items-center space-x-2">
+                                <i data-lucide="truck" class="w-4 h-4 text-green-500"></i>
+                                <span>Suivi en temps réel</span>
+                            </li>
+                            
+                            <li class="flex items-center space-x-2">
+                                <i data-lucide="headphones" class="w-4 h-4 text-green-500"></i>
+                                <span>Support {% if plan.priority_support %}prioritaire{% else %}standard{% endif %}</span>
+                            </li>
+                            
+                            {% if plan.analytics %}
+                                <li class="flex items-center space-x-2">
+                                    <i data-lucide="bar-chart" class="w-4 h-4 text-green-500"></i>
+                                    <span>Analyses avancées</span>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+
+                    <!-- Total -->
+                    <div class="border-t pt-4">
+                        <div class="flex items-center justify-between text-lg font-semibold">
+                            <span>Total</span>
+                            <span class="text-blue-600">{{ plan.price }} FCFA</span>
+                        </div>
+                        <p class="text-sm text-gray-500 mt-1">Facturation {{ plan.get_duration_display|lower }}</p>
+                    </div>
+
+                    <!-- Garanties -->
+                    <div class="mt-6 pt-6 border-t">
+                        <div class="flex items-center space-x-2 text-sm text-gray-600 mb-2">
+                            <i data-lucide="shield-check" class="w-4 h-4 text-green-500"></i>
+                            <span>Paiement sécurisé</span>
+                        </div>
+                        <div class="flex items-center space-x-2 text-sm text-gray-600 mb-2">
+                            <i data-lucide="refresh-cw" class="w-4 h-4 text-green-500"></i>
+                            <span>Annulation flexible</span>
+                        </div>
+                        <div class="flex items-center space-x-2 text-sm text-gray-600">
+                            <i data-lucide="clock" class="w-4 h-4 text-green-500"></i>
+                            <span>14 jours d'essai gratuit</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<script>
+    lucide.createIcons();
+</script>
+{% endblock %}

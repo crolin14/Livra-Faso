@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Mon Profil - LivraFaso{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="card mb-8">
+        <div class="gradient-header">
+            <h1 class="heading-1">Mon Profil</h1>
+            <p class="text-lg opacity-90">Gérez vos informations personnelles, adresses et moyens de paiement.</p>
+        </div>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Colonne principale : Informations personnelles -->
+            <div class="lg:col-span-2 space-y-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title"><i data-lucide="user" class="w-5 h-5"></i>Informations Personnelles</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="first_name" class="form-label">Prénom</label>
+                                <input type="text" id="first_name" name="first_name" class="input" value="{{ user.first_name|default:'' }}">
+                            </div>
+                            <div>
+                                <label for="last_name" class="form-label">Nom</label>
+                                <input type="text" id="last_name" name="last_name" class="input" value="{{ user.last_name|default:'' }}">
+                            </div>
+                            <div>
+                                <label for="email" class="form-label">Adresse E-mail</label>
+                                <input type="email" id="email" name="email" class="input" value="{{ user.email|default:'' }}">
+                            </div>
+                            <div>
+                                <label for="phone_number" class="form-label">Numéro de Téléphone</label>
+                                <input type="text" id="phone_number" name="phone_number" class="input" value="{{ user.phone_number|default:'' }}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer text-right">
+                        <button type="submit" class="btn btn-primary">
+                            <i data-lucide="save" class="w-4 h-4 mr-2"></i>
+                            Sauvegarder les modifications
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Adresses -->
+                <div class="card">
+                    <div class="card-header flex justify-between items-center">
+                        <h2 class="card-title"><i data-lucide="map-pin" class="w-5 h-5"></i>Mes Adresses</h2>
+                        <button type="button" class="btn btn-secondary btn-sm"><i data-lucide="plus" class="w-4 h-4 mr-2"></i>Ajouter</button>
+                    </div>
+                    <div class="card-body">
+                        {% for adresse in adresses %}
+                            <div class="p-4 rounded-lg {% if forloop.counter|divisibleby:2 %}bg-slate-50{% else %}bg-white{% endif %} flex justify-between items-center">
+                                <div>
+                                    <p class="font-semibold">{{ adresse.nom }} <span class="badge badge-info">{{ adresse.get_type_adresse_display }}</span></p>
+                                    <p class="text-sm text-slate-600">{{ adresse.adresse_complete }}</p>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <button type="button" class="btn btn-outline btn-sm"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+                                    <button type="button" class="btn btn-danger btn-sm"><i data-lucide="trash" class="w-4 h-4"></i></button>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <p class="text-slate-500">Aucune adresse enregistrée.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Colonne latérale -->
+            <div class="space-y-6">
+                <!-- Portefeuille -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i data-lucide="wallet" class="w-5 h-5"></i>Mon Portefeuille</h3>
+                    </div>
+                    <div class="card-body text-center">
+                        <p class="text-sm text-slate-600">Solde Total</p>
+                        <p class="text-3xl font-bold text-primary-600 my-2">{{ portefeuille.solde_total|floatformat:0 }} FCFA</p>
+                        <button class="btn btn-secondary w-full"><i data-lucide="plus" class="w-4 h-4 mr-2"></i>Recharger</button>
+                    </div>
+                </div>
+
+                <!-- Moyens de paiement -->
+                <div class="card">
+                    <div class="card-header flex justify-between items-center">
+                        <h3 class="card-title"><i data-lucide="credit-card" class="w-5 h-5"></i>Paiement</h3>
+                        <button type="button" class="btn btn-secondary btn-sm"><i data-lucide="plus" class="w-4 h-4 mr-2"></i>Ajouter</button>
+                    </div>
+                    <div class="card-body">
+                         <div>
+                            <label for="default_payment_method" class="form-label">Moyen par défaut</label>
+                            <select id="default_payment_method" name="default_payment_method" class="input">
+                                <option value="orange_money" {% if client_profile.default_payment_method == 'orange_money' %}selected{% endif %}>Orange Money</option>
+                                <option value="moov_money" {% if client_profile.default_payment_method == 'moov_money' %}selected{% endif %}>Moov Money</option>
+                                <option value="wave" {% if client_profile.default_payment_method == 'wave' %}selected{% endif %}>Wave</option>
+                                <option value="carte_bancaire" {% if client_profile.default_payment_method == 'carte_bancaire' %}selected{% endif %}>Carte Bancaire</option>
+                                <option value="especes" {% if client_profile.default_payment_method == 'especes' %}selected{% endif %}>Espèces</option>
+                            </select>
+                        </div>
+                        <hr class="my-4">
+                        <div class="space-y-2">
+                        {% for moyen in moyens_paiement %}
+                            <div class="p-3 rounded-lg flex items-center justify-between border border-slate-200">
+                                <p class="font-medium text-sm">{{ moyen.nom_affiche }}</p>
+                                <span class="badge badge-secondary">{{ moyen.get_type_paiement_display }}</span>
+                            </div>
+                        {% empty %}
+                            <p class="text-slate-500 text-sm">Aucun moyen de paiement.</p>
+                        {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<style>
+.form-label {
+    @apply block text-sm font-medium text-slate-700 mb-1;
+}
+.input {
+    @apply block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm placeholder-slate-400
+           focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500;
+}
+</style>
+
+{% endblock %}

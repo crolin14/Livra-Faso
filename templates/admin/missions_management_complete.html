@@ -1,0 +1,399 @@
+{% extends 'base_ultra_modern.html' %}
+{% load static %}
+
+{% block title %}Gestion des Missions - Admin LivraFaso{% endblock %}
+
+{% block extra_head %}
+<style>
+    .mission-card {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+        border-radius: 16px;
+    }
+    
+    .mission-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+    }
+    
+    .status-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-pending { background: rgba(251, 191, 36, 0.2); color: #d97706; }
+    .status-in-progress { background: rgba(59, 130, 246, 0.2); color: #2563eb; }
+    .status-completed { background: rgba(34, 197, 94, 0.2); color: #16a34a; }
+    .status-cancelled { background: rgba(239, 68, 68, 0.2); color: #dc2626; }
+    
+    .priority-high { border-left: 4px solid #dc2626; }
+    .priority-medium { border-left: 4px solid #d97706; }
+    .priority-low { border-left: 4px solid #16a34a; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Gestion des Missions</h1>
+            <p class="text-gray-600 mt-2">Supervision et administration de toutes les missions de livraison</p>
+        </div>
+        <div class="flex space-x-3">
+            <a href="{% url 'admin_dashboard:dashboard' %}" class="btn-outline">
+                <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>
+                Retour Dashboard
+            </a>
+            <button class="btn-secondary" onclick="exportMissions()">
+                <i data-lucide="download" class="w-4 h-4 mr-2"></i>
+                Exporter
+            </button>
+            <button class="btn-primary" onclick="refreshMissions()">
+                <i data-lucide="refresh-cw" class="w-4 h-4 mr-2"></i>
+                Actualiser
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="mission-card p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-600 text-sm font-medium">Total Missions</p>
+                    <p class="text-2xl font-bold text-gray-900 mt-1">{{ stats.total_missions }}</p>
+                </div>
+                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <i data-lucide="package" class="w-5 h-5 text-blue-600"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mission-card p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-600 text-sm font-medium">En Cours</p>
+                    <p class="text-2xl font-bold text-blue-600 mt-1">{{ stats.active_missions }}</p>
+                </div>
+                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <i data-lucide="truck" class="w-5 h-5 text-blue-600"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mission-card p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-600 text-sm font-medium">Complétées</p>
+                    <p class="text-2xl font-bold text-green-600 mt-1">{{ stats.completed_missions }}</p>
+                </div>
+                <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                    <i data-lucide="check-circle" class="w-5 h-5 text-green-600"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mission-card p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-600 text-sm font-medium">Revenus Aujourd'hui</p>
+                    <p class="text-2xl font-bold text-yellow-600 mt-1">{{ stats.today_revenue|floatformat:0 }} FCFA</p>
+                </div>
+                <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+                    <i data-lucide="dollar-sign" class="w-5 h-5 text-yellow-600"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="mission-card p-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Statut</label>
+                <select id="status-filter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
+                    <option value="">Tous les statuts</option>
+                    <option value="pending">En Attente</option>
+                    <option value="in_progress">En Cours</option>
+                    <option value="completed">Complétée</option>
+                    <option value="cancelled">Annulée</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Priorité</label>
+                <select id="priority-filter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
+                    <option value="">Toutes priorités</option>
+                    <option value="high">Haute</option>
+                    <option value="medium">Moyenne</option>
+                    <option value="low">Basse</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Livreur</label>
+                <select id="livreur-filter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
+                    <option value="">Tous les livreurs</option>
+                    {% for livreur in livreurs %}
+                    <option value="{{ livreur.id }}">{{ livreur.username }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                <input type="date" id="date-filter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
+            </div>
+            <div class="flex items-end">
+                <button onclick="applyFilters()" class="btn-primary w-full">
+                    <i data-lucide="filter" class="w-4 h-4 mr-2"></i>
+                    Filtrer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Missions List -->
+    <div class="space-y-4" id="missions-container">
+        {% for mission in missions %}
+        <div class="mission-card p-6 priority-{{ mission.priority|default:'medium' }}">
+            <div class="flex items-start justify-between">
+                <div class="flex-1">
+                    <div class="flex items-center space-x-3 mb-3">
+                        <h3 class="text-lg font-semibold text-gray-900">#{{ mission.id }} - {{ mission.title|default:'Mission de livraison' }}</h3>
+                        <span class="status-badge status-{{ mission.status }}">
+                            {{ mission.get_status_display|default:mission.status }}
+                        </span>
+                        {% if mission.priority %}
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                            {% if mission.priority == 'high' %}bg-red-100 text-red-800
+                            {% elif mission.priority == 'medium' %}bg-yellow-100 text-yellow-800
+                            {% else %}bg-green-100 text-green-800{% endif %}">
+                            {{ mission.priority|capfirst }}
+                        </span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div>
+                            <p class="text-sm text-gray-500">Client</p>
+                            <p class="font-medium">{{ mission.client.username|default:'N/A' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Livreur</p>
+                            <p class="font-medium">{{ mission.livreur.username|default:'Non assigné' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Prix</p>
+                            <p class="font-medium text-green-600">{{ mission.price|floatformat:0 }} FCFA</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <p class="text-sm text-gray-500">Adresse de départ</p>
+                            <p class="text-sm">{{ mission.pickup_address|default:'N/A' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Adresse de livraison</p>
+                            <p class="text-sm">{{ mission.delivery_address|default:'N/A' }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-4 text-sm text-gray-500">
+                        <span><i data-lucide="calendar" class="w-4 h-4 inline mr-1"></i>{{ mission.created_at|date:"d/m/Y H:i" }}</span>
+                        {% if mission.scheduled_time %}
+                        <span><i data-lucide="clock" class="w-4 h-4 inline mr-1"></i>{{ mission.scheduled_time|date:"d/m/Y H:i" }}</span>
+                        {% endif %}
+                        {% if mission.distance %}
+                        <span><i data-lucide="map-pin" class="w-4 h-4 inline mr-1"></i>{{ mission.distance|floatformat:1 }} km</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="flex flex-col space-y-2 ml-4">
+                    <button onclick="viewMission({{ mission.id }})" class="btn-sm btn-outline" title="Voir détails">
+                        <i data-lucide="eye" class="w-4 h-4"></i>
+                    </button>
+                    <button onclick="editMission({{ mission.id }})" class="btn-sm btn-secondary" title="Modifier">
+                        <i data-lucide="edit" class="w-4 h-4"></i>
+                    </button>
+                    {% if mission.status == 'pending' %}
+                    <button onclick="assignMission({{ mission.id }})" class="btn-sm btn-primary" title="Assigner">
+                        <i data-lucide="user-plus" class="w-4 h-4"></i>
+                    </button>
+                    {% endif %}
+                    {% if mission.status != 'completed' and mission.status != 'cancelled' %}
+                    <button onclick="cancelMission({{ mission.id }})" class="btn-sm btn-danger" title="Annuler">
+                        <i data-lucide="x-circle" class="w-4 h-4"></i>
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="mission-card p-8 text-center">
+            <i data-lucide="package" class="w-12 h-12 text-gray-400 mx-auto mb-4"></i>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">Aucune mission trouvée</h3>
+            <p class="text-gray-500">Aucune mission ne correspond aux critères de recherche.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if missions.has_other_pages %}
+    <div class="flex items-center justify-between mt-8">
+        <div class="text-sm text-gray-700">
+            Affichage de {{ missions.start_index }} à {{ missions.end_index }} sur {{ missions.paginator.count }} missions
+        </div>
+        <div class="flex space-x-2">
+            {% if missions.has_previous %}
+            <a href="?page={{ missions.previous_page_number }}" class="btn-outline">Précédent</a>
+            {% endif %}
+            
+            {% for num in missions.paginator.page_range %}
+            {% if missions.number == num %}
+            <span class="btn-primary">{{ num }}</span>
+            {% else %}
+            <a href="?page={{ num }}" class="btn-outline">{{ num }}</a>
+            {% endif %}
+            {% endfor %}
+            
+            {% if missions.has_next %}
+            <a href="?page={{ missions.next_page_number }}" class="btn-outline">Suivant</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Mission Details Modal -->
+<div id="mission-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-screen overflow-y-auto">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-bold text-gray-900">Détails de la Mission</h2>
+                    <button onclick="closeMissionModal()" class="text-gray-400 hover:text-gray-600">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                </div>
+                <div id="mission-details-content">
+                    <!-- Content will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    lucide.createIcons();
+});
+
+function viewMission(missionId) {
+    // Show mission details modal
+    fetch(`/admin-dashboard/missions/${missionId}/details/`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('mission-details-content').innerHTML = data.html;
+            document.getElementById('mission-modal').classList.remove('hidden');
+            lucide.createIcons();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Erreur lors du chargement des détails');
+        });
+}
+
+function closeMissionModal() {
+    document.getElementById('mission-modal').classList.add('hidden');
+}
+
+function editMission(missionId) {
+    window.location.href = `/missions/${missionId}/edit/`;
+}
+
+function assignMission(missionId) {
+    if (confirm('Voulez-vous assigner cette mission automatiquement ?')) {
+        fetch(`/admin-dashboard/missions/${missionId}/assign/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Erreur lors de l\'assignation: ' + data.message);
+            }
+        });
+    }
+}
+
+function cancelMission(missionId) {
+    if (confirm('Êtes-vous sûr de vouloir annuler cette mission ?')) {
+        fetch(`/admin-dashboard/missions/${missionId}/cancel/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Erreur lors de l\'annulation: ' + data.message);
+            }
+        });
+    }
+}
+
+function applyFilters() {
+    const status = document.getElementById('status-filter').value;
+    const priority = document.getElementById('priority-filter').value;
+    const livreur = document.getElementById('livreur-filter').value;
+    const date = document.getElementById('date-filter').value;
+    
+    const params = new URLSearchParams();
+    if (status) params.append('status', status);
+    if (priority) params.append('priority', priority);
+    if (livreur) params.append('livreur', livreur);
+    if (date) params.append('date', date);
+    
+    window.location.href = '?' + params.toString();
+}
+
+function refreshMissions() {
+    location.reload();
+}
+
+function exportMissions() {
+    window.location.href = '/admin-dashboard/missions/export/';
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

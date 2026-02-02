@@ -1,0 +1,822 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Inscription - LivraFaso{% endblock %}
+
+{% block content %}
+<!-- Registration Section -->
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50">
+    <div class="max-w-2xl w-full space-y-8 px-4 py-8">
+        <div class="text-center">
+            <div class="w-16 h-16 bg-gradient-primary rounded-xl flex items-center justify-center mx-auto mb-6">
+                <i data-lucide="user-plus" class="w-8 h-8 text-white"></i>
+            </div>
+            <h2 class="heading-1 mb-2">
+                Rejoignez LivraFaso
+            </h2>
+            <p class="body-large text-slate-600">
+                Créez votre compte et commencez dès aujourd'hui
+            </p>
+        </div>
+
+        <div class="card p-8">
+            <form method="post" id="registration-form" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- User Type Selection -->
+                <div class="space-y-6">
+                    <div class="text-center">
+                        <h3 class="heading-3 mb-2">
+                            Choisissez votre profil
+                        </h3>
+                        <p class="body-medium text-slate-500">Sélectionnez le type de compte qui vous correspond</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
+                        <!-- Client Card -->
+                        <label class="futuristic-card" data-type="client">
+                            <input type="radio" name="{{ form.user_type.name }}" value="client" class="sr-only" required>
+                            <div class="futuristic-card-inner">
+                                <div class="futuristic-card-glow"></div>
+                                <div class="futuristic-card-content">
+                                    <div class="futuristic-icon-container">
+                                        <div class="futuristic-icon-bg"></div>
+                                        <i data-lucide="user" class="futuristic-icon"></i>
+                                    </div>
+                                    <h4 class="futuristic-title">Client</h4>
+                                    <p class="futuristic-subtitle">Particuliers</p>
+                                    <div class="futuristic-features">
+                                        <span class="futuristic-feature">• Commandes rapides</span>
+                                        <span class="futuristic-feature">• Suivi en temps réel</span>
+                                    </div>
+                                </div>
+                                <div class="futuristic-card-border"></div>
+                            </div>
+                        </label>
+                        
+                        <!-- Livreur Card -->
+                        <label class="futuristic-card" data-type="livreur">
+                            <input type="radio" name="{{ form.user_type.name }}" value="livreur" class="sr-only" required>
+                            <div class="futuristic-card-inner">
+                                <div class="futuristic-card-glow"></div>
+                                <div class="futuristic-card-content">
+                                    <div class="futuristic-icon-container">
+                                        <div class="futuristic-icon-bg"></div>
+                                        <i data-lucide="truck" class="futuristic-icon"></i>
+                                    </div>
+                                    <h4 class="futuristic-title">Livreur</h4>
+                                    <p class="futuristic-subtitle">Transporteurs</p>
+                                    <div class="futuristic-features">
+                                        <span class="futuristic-feature">• Missions disponibles</span>
+                                        <span class="futuristic-feature">• Revenus optimisés</span>
+                                    </div>
+                                </div>
+                                <div class="futuristic-card-border"></div>
+                            </div>
+                        </label>
+                        
+                        <!-- Entreprise Card -->
+                        <label class="futuristic-card" data-type="entreprise">
+                            <input type="radio" name="{{ form.user_type.name }}" value="entreprise" class="sr-only" required>
+                            <div class="futuristic-card-inner">
+                                <div class="futuristic-card-glow"></div>
+                                <div class="futuristic-card-content">
+                                    <div class="futuristic-icon-container">
+                                        <div class="futuristic-icon-bg"></div>
+                                        <i data-lucide="building-2" class="futuristic-icon"></i>
+                                    </div>
+                                    <h4 class="futuristic-title">Entreprise</h4>
+                                    <p class="futuristic-subtitle">Professionnels</p>
+                                    <div class="futuristic-features">
+                                        <span class="futuristic-feature">• Gestion de flotte</span>
+                                        <span class="futuristic-feature">• Analytics avancés</span>
+                                    </div>
+                                </div>
+                                <div class="futuristic-card-border"></div>
+                            </div>
+                        </label>
+                    </div>
+                    {% if form.user_type.errors %}
+                        <p class="text-sm text-red-600">{{ form.user_type.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Basic Information -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="{{ form.first_name.id_for_label }}" class="form-label">
+                            Prénom *
+                        </label>
+                        {{ form.first_name }}
+                        {% if form.first_name.errors %}
+                            <p class="text-sm text-red-600 mt-1">{{ form.first_name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label for="{{ form.last_name.id_for_label }}" class="form-label">
+                            Nom *
+                        </label>
+                        {{ form.last_name }}
+                        {% if form.last_name.errors %}
+                            <p class="text-sm text-red-600 mt-1">{{ form.last_name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div>
+                    <label for="{{ form.username.id_for_label }}" class="form-label">
+                        Nom d'utilisateur *
+                    </label>
+                    {{ form.username }}
+                    {% if form.username.errors %}
+                        <p class="text-sm text-red-600 mt-1">{{ form.username.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="{{ form.email.id_for_label }}" class="form-label">
+                        Adresse email *
+                    </label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                        <p class="text-sm text-red-600 mt-1">{{ form.email.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="{{ form.phone_number.id_for_label }}" class="form-label">
+                        Numéro de téléphone *
+                    </label>
+                    {{ form.phone_number }}
+                    {% if form.phone_number.errors %}
+                        <p class="text-sm text-red-600 mt-1">{{ form.phone_number.errors.0 }}</p>
+                    {% endif %}
+                    <p class="body-small text-slate-500 mt-1">Format: +226XXXXXXXX</p>
+                </div>
+
+                <!-- Password Fields -->
+                <div>
+                    <label for="{{ form.password1.id_for_label }}" class="form-label">
+                        Mot de passe *
+                    </label>
+                    <div class="relative">
+                        {{ form.password1 }}
+                        <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600" onclick="togglePassword('{{ form.password1.id_for_label }}', this)">
+                            <i data-lucide="eye" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                    {% if form.password1.errors %}
+                        <p class="text-sm text-red-600 mt-1">{{ form.password1.errors.0 }}</p>
+                    {% endif %}
+                    
+                    <!-- Password Strength Indicator -->
+                    <div class="mt-2">
+                        <div class="flex items-center space-x-2">
+                            <div class="flex-1 bg-gray-200 rounded-full h-2">
+                                <div id="password-strength-bar" class="h-2 rounded-full transition-all duration-300 bg-red-500" style="width: 0%"></div>
+                            </div>
+                            <span id="password-strength-text" class="body-small text-slate-500">Faible</span>
+                        </div>
+                        <ul class="body-small text-slate-500 mt-2 space-y-1" id="password-requirements">
+                            <li id="req-length" class="flex items-center">
+                                <i data-lucide="x" class="w-3 h-3 text-red-500 mr-1"></i>
+                                Au moins 8 caractères
+                            </li>
+                            <li id="req-uppercase" class="flex items-center">
+                                <i data-lucide="x" class="w-3 h-3 text-red-500 mr-1"></i>
+                                Une majuscule
+                            </li>
+                            <li id="req-lowercase" class="flex items-center">
+                                <i data-lucide="x" class="w-3 h-3 text-red-500 mr-1"></i>
+                                Une minuscule
+                            </li>
+                            <li id="req-number" class="flex items-center">
+                                <i data-lucide="x" class="w-3 h-3 text-red-500 mr-1"></i>
+                                Un chiffre
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="{{ form.password2.id_for_label }}" class="form-label">
+                        Confirmer le mot de passe *
+                    </label>
+                    <div class="relative">
+                        {{ form.password2 }}
+                        <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600" onclick="togglePassword('{{ form.password2.id_for_label }}', this)">
+                            <i data-lucide="eye" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                    {% if form.password2.errors %}
+                        <p class="text-sm text-red-600 mt-1">{{ form.password2.errors.0 }}</p>
+                    {% endif %}
+                    <div id="password-match" class="mt-1 body-small hidden">
+                        <span id="password-match-text"></span>
+                    </div>
+                </div>
+
+                <!-- Terms and Conditions -->
+                <div class="space-y-4">
+                    <div class="flex items-start space-x-3">
+                        <input type="checkbox" id="terms" class="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-slate-300 rounded" required>
+                        <label for="terms" class="body-medium text-slate-700 leading-relaxed">
+                            J'accepte les <a href="{% url 'legal:terms' %}" class="text-primary-600 hover:text-primary-700 underline font-medium">conditions générales</a> 
+                            et la <a href="{% url 'legal:privacy' %}" class="text-primary-600 hover:text-primary-700 underline font-medium">politique de confidentialité</a> de LivraFaso *
+                        </label>
+                    </div>
+
+                    <div class="flex items-start space-x-3">
+                        <input type="checkbox" id="newsletter" class="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-slate-300 rounded">
+                        <label for="newsletter" class="body-medium text-slate-700 leading-relaxed">
+                            Je souhaite recevoir les actualités et offres spéciales de LivraFaso
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Submit Button Container -->
+                <div class="mt-6">
+                    <button type="submit" class="btn btn-primary w-full btn-lg" id="submit-btn">
+                        <i data-lucide="user-plus" class="w-5 h-5 mr-2"></i>
+                        Créer mon compte
+                    </button>
+                </div>
+            </form>
+
+            <!-- Login Link -->
+            <div class="text-center mt-6 pt-6 border-t border-slate-200">
+                <p class="body-medium text-slate-600">
+                    Vous avez déjà un compte ?
+                    <a href="{% url 'users:login' %}" class="text-primary-600 hover:text-primary-700 font-medium">
+                        Se connecter
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Minimalist Card Styles */
+.futuristic-card {
+    position: relative;
+    display: block;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.futuristic-card-inner {
+    position: relative;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 2rem;
+    height: 85%;
+    min-height: 180px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.futuristic-card:hover .futuristic-card-inner {
+    border-color: #d1d5db;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+}
+
+.futuristic-card.selected .futuristic-card-inner {
+    background: #f8fafc;
+    border-color: #3b82f6;
+    border-width: 2px;
+    box-shadow: 0 8px 24px rgba(59, 130, 246, 0.12);
+    transform: translateY(-4px);
+}
+
+.futuristic-card-glow {
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    right: -1px;
+    bottom: -1px;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    border-radius: 16px;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.futuristic-card.selected .futuristic-card-glow {
+    opacity: 0.1;
+}
+
+.futuristic-icon-container {
+    position: relative;
+    width: 56px;
+    height: 56px;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f1f5f9;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.futuristic-card:hover .futuristic-icon-container {
+    background: #e2e8f0;
+}
+
+.futuristic-card.selected .futuristic-icon-container {
+    background: #dbeafe;
+}
+
+.futuristic-icon-bg {
+    display: none;
+}
+
+.futuristic-icon {
+    width: 24px;
+    height: 24px;
+    color: #64748b;
+    transition: all 0.3s ease;
+}
+
+.futuristic-card:hover .futuristic-icon {
+    color: #475569;
+}
+
+.futuristic-card.selected .futuristic-icon {
+    color: #3b82f6;
+}
+
+.futuristic-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+    transition: color 0.3s ease;
+}
+
+.futuristic-card.selected .futuristic-title {
+    color: #1d4ed8;
+}
+
+.futuristic-subtitle {
+    color: #64748b;
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+    font-weight: 400;
+}
+
+.futuristic-features {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+}
+
+.futuristic-feature {
+    color: #64748b;
+    font-size: 0.75rem;
+    font-weight: 400;
+    padding: 0.25rem 0;
+}
+
+.futuristic-card.selected .futuristic-feature {
+    color: #475569;
+}
+
+.futuristic-card-border {
+    display: none;
+}
+
+/* Submit Button Styles */
+.submit-button-container {
+    position: relative;
+    margin-top: 2rem;
+}
+
+.submit-button {
+    position: relative;
+    width: 100%;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    border: none;
+    border-radius: 12px;
+    padding: 1rem 2rem;
+    color: white;
+    font-size: 1.125rem;
+    font-weight: 600;
+    cursor: pointer;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+}
+
+.submit-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);
+}
+
+.submit-button:active {
+    transform: translateY(0);
+}
+
+.button-content {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    z-index: 2;
+}
+
+.button-icon {
+    width: 20px;
+    height: 20px;
+    transition: transform 0.3s ease;
+}
+
+.submit-button:hover .button-icon {
+    transform: scale(1.1);
+}
+
+.button-glow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+    border-radius: 12px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.submit-button:hover .button-glow {
+    opacity: 1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    .futuristic-card-inner {
+        min-height: 160px;
+        padding: 1.5rem;
+    }
+    
+    .futuristic-icon-container {
+        width: 48px;
+        height: 48px;
+    }
+    
+    .futuristic-icon {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .futuristic-title {
+        font-size: 1rem;
+    }
+    
+    .submit-button {
+        padding: 0.875rem 1.5rem;
+        font-size: 1rem;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('registration-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const password1 = document.getElementById('password1');
+    const password2 = document.getElementById('password2');
+
+    // Futuristic user type selection
+    document.querySelectorAll('.futuristic-card').forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Remove selected class from all options
+            document.querySelectorAll('.futuristic-card').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            
+            // Add selected class to clicked option
+            this.classList.add('selected');
+            
+            // Set the radio button value
+            const radio = this.querySelector('input[type="radio"]');
+            if (radio) {
+                radio.checked = true;
+                radio.dispatchEvent(new Event('change'));
+            }
+            
+            // Show selection feedback
+            showSelectionFeedback(this.dataset.type);
+        });
+        
+        // Hover effects
+        option.addEventListener('mouseenter', function() {
+            if (!this.classList.contains('selected')) {
+                this.style.transform = 'scale(1)';
+            }
+        });
+        
+        option.addEventListener('mouseleave', function() {
+            if (!this.classList.contains('selected')) {
+                this.style.transform = 'scale(1)';
+            }
+        });
+    });
+
+    // Initialize - do NOT auto-select any option
+    // User must explicitly choose their account type
+    
+    // Function to show selection feedback
+    function showSelectionFeedback(userType) {
+        // Remove any existing feedback
+        const existingFeedback = document.querySelector('.selection-feedback');
+        if (existingFeedback) {
+            existingFeedback.remove();
+        }
+        
+        // Create feedback element
+        const feedback = document.createElement('div');
+        feedback.className = 'selection-feedback mt-3 p-3 bg-primary-100 border border-primary-300 rounded-lg text-primary-700 text-sm font-medium flex items-center';
+        
+        const typeLabels = {
+            'client': 'Client (Particulier)',
+            'livreur': 'Livreur (Transporteur)',
+            'entreprise': 'Entreprise (Professionnel)',
+            'admin': 'Administrateur'
+        };
+        
+        feedback.innerHTML = `
+            <i data-lucide="check-circle" class="w-4 h-4 mr-2 text-primary-600"></i>
+            Type de compte sélectionné : <strong>${typeLabels[userType] || userType}</strong>
+        `;
+        
+        // Insert feedback after user type selection
+        const userTypeContainer = document.querySelector('.user-type-option').closest('.space-y-4');
+        if (userTypeContainer) {
+            userTypeContainer.appendChild(feedback);
+            // Re-initialize Lucide icons
+            lucide.createIcons();
+        }
+    }
+
+    // Password strength checker
+    function checkPasswordStrength(password) {
+        let strength = 0;
+        const requirements = {
+            length: password.length >= 8,
+            uppercase: /[A-Z]/.test(password),
+            lowercase: /[a-z]/.test(password),
+            number: /\d/.test(password)
+        };
+
+        // Update requirement indicators
+        Object.keys(requirements).forEach(req => {
+            const element = document.getElementById(`req-${req}`);
+            const icon = element.querySelector('i');
+            if (requirements[req]) {
+                icon.setAttribute('data-lucide', 'check');
+                icon.className = 'w-3 h-3 text-green-500 mr-1';
+                strength++;
+            } else {
+                icon.setAttribute('data-lucide', 'x');
+                icon.className = 'w-3 h-3 text-red-500 mr-1';
+            }
+        });
+
+        // Update strength bar
+        const strengthBar = document.getElementById('password-strength-bar');
+        const strengthText = document.getElementById('password-strength-text');
+        const percentage = (strength / 4) * 100;
+        
+        strengthBar.style.width = percentage + '%';
+        
+        if (strength === 0) {
+            strengthBar.className = 'h-2 rounded-full transition-all duration-300 bg-red-500';
+            strengthText.textContent = 'Très faible';
+        } else if (strength === 1) {
+            strengthBar.className = 'h-2 rounded-full transition-all duration-300 bg-red-500';
+            strengthText.textContent = 'Faible';
+        } else if (strength === 2) {
+            strengthBar.className = 'h-2 rounded-full transition-all duration-300 bg-yellow-500';
+            strengthText.textContent = 'Moyen';
+        } else if (strength === 3) {
+            strengthBar.className = 'h-2 rounded-full transition-all duration-300 bg-blue-500';
+            strengthText.textContent = 'Bon';
+        } else {
+            strengthBar.className = 'h-2 rounded-full transition-all duration-300 bg-green-500';
+            strengthText.textContent = 'Excellent';
+        }
+
+        // Re-initialize Lucide icons
+        lucide.createIcons();
+        
+        return strength >= 3;
+    }
+
+    // Password confirmation checker
+    function checkPasswordMatch() {
+        const matchDiv = document.getElementById('password-match');
+        const matchText = document.getElementById('password-match-text');
+        
+        if (password2.value === '') {
+            matchDiv.classList.add('hidden');
+            return true;
+        }
+        
+        matchDiv.classList.remove('hidden');
+        
+        if (password1.value === password2.value) {
+            matchText.innerHTML = '<i data-lucide="check" class="w-3 h-3 text-green-500 inline mr-1"></i>Les mots de passe correspondent';
+            matchText.className = 'text-green-600';
+            lucide.createIcons();
+            return true;
+        } else {
+            matchText.innerHTML = '<i data-lucide="x" class="w-3 h-3 text-red-500 inline mr-1"></i>Les mots de passe ne correspondent pas';
+            matchText.className = 'text-red-600';
+            lucide.createIcons();
+            return false;
+        }
+    }
+
+    // Event listeners
+    if (password1) {
+        password1.addEventListener('input', function() {
+            checkPasswordStrength(this.value);
+            if (password2.value) checkPasswordMatch();
+        });
+    }
+
+    if (password2) {
+        password2.addEventListener('input', checkPasswordMatch);
+    }
+
+    // Form validation with enhanced feedback
+    form.addEventListener('submit', function(e) {
+        const userTypeSelected = document.querySelector('input[name="{{ form.user_type.name }}"]:checked');
+        const termsAccepted = document.getElementById('terms').checked;
+        
+        console.log('Form submission - User type selected:', userTypeSelected ? userTypeSelected.value : 'none');
+        
+        if (!userTypeSelected) {
+            e.preventDefault();
+            
+            // Highlight user type selection area
+            const userTypeContainer = document.querySelector('.user-type-option').closest('.space-y-4');
+            if (userTypeContainer) {
+                userTypeContainer.style.border = '2px solid #ef4444';
+                userTypeContainer.style.borderRadius = '12px';
+                userTypeContainer.style.padding = '16px';
+                userTypeContainer.style.backgroundColor = '#fef2f2';
+                
+                // Remove highlight after 3 seconds
+                setTimeout(() => {
+                    userTypeContainer.style.border = '';
+                    userTypeContainer.style.borderRadius = '';
+                    userTypeContainer.style.padding = '';
+                    userTypeContainer.style.backgroundColor = '';
+                }, 3000);
+            }
+            
+            // Show error message
+            showErrorMessage('Veuillez sélectionner un type de compte avant de continuer.');
+            return;
+        }
+        
+        if (!termsAccepted) {
+            e.preventDefault();
+            alert('Veuillez accepter les conditions générales.');
+            return;
+        }
+
+        if (password1 && !checkPasswordStrength(password1.value)) {
+            e.preventDefault();
+            alert('Le mot de passe ne respecte pas les critères de sécurité.');
+            return;
+        }
+
+        if (password2 && !checkPasswordMatch()) {
+            e.preventDefault();
+            alert('Les mots de passe ne correspondent pas.');
+            return;
+        }
+
+        // Debug: Log form data before submission
+        const formData = new FormData(form);
+        console.log('Form data being submitted:');
+        for (let [key, value] of formData.entries()) {
+            console.log(key, value);
+        }
+
+        // Show loading state
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i data-lucide="loader" class="w-5 h-5 mr-2 animate-spin"></i>Création du compte...';
+    });
+    
+    // Function to show error messages
+    function showErrorMessage(message) {
+        // Remove any existing error message
+        const existingError = document.querySelector('.error-notification');
+        if (existingError) {
+            existingError.remove();
+        }
+        
+        // Create error notification
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-notification fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg shadow-lg z-50 flex items-center';
+        errorDiv.innerHTML = `
+            <i data-lucide="alert-circle" class="w-5 h-5 mr-2"></i>
+            <span>${message}</span>
+            <button onclick="this.parentElement.remove()" class="ml-4 text-red-500 hover:text-red-700">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        `;
+        
+        document.body.appendChild(errorDiv);
+        lucide.createIcons();
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            if (errorDiv.parentElement) {
+                errorDiv.remove();
+            }
+        }, 5000);
+    }
+});
+
+// Toggle password visibility
+function togglePassword(fieldId, button) {
+    const field = document.getElementById(fieldId);
+    }
+</script>
+
+
+.user-type-option.selected .user-type-card p {
+    @apply text-primary-600;
+}
+
+/* Amélioration de l'espacement et de la lisibilité */
+.form-section {
+    @apply space-y-6 p-6 bg-white/30 rounded-xl border border-gray-100;
+}
+
+.form-field {
+    @apply space-y-2;
+}
+
+.form-label {
+    @apply block text-sm font-medium text-gray-700 mb-2;
+}
+
+.form-input {
+    @apply w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 bg-white/50 backdrop-blur-sm placeholder-gray-400;
+}
+
+.error-message {
+    @apply text-sm text-red-600 mt-1 flex items-center;
+}
+
+.help-text {
+    @apply text-xs text-gray-500 mt-1;
+}
+
+/* Amélioration des checkboxes */
+.checkbox-container {
+    @apply flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors duration-200;
+}
+
+.checkbox-input {
+    @apply mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded;
+}
+
+.checkbox-label {
+    @apply text-sm text-gray-700 leading-relaxed;
+}
+
+/* Responsive improvements */
+@media (max-width: 640px) {
+    .user-type-card {
+        @apply p-4 min-h-[100px];
+    }
+    
+    .user-type-card h3 {
+        @apply text-sm;
+    }
+    
+    .user-type-card p {
+        @apply text-xs;
+    }
+}
+</style>
+{% endblock %}

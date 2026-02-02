@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Créer Mission Courses - Étape 2{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="card mb-8">
+        <div class="gradient-header text-center">
+            <h1 class="heading-1 mb-2">Créer une Mission de Courses</h1>
+            <p class="text-lg opacity-90">Étape 2/3 : Définir les étapes et articles</p>
+        </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between mb-2">
+            <span class="text-sm font-medium text-slate-600">Progression</span>
+            <span class="text-sm font-medium text-slate-600">66%</span>
+        </div>
+        <div class="w-full bg-slate-200 rounded-full h-2">
+            <div class="bg-blue-600 h-2 rounded-full" style="width: 66%"></div>
+        </div>
+    </div>
+
+    <!-- Formulaire des étapes -->
+    <div class="card mb-6">
+        <div class="card-header">
+            <div class="flex items-center justify-between">
+                <h2 class="card-title">
+                    <i data-lucide="map-pin" class="w-5 h-5"></i>
+                    Étapes de la Mission
+                </h2>
+                <button type="button" onclick="ajouterEtape()" class="btn btn-secondary btn-sm">
+                    <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
+                    Ajouter une étape
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div id="etapes-container" class="space-y-6">
+                <!-- Les étapes seront ajoutées dynamiquement ici -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex justify-between">
+        <a href="{% url 'client_dashboard:creer_mission_courses' %}?step=1" class="btn btn-secondary">
+            <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>
+            Précédent
+        </a>
+        <button type="button" onclick="sauvegarderEtapes()" class="btn btn-primary">
+            Suivant
+            <i data-lucide="arrow-right" class="w-4 h-4 ml-2"></i>
+        </button>
+    </div>
+</div>
+
+<!-- Template pour une étape -->
+<template id="etape-template">
+    <div class="etape-card border border-slate-200 rounded-lg p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-slate-900">Étape <span class="numero-etape">1</span></h3>
+            <button type="button" onclick="supprimerEtape(this)" class="text-red-600 hover:text-red-700">
+                <i data-lucide="trash-2" class="w-5 h-5"></i>
+            </button>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-2">Type d'étape *</label>
+                <select class="form-select type-etape" required>
+                    <option value="">-- Sélectionner --</option>
+                    <option value="depart">Point de départ</option>
+                    <option value="achat">Lieu d'achat</option>
+                    <option value="depot">Dépôt intermédiaire</option>
+                    <option value="livraison">Livraison finale</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-2">Montant requis (FCFA)</label>
+                <input type="number" class="form-input montant-requis" placeholder="Ex: 15000" min="0" step="100">
+            </div>
+        </div>
+        
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-slate-700 mb-2">Adresse complète *</label>
+            <textarea class="form-textarea adresse-etape" rows="3" placeholder="Adresse avec points de repère" required></textarea>
+        </div>
+        
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-slate-700 mb-2">Action requise *</label>
+            <textarea class="form-textarea action-requise" rows="2" placeholder="Ex: Récupérer 15 000 FCFA, Acheter les produits frais" required></textarea>
+        </div>
+        
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-slate-700 mb-2">Instructions</label>
+            <textarea class="form-textarea instructions-etape" rows="2" placeholder="Instructions spécifiques"></textarea>
+        </div>
+        
+        <!-- Articles pour cette étape -->
+        <div class="border-t border-slate-200 pt-4">
+            <div class="flex items-center justify-between mb-3">
+                <h4 class="font-medium text-slate-900">Articles à acheter</h4>
+                <button type="button" onclick="ajouterArticle(this)" class="btn btn-outline btn-sm">
+                    <i data-lucide="plus" class="w-4 h-4 mr-1"></i>
+                    Ajouter article
+                </button>
+            </div>
+            <div class="articles-container space-y-3">
+                <!-- Articles ajoutés dynamiquement -->
+            </div>
+        </div>
+    </div>
+</template>
+
+<!-- Template pour un article -->
+<template id="article-template">
+    <div class="article-card border border-slate-100 rounded-lg p-4 bg-slate-50">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Nom de l'article *</label>
+                <input type="text" class="form-input article-nom" placeholder="Ex: Tomates" required>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Quantité *</label>
+                <input type="text" class="form-input article-quantite" placeholder="Ex: 2 kg" required>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Prix estimé (FCFA)</label>
+                <input type="number" class="form-input article-prix-estime" placeholder="Facultatif" min="0" step="50">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Prix max accepté (FCFA)</label>
+                <input type="number" class="form-input article-prix-max" placeholder="Requis" min="0" step="50">
+            </div>
+            <div class="md:col-span-2">
+                <label class="flex items-center space-x-2">
+                    <input type="checkbox" class="form-checkbox article-substitution">
+                    <span class="text-sm text-slate-700">Substitution autorisée</span>
+                </label>
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-slate-700 mb-1">Commentaire</label>
+                <textarea class="form-textarea article-commentaire" rows="2" placeholder="Marque, qualité, etc."></textarea>
+            </div>
+        </div>
+        <div class="mt-3 flex justify-end">
+            <button type="button" onclick="supprimerArticle(this)" class="text-red-600 hover:text-red-700 text-sm">
+                <i data-lucide="trash-2" class="w-4 h-4 inline mr-1"></i>
+                Supprimer
+            </button>
+        </div>
+    </div>
+</template>
+
+<script>
+let numeroEtape = 0;
+
+document.addEventListener('DOMContentLoaded', function() {
+    lucide.createIcons();
+    ajouterEtape(); // Ajouter la première étape par défaut
+});
+
+function ajouterEtape() {
+    numeroEtape++;
+    const template = document.getElementById('etape-template');
+    const clone = template.content.cloneNode(true);
+    
+    clone.querySelector('.numero-etape').textContent = numeroEtape;
+    
+    document.getElementById('etapes-container').appendChild(clone);
+    lucide.createIcons();
+    mettreAJourNumerosEtapes();
+}
+
+function supprimerEtape(button) {
+    if (document.querySelectorAll('.etape-card').length <= 1) {
+        alert('Vous devez avoir au moins une étape.');
+        return;
+    }
+    button.closest('.etape-card').remove();
+    mettreAJourNumerosEtapes();
+}
+
+function mettreAJourNumerosEtapes() {
+    document.querySelectorAll('.etape-card').forEach((card, index) => {
+        card.querySelector('.numero-etape').textContent = index + 1;
+    });
+}
+
+function ajouterArticle(button) {
+    const template = document.getElementById('article-template');
+    const clone = template.content.cloneNode(true);
+    button.closest('.etape-card').querySelector('.articles-container').appendChild(clone);
+    lucide.createIcons();
+}
+
+function supprimerArticle(button) {
+    button.closest('.article-card').remove();
+}
+
+function sauvegarderEtapes() {
+    const etapes = [];
+    const etapesCards = document.querySelectorAll('.etape-card');
+    
+    if (etapesCards.length === 0) {
+        alert('Veuillez ajouter au moins une étape.');
+        return;
+    }
+    
+    etapesCards.forEach((card, index) => {
+        const typeEtape = card.querySelector('.type-etape').value;
+        const adresse = card.querySelector('.adresse-etape').value;
+        const actionRequise = card.querySelector('.action-requise').value;
+        const instructions = card.querySelector('.instructions-etape').value;
+        const montantRequis = card.querySelector('.montant-requis').value;
+        
+        if (!typeEtape || !adresse || !actionRequise) {
+            alert(`Veuillez remplir tous les champs obligatoires de l'étape ${index + 1}.`);
+            return;
+        }
+        
+        const articles = [];
+        card.querySelectorAll('.article-card').forEach(articleCard => {
+            const nom = articleCard.querySelector('.article-nom').value;
+            const quantite = articleCard.querySelector('.article-quantite').value;
+            
+            if (nom && quantite) {
+                articles.push({
+                    nom: nom,
+                    quantite: quantite,
+                    prix_estime: articleCard.querySelector('.article-prix-estime').value || null,
+                    prix_max_accepte: articleCard.querySelector('.article-prix-max').value || null,
+                    substitution_autorisee: articleCard.querySelector('.article-substitution').checked,
+                    commentaire: articleCard.querySelector('.article-commentaire').value || ''
+                });
+            }
+        });
+        
+        etapes.push({
+            type_etape: typeEtape,
+            adresse: adresse,
+            action_requise: actionRequise,
+            instructions: instructions,
+            montant_requis: montantRequis || null,
+            articles: articles
+        });
+    });
+    
+    // Envoyer les données au serveur
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '{% url "client_dashboard:creer_mission_courses" %}?step=2';
+    
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = 'csrfmiddlewaretoken';
+    csrfInput.value = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    form.appendChild(csrfInput);
+    
+    const etapesInput = document.createElement('input');
+    etapesInput.type = 'hidden';
+    etapesInput.name = 'etapes';
+    etapesInput.value = JSON.stringify(etapes);
+    form.appendChild(etapesInput);
+    
+    document.body.appendChild(form);
+    form.submit();
+}
+</script>
+{% endblock %}
+

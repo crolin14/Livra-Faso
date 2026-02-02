@@ -1,0 +1,399 @@
+{% extends 'base_ultra_modern.html' %}
+{% load static %}
+
+{% block title %}Rapports et Analytics - Admin LivraFaso{% endblock %}
+
+{% block extra_head %}
+<meta name="csrf-token" content="{{ csrf_token }}">
+<style>
+    .report-card {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+        border-radius: 16px;
+    }
+    
+    .report-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+    }
+    
+    .metric-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .chart-container {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Rapports et Analytics</h1>
+            <p class="text-gray-600 mt-2">Analyse des performances et statistiques détaillées</p>
+        </div>
+        <div class="flex space-x-3">
+            <a href="{% url 'admin_dashboard:dashboard' %}" class="btn-outline">
+                <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>
+                Retour Dashboard
+            </a>
+            <button onclick="exportReport()" class="btn-secondary">
+                <i data-lucide="download" class="w-4 h-4 mr-2"></i>
+                Exporter PDF
+            </button>
+            <button onclick="refreshReports()" class="btn-primary">
+                <i data-lucide="refresh-cw" class="w-4 h-4 mr-2"></i>
+                Actualiser
+            </button>
+        </div>
+    </div>
+
+    <!-- Date Range Filter -->
+    <div class="report-card p-6 mb-8">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold text-gray-900">Période d'analyse</h2>
+            <div class="flex space-x-2">
+                <button onclick="setDateRange('today')" class="btn-sm btn-outline">Aujourd'hui</button>
+                <button onclick="setDateRange('week')" class="btn-sm btn-outline">Cette semaine</button>
+                <button onclick="setDateRange('month')" class="btn-sm btn-primary">Ce mois</button>
+                <button onclick="setDateRange('year')" class="btn-sm btn-outline">Cette année</button>
+            </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Date de début</label>
+                <input type="date" id="start-date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Date de fin</label>
+                <input type="date" id="end-date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
+            </div>
+            <div class="flex items-end">
+                <button onclick="applyDateFilter()" class="btn-primary w-full">
+                    <i data-lucide="calendar" class="w-4 h-4 mr-2"></i>
+                    Appliquer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="metric-card p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-600 text-sm font-medium">Revenus Total</p>
+                    <p class="text-2xl font-bold text-green-600 mt-1">{{ metrics.total_revenue|floatformat:0 }} FCFA</p>
+                    <div class="flex items-center mt-2">
+                        <i data-lucide="trending-up" class="w-4 h-4 text-green-500 mr-1"></i>
+                        <span class="text-sm text-green-600">+{{ metrics.revenue_growth }}%</span>
+                    </div>
+                </div>
+                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                    <i data-lucide="dollar-sign" class="w-6 h-6 text-green-600"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="metric-card p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-600 text-sm font-medium">Missions Complétées</p>
+                    <p class="text-2xl font-bold text-blue-600 mt-1">{{ metrics.completed_missions }}</p>
+                    <div class="flex items-center mt-2">
+                        <i data-lucide="trending-up" class="w-4 h-4 text-blue-500 mr-1"></i>
+                        <span class="text-sm text-blue-600">+{{ metrics.missions_growth }}%</span>
+                    </div>
+                </div>
+                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                    <i data-lucide="check-circle" class="w-6 h-6 text-blue-600"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="metric-card p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-600 text-sm font-medium">Nouveaux Clients</p>
+                    <p class="text-2xl font-bold text-purple-600 mt-1">{{ metrics.new_clients }}</p>
+                    <div class="flex items-center mt-2">
+                        <i data-lucide="trending-up" class="w-4 h-4 text-purple-500 mr-1"></i>
+                        <span class="text-sm text-purple-600">+{{ metrics.clients_growth }}%</span>
+                    </div>
+                </div>
+                <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                    <i data-lucide="users" class="w-6 h-6 text-purple-600"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="metric-card p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-600 text-sm font-medium">Taux de Satisfaction</p>
+                    <p class="text-2xl font-bold text-yellow-600 mt-1">{{ metrics.satisfaction_rate }}%</p>
+                    <div class="flex items-center mt-2">
+                        <i data-lucide="star" class="w-4 h-4 text-yellow-500 mr-1"></i>
+                        <span class="text-sm text-yellow-600">{{ metrics.avg_rating }}/5</span>
+                    </div>
+                </div>
+                <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                    <i data-lucide="heart" class="w-6 h-6 text-yellow-600"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <!-- Revenue Chart -->
+        <div class="chart-container p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Évolution des Revenus</h3>
+            <div class="h-64">
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Missions Chart -->
+        <div class="chart-container p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Missions par Statut</h3>
+            <div class="h-64">
+                <canvas id="missionsChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Tables -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <!-- Top Livreurs -->
+        <div class="report-card p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Top Livreurs</h3>
+            <div class="space-y-3">
+                {% for livreur in top_livreurs %}
+                <div class="flex items-center justify-between p-3 bg-white/50 rounded-lg">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                            <span class="text-sm font-medium text-blue-600">{{ forloop.counter }}</span>
+                        </div>
+                        <div>
+                            <p class="font-medium text-gray-900">{{ livreur.username }}</p>
+                            <p class="text-sm text-gray-500">{{ livreur.missions_count }} missions</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-medium text-green-600">{{ livreur.total_earnings|floatformat:0 }} FCFA</p>
+                        <p class="text-sm text-gray-500">{{ livreur.avg_rating|floatformat:1 }}⭐</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Top Clients -->
+        <div class="report-card p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Top Clients</h3>
+            <div class="space-y-3">
+                {% for client in top_clients %}
+                <div class="flex items-center justify-between p-3 bg-white/50 rounded-lg">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                            <span class="text-sm font-medium text-purple-600">{{ forloop.counter }}</span>
+                        </div>
+                        <div>
+                            <p class="font-medium text-gray-900">{{ client.username }}</p>
+                            <p class="text-sm text-gray-500">{{ client.missions_count }} missions</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-medium text-blue-600">{{ client.total_spent|floatformat:0 }} FCFA</p>
+                        <p class="text-sm text-gray-500">Depuis {{ client.date_joined|date:"M Y" }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Reports -->
+    <div class="report-card p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-6">Rapports Détaillés</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <button onclick="generateReport('financial')" class="p-6 text-left border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                    <i data-lucide="bar-chart-3" class="w-6 h-6 text-green-600"></i>
+                </div>
+                <h4 class="font-semibold text-gray-900 mb-2">Rapport Financier</h4>
+                <p class="text-sm text-gray-600">Analyse détaillée des revenus, coûts et bénéfices</p>
+            </button>
+            
+            <button onclick="generateReport('operational')" class="p-6 text-left border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                    <i data-lucide="truck" class="w-6 h-6 text-blue-600"></i>
+                </div>
+                <h4 class="font-semibold text-gray-900 mb-2">Rapport Opérationnel</h4>
+                <p class="text-sm text-gray-600">Performance des livraisons et efficacité</p>
+            </button>
+            
+            <button onclick="generateReport('customer')" class="p-6 text-left border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-4">
+                    <i data-lucide="users" class="w-6 h-6 text-purple-600"></i>
+                </div>
+                <h4 class="font-semibold text-gray-900 mb-2">Rapport Client</h4>
+                <p class="text-sm text-gray-600">Satisfaction client et analyse comportementale</p>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    lucide.createIcons();
+    initializeCharts();
+});
+
+function initializeCharts() {
+    // Revenue Chart
+    const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+    new Chart(revenueCtx, {
+        type: 'line',
+        data: {
+            labels: {{ revenue_chart_labels|safe }},
+            datasets: [{
+                label: 'Revenus (FCFA)',
+                data: {{ revenue_chart_data|safe }},
+                borderColor: 'rgb(34, 197, 94)',
+                backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString() + ' FCFA';
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Missions Chart
+    const missionsCtx = document.getElementById('missionsChart').getContext('2d');
+    new Chart(missionsCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Complétées', 'En cours', 'Annulées', 'En attente'],
+            datasets: [{
+                data: {{ missions_status_data|safe }},
+                backgroundColor: [
+                    'rgb(34, 197, 94)',
+                    'rgb(59, 130, 246)',
+                    'rgb(239, 68, 68)',
+                    'rgb(251, 191, 36)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                }
+            }
+        }
+    });
+}
+
+function setDateRange(period) {
+    const today = new Date();
+    const startDate = document.getElementById('start-date');
+    const endDate = document.getElementById('end-date');
+    
+    endDate.value = today.toISOString().split('T')[0];
+    
+    switch(period) {
+        case 'today':
+            startDate.value = today.toISOString().split('T')[0];
+            break;
+        case 'week':
+            const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+            startDate.value = weekAgo.toISOString().split('T')[0];
+            break;
+        case 'month':
+            const monthAgo = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+            startDate.value = monthAgo.toISOString().split('T')[0];
+            break;
+        case 'year':
+            const yearAgo = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
+            startDate.value = yearAgo.toISOString().split('T')[0];
+            break;
+    }
+    
+    applyDateFilter();
+}
+
+function applyDateFilter() {
+    const startDate = document.getElementById('start-date').value;
+    const endDate = document.getElementById('end-date').value;
+    
+    if (startDate && endDate) {
+        const params = new URLSearchParams();
+        params.append('start_date', startDate);
+        params.append('end_date', endDate);
+        window.location.href = '?' + params.toString();
+    }
+}
+
+function generateReport(type) {
+    const startDate = document.getElementById('start-date').value;
+    const endDate = document.getElementById('end-date').value;
+    
+    const params = new URLSearchParams();
+    params.append('type', type);
+    if (startDate) params.append('start_date', startDate);
+    if (endDate) params.append('end_date', endDate);
+    
+    window.location.href = '/admin-dashboard/reports/generate/?' + params.toString();
+}
+
+function exportReport() {
+    const startDate = document.getElementById('start-date').value;
+    const endDate = document.getElementById('end-date').value;
+    
+    const params = new URLSearchParams();
+    params.append('format', 'pdf');
+    if (startDate) params.append('start_date', startDate);
+    if (endDate) params.append('end_date', endDate);
+    
+    window.open('/admin-dashboard/reports/export/?' + params.toString(), '_blank');
+}
+
+function refreshReports() {
+    location.reload();
+}
+</script>
+{% endblock %}

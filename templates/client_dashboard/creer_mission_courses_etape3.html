@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Créer Mission Courses - Étape 3{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="card mb-8">
+        <div class="gradient-header text-center">
+            <h1 class="heading-1 mb-2">Créer une Mission de Courses</h1>
+            <p class="text-lg opacity-90">Étape 3/3 : Calcul du prix et paiement</p>
+        </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between mb-2">
+            <span class="text-sm font-medium text-slate-600">Progression</span>
+            <span class="text-sm font-medium text-slate-600">100%</span>
+        </div>
+        <div class="w-full bg-slate-200 rounded-full h-2">
+            <div class="bg-blue-600 h-2 rounded-full" style="width: 100%"></div>
+        </div>
+    </div>
+
+    <!-- Résumé de la mission -->
+    <div class="card mb-6">
+        <div class="card-header">
+            <h2 class="card-title">
+                <i data-lucide="file-text" class="w-5 h-5"></i>
+                Résumé de la mission
+            </h2>
+        </div>
+        <div class="card-body">
+            <div class="space-y-4">
+                <div>
+                    <span class="text-sm font-medium text-slate-600">Titre:</span>
+                    <span class="ml-2 text-slate-900">{{ mission.titre }}</span>
+                </div>
+                <div>
+                    <span class="text-sm font-medium text-slate-600">Nombre d'étapes:</span>
+                    <span class="ml-2 text-slate-900">{{ mission.nombre_etapes }}</span>
+                </div>
+                <div>
+                    <span class="text-sm font-medium text-slate-600">Distance totale:</span>
+                    <span class="ml-2 text-slate-900">{{ mission.distance_totale_km|default:"En cours de calcul..." }} km</span>
+                </div>
+                <div>
+                    <span class="text-sm font-medium text-slate-600">Délai maximum:</span>
+                    <span class="ml-2 text-slate-900">
+                        {% if mission.delai_type == 'heure_limite' %}
+                            Avant {{ mission.heure_limite|date:"d/m/Y H:i" }}
+                        {% else %}
+                            {{ mission.duree_max_minutes }} minutes
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calcul du prix -->
+    <div class="card mb-6">
+        <div class="card-header">
+            <h2 class="card-title">
+                <i data-lucide="calculator" class="w-5 h-5"></i>
+                Calcul du prix
+            </h2>
+        </div>
+        <div class="card-body">
+            <div class="space-y-3">
+                <div class="flex justify-between">
+                    <span class="text-slate-600">Distance ({{ mission.distance_totale_km|default:0 }} km × {{ mission.tarif_km }} FCFA/km):</span>
+                    <span class="font-medium">{{ mission.distance_totale_km|floatformat:2|default:0|mul:mission.tarif_km|floatformat:0 }} FCFA</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-600">Frais de service:</span>
+                    <span class="font-medium">{{ mission.frais_service }} FCFA</span>
+                </div>
+                {% if mission.surcharge_urgence > 0 %}
+                <div class="flex justify-between text-orange-600">
+                    <span>Surcharge urgence:</span>
+                    <span class="font-medium">+{{ mission.surcharge_urgence }} FCFA</span>
+                </div>
+                {% endif %}
+                <div class="border-t border-slate-200 pt-3 mt-3">
+                    <div class="flex justify-between text-lg font-bold">
+                        <span>Prix total:</span>
+                        <span class="text-blue-600">{{ mission.prix_total }} FCFA</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex justify-between">
+        <a href="{% url 'client_dashboard:creer_mission_courses' %}?step=2" class="btn btn-secondary">
+            <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>
+            Précédent
+        </a>
+        <a href="{% url 'client_dashboard:paiement_mission_courses' mission.id %}" class="btn btn-primary">
+            Procéder au paiement
+            <i data-lucide="arrow-right" class="w-4 h-4 ml-2"></i>
+        </a>
+    </div>
+</div>
+{% endblock %}
+

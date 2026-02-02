@@ -1,0 +1,331 @@
+{% extends "base_ultra_modern.html" %}
+{% load static %}
+
+{% block title %}Paiement - Plan {{ subscription.plan.name }} - LivraFaso{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Finaliser le paiement</h1>
+            <p class="text-gray-600">Sécurisez votre abonnement au plan <strong>{{ subscription.plan.name }}</strong></p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Formulaire de paiement -->
+            <div class="lg:col-span-2">
+                <div class="bg-white shadow-lg rounded-xl overflow-hidden">
+                    <!-- Étapes -->
+                    <div class="bg-gray-50 px-6 py-4 border-b">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-4">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-medium">✓</div>
+                                    <span class="text-sm font-medium text-green-600">Informations</span>
+                                </div>
+                                <div class="w-8 h-px bg-green-600"></div>
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">2</div>
+                                    <span class="text-sm font-medium text-blue-600">Paiement</span>
+                                </div>
+                                <div class="w-8 h-px bg-gray-300"></div>
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center text-sm font-medium">3</div>
+                                    <span class="text-sm text-gray-600">Confirmation</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Méthodes de paiement -->
+                    <div class="p-6">
+                        <!-- Messages -->
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="mb-4 p-4 rounded-lg {% if message.tags == 'error' %}bg-red-50 border border-red-200 text-red-700{% else %}bg-green-50 border border-green-200 text-green-700{% endif %}">
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+
+                        <!-- Onglets des méthodes de paiement -->
+                        <div class="border-b border-gray-200 mb-6">
+                            <nav class="-mb-px flex space-x-8">
+                                <button class="payment-tab active py-2 px-1 border-b-2 border-blue-500 font-medium text-sm text-blue-600" data-target="card">
+                                    <i data-lucide="credit-card" class="w-4 h-4 inline mr-2"></i>
+                                    Carte bancaire
+                                </button>
+                                <button class="payment-tab py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700" data-target="mobile">
+                                    <i data-lucide="smartphone" class="w-4 h-4 inline mr-2"></i>
+                                    Mobile Money
+                                </button>
+                                <button class="payment-tab py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700" data-target="bank">
+                                    <i data-lucide="building" class="w-4 h-4 inline mr-2"></i>
+                                    Virement bancaire
+                                </button>
+                            </nav>
+                        </div>
+
+                        <!-- Paiement par carte -->
+                        <div id="card-payment" class="payment-content">
+                            <form method="post" action="{% url 'subscriptions:process_payment' %}" class="space-y-6">
+                                {% csrf_token %}
+                                <input type="hidden" name="payment_method" value="card">
+                                <input type="hidden" name="subscription_id" value="{{ subscription.id }}">
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Numéro de carte *</label>
+                                    <input type="text" name="card_number" placeholder="1234 5678 9012 3456" 
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                                           maxlength="19" required>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Date d'expiration *</label>
+                                        <input type="text" name="expiry_date" placeholder="MM/AA" 
+                                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                                               maxlength="5" required>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">CVV *</label>
+                                        <input type="text" name="cvv" placeholder="123" 
+                                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                                               maxlength="4" required>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Nom sur la carte *</label>
+                                    <input type="text" name="cardholder_name" value="{{ user.get_full_name }}" 
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                                           required>
+                                </div>
+
+                                <button type="submit" class="w-full py-3 px-6 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                                    <i data-lucide="lock" class="w-4 h-4 inline mr-2"></i>
+                                    Payer {{ subscription.plan.price }} FCFA
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Paiement Mobile Money -->
+                        <div id="mobile-payment" class="payment-content hidden">
+                            <form method="post" action="{% url 'subscriptions:process_payment' %}" class="space-y-6">
+                                {% csrf_token %}
+                                <input type="hidden" name="payment_method" value="mobile_money">
+                                <input type="hidden" name="subscription_id" value="{{ subscription.id }}">
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Opérateur *</label>
+                                    <select name="mobile_operator" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                                        <option value="">Choisir un opérateur</option>
+                                        <option value="orange">Orange Money</option>
+                                        <option value="moov">Moov Money</option>
+                                        <option value="coris">Coris Money</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Numéro de téléphone *</label>
+                                    <input type="tel" name="mobile_number" value="{{ user.phone }}" 
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                                           placeholder="70 12 34 56 78" required>
+                                </div>
+
+                                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                    <div class="flex">
+                                        <i data-lucide="info" class="w-5 h-5 text-blue-400 mr-3 mt-0.5"></i>
+                                        <div class="text-sm text-blue-700">
+                                            <p class="font-medium mb-1">Instructions de paiement :</p>
+                                            <ol class="list-decimal list-inside space-y-1">
+                                                <li>Composez le code USSD de votre opérateur</li>
+                                                <li>Suivez les instructions pour effectuer le paiement</li>
+                                                <li>Confirmez la transaction avec votre code PIN</li>
+                                            </ol>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="w-full py-3 px-6 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors">
+                                    <i data-lucide="smartphone" class="w-4 h-4 inline mr-2"></i>
+                                    Initier le paiement Mobile Money
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Virement bancaire -->
+                        <div id="bank-payment" class="payment-content hidden">
+                            <div class="space-y-6">
+                                <div class="bg-gray-50 border border-gray-200 rounded-lg p-6">
+                                    <h3 class="font-medium text-gray-900 mb-4">Informations bancaires</h3>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                        <div>
+                                            <p class="text-gray-600">Bénéficiaire</p>
+                                            <p class="font-medium">LivraFaso SARL</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-gray-600">Banque</p>
+                                            <p class="font-medium">Banque Atlantique Burkina</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-gray-600">IBAN</p>
+                                            <p class="font-medium">BF12 3456 7890 1234 5678 90</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-gray-600">Code SWIFT</p>
+                                            <p class="font-medium">ATBKBFBF</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                                    <div class="flex">
+                                        <i data-lucide="alert-triangle" class="w-5 h-5 text-yellow-400 mr-3 mt-0.5"></i>
+                                        <div class="text-sm text-yellow-700">
+                                            <p class="font-medium mb-1">Important :</p>
+                                            <p>Mentionnez votre numéro de commande <strong>#{{ subscription.id }}</strong> dans le libellé du virement. Le traitement peut prendre 1-3 jours ouvrables.</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <form method="post" action="{% url 'subscriptions:confirm_bank_transfer' %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="subscription_id" value="{{ subscription.id }}">
+                                    <button type="submit" class="w-full py-3 px-6 bg-gray-600 text-white font-medium rounded-lg hover:bg-gray-700 transition-colors">
+                                        <i data-lucide="building" class="w-4 h-4 inline mr-2"></i>
+                                        J'ai effectué le virement
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Sécurité -->
+                        <div class="mt-8 pt-6 border-t">
+                            <div class="flex items-center justify-center space-x-6 text-sm text-gray-500">
+                                <div class="flex items-center space-x-2">
+                                    <i data-lucide="shield-check" class="w-4 h-4"></i>
+                                    <span>SSL 256-bit</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <i data-lucide="lock" class="w-4 h-4"></i>
+                                    <span>Paiement sécurisé</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <i data-lucide="shield" class="w-4 h-4"></i>
+                                    <span>Données protégées</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Résumé de la commande -->
+            <div class="lg:col-span-1">
+                <div class="bg-white shadow-lg rounded-xl p-6 sticky top-8">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Résumé de la commande</h2>
+                    
+                    <!-- Plan -->
+                    <div class="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-4 mb-6">
+                        <h3 class="font-semibold text-gray-900 mb-1">{{ subscription.plan.name }}</h3>
+                        <p class="text-sm text-gray-600 mb-3">{{ subscription.plan.description }}</p>
+                        
+                        <div class="space-y-1 text-sm">
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-600">Prix</span>
+                                <span class="font-semibold">{{ subscription.plan.price }} FCFA</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-600">Période</span>
+                                <span>{{ subscription.plan.get_duration_display }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Informations de facturation -->
+                    <div class="mb-6">
+                        <h4 class="font-medium text-gray-900 mb-3">Facturation :</h4>
+                        <div class="text-sm text-gray-600 space-y-1">
+                            <p>{{ subscription.billing_first_name }} {{ subscription.billing_last_name }}</p>
+                            <p>{{ subscription.billing_email }}</p>
+                            <p>{{ subscription.billing_phone }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Total -->
+                    <div class="border-t pt-4 mb-6">
+                        <div class="flex items-center justify-between text-lg font-semibold">
+                            <span>Total à payer</span>
+                            <span class="text-blue-600">{{ subscription.plan.price }} FCFA</span>
+                        </div>
+                        <p class="text-sm text-gray-500 mt-1">TVA incluse</p>
+                    </div>
+
+                    <!-- Garanties -->
+                    <div class="space-y-3 text-sm text-gray-600">
+                        <div class="flex items-center space-x-2">
+                            <i data-lucide="clock" class="w-4 h-4 text-green-500"></i>
+                            <span>14 jours d'essai gratuit</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <i data-lucide="refresh-cw" class="w-4 h-4 text-green-500"></i>
+                            <span>Annulation à tout moment</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <i data-lucide="headphones" class="w-4 h-4 text-green-500"></i>
+                            <span>Support client 24/7</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<script>
+    lucide.createIcons();
+    
+    // Gestion des onglets de paiement
+    document.querySelectorAll('.payment-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            // Désactiver tous les onglets
+            document.querySelectorAll('.payment-tab').forEach(t => {
+                t.classList.remove('active', 'border-blue-500', 'text-blue-600');
+                t.classList.add('border-transparent', 'text-gray-500');
+            });
+            
+            // Activer l'onglet cliqué
+            this.classList.add('active', 'border-blue-500', 'text-blue-600');
+            this.classList.remove('border-transparent', 'text-gray-500');
+            
+            // Masquer tous les contenus
+            document.querySelectorAll('.payment-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            
+            // Afficher le contenu correspondant
+            const target = this.getAttribute('data-target');
+            document.getElementById(target + '-payment').classList.remove('hidden');
+        });
+    });
+    
+    // Formatage du numéro de carte
+    document.querySelector('input[name="card_number"]')?.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\s/g, '').replace(/[^0-9]/gi, '');
+        let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+        e.target.value = formattedValue;
+    });
+    
+    // Formatage de la date d'expiration
+    document.querySelector('input[name="expiry_date"]')?.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length >= 2) {
+            value = value.substring(0,2) + '/' + value.substring(2,4);
+        }
+        e.target.value = value;
+    });
+</script>
+{% endblock %}

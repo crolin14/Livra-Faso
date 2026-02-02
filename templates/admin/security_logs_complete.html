@@ -1,0 +1,428 @@
+{% extends 'base_ultra_modern.html' %}
+{% load static %}
+
+{% block title %}Journaux de Sécurité - Admin LivraFaso{% endblock %}
+
+{% block extra_head %}
+<meta name="csrf-token" content="{{ csrf_token }}">
+<style>
+    .security-card {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+        border-radius: 16px;
+    }
+    
+    .security-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+    }
+    
+    .log-entry {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
+    }
+    
+    .log-entry:hover {
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    }
+    
+    .severity-critical { border-left: 4px solid #dc2626; }
+    .severity-high { border-left: 4px solid #ea580c; }
+    .severity-medium { border-left: 4px solid #d97706; }
+    .severity-low { border-left: 4px solid #16a34a; }
+    .severity-info { border-left: 4px solid #2563eb; }
+    
+    .alert-badge {
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Journaux de Sécurité</h1>
+            <p class="text-gray-600 mt-2">Surveillance et analyse des événements de sécurité</p>
+        </div>
+        <div class="flex space-x-3">
+            <a href="{% url 'admin_dashboard:dashboard' %}" class="btn-outline">
+                <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>
+                Retour Dashboard
+            </a>
+            <button onclick="exportLogs()" class="btn-secondary">
+                <i data-lucide="download" class="w-4 h-4 mr-2"></i>
+                Exporter
+            </button>
+            <button onclick="refreshLogs()" class="btn-primary">
+                <i data-lucide="refresh-cw" class="w-4 h-4 mr-2"></i>
+                Actualiser
+            </button>
+        </div>
+    </div>
+
+    <!-- Security Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="security-card p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-600 text-sm font-medium">Alertes Critiques</p>
+                    <p class="text-2xl font-bold text-red-600 mt-1">{{ security_stats.critical_alerts }}</p>
+                    {% if security_stats.critical_alerts > 0 %}
+                    <div class="alert-badge inline-flex items-center mt-2">
+                        <i data-lucide="alert-triangle" class="w-4 h-4 text-red-500 mr-1"></i>
+                        <span class="text-sm text-red-600">Action requise</span>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                    <i data-lucide="shield-alert" class="w-6 h-6 text-red-600"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="security-card p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-600 text-sm font-medium">Tentatives de Connexion</p>
+                    <p class="text-2xl font-bold text-orange-600 mt-1">{{ security_stats.failed_logins }}</p>
+                    <div class="flex items-center mt-2">
+                        <i data-lucide="trending-up" class="w-4 h-4 text-orange-500 mr-1"></i>
+                        <span class="text-sm text-orange-600">24h</span>
+                    </div>
+                </div>
+                <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                    <i data-lucide="user-x" class="w-6 h-6 text-orange-600"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="security-card p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-600 text-sm font-medium">Accès Suspects</p>
+                    <p class="text-2xl font-bold text-yellow-600 mt-1">{{ security_stats.suspicious_access }}</p>
+                    <div class="flex items-center mt-2">
+                        <i data-lucide="eye" class="w-4 h-4 text-yellow-500 mr-1"></i>
+                        <span class="text-sm text-yellow-600">Surveillé</span>
+                    </div>
+                </div>
+                <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                    <i data-lucide="search" class="w-6 h-6 text-yellow-600"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="security-card p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-600 text-sm font-medium">Système Sain</p>
+                    <p class="text-2xl font-bold text-green-600 mt-1">{{ security_stats.system_health }}%</p>
+                    <div class="flex items-center mt-2">
+                        <i data-lucide="shield-check" class="w-4 h-4 text-green-500 mr-1"></i>
+                        <span class="text-sm text-green-600">Protégé</span>
+                    </div>
+                </div>
+                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                    <i data-lucide="shield" class="w-6 h-6 text-green-600"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="security-card p-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Niveau de Sévérité</label>
+                <select id="severity-filter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
+                    <option value="">Tous les niveaux</option>
+                    <option value="critical">Critique</option>
+                    <option value="high">Élevé</option>
+                    <option value="medium">Moyen</option>
+                    <option value="low">Faible</option>
+                    <option value="info">Information</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Type d'Événement</label>
+                <select id="event-filter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
+                    <option value="">Tous les types</option>
+                    <option value="login">Connexion</option>
+                    <option value="access">Accès</option>
+                    <option value="error">Erreur</option>
+                    <option value="security">Sécurité</option>
+                    <option value="system">Système</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Utilisateur</label>
+                <input type="text" id="user-filter" placeholder="Nom d'utilisateur..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                <input type="date" id="date-filter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
+            </div>
+            <div class="flex items-end">
+                <button onclick="applyFilters()" class="btn-primary w-full">
+                    <i data-lucide="filter" class="w-4 h-4 mr-2"></i>
+                    Filtrer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security Logs -->
+    <div class="space-y-4" id="logs-container">
+        {% for log in security_logs %}
+        <div class="log-entry p-6 severity-{{ log.severity|default:'info' }}">
+            <div class="flex items-start justify-between">
+                <div class="flex-1">
+                    <div class="flex items-center space-x-3 mb-3">
+                        <div class="flex items-center space-x-2">
+                            {% if log.severity == 'critical' %}
+                            <i data-lucide="alert-triangle" class="w-5 h-5 text-red-600"></i>
+                            {% elif log.severity == 'high' %}
+                            <i data-lucide="alert-circle" class="w-5 h-5 text-orange-600"></i>
+                            {% elif log.severity == 'medium' %}
+                            <i data-lucide="info" class="w-5 h-5 text-yellow-600"></i>
+                            {% elif log.severity == 'low' %}
+                            <i data-lucide="check-circle" class="w-5 h-5 text-green-600"></i>
+                            {% else %}
+                            <i data-lucide="info" class="w-5 h-5 text-blue-600"></i>
+                            {% endif %}
+                            <span class="font-semibold text-gray-900">{{ log.event_type|capfirst }}</span>
+                        </div>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                            {% if log.severity == 'critical' %}bg-red-100 text-red-800
+                            {% elif log.severity == 'high' %}bg-orange-100 text-orange-800
+                            {% elif log.severity == 'medium' %}bg-yellow-100 text-yellow-800
+                            {% elif log.severity == 'low' %}bg-green-100 text-green-800
+                            {% else %}bg-blue-100 text-blue-800{% endif %}">
+                            {{ log.severity|capfirst }}
+                        </span>
+                        {% if log.resolved %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <i data-lucide="check" class="w-3 h-3 mr-1"></i>
+                            Résolu
+                        </span>
+                        {% endif %}
+                    </div>
+                    
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">{{ log.title|default:'Événement de sécurité' }}</h3>
+                    <p class="text-gray-700 mb-4">{{ log.description|default:'Description non disponible' }}</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div>
+                            <p class="text-sm text-gray-500">Utilisateur</p>
+                            <p class="font-medium">{{ log.user.username|default:'Système' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Adresse IP</p>
+                            <p class="font-medium">{{ log.ip_address|default:'N/A' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">User Agent</p>
+                            <p class="font-medium text-sm">{{ log.user_agent|default:'N/A'|truncatechars:50 }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-4 text-sm text-gray-500">
+                        <span><i data-lucide="calendar" class="w-4 h-4 inline mr-1"></i>{{ log.timestamp|date:"d/m/Y H:i:s" }}</span>
+                        {% if log.location %}
+                        <span><i data-lucide="map-pin" class="w-4 h-4 inline mr-1"></i>{{ log.location }}</span>
+                        {% endif %}
+                        {% if log.risk_score %}
+                        <span><i data-lucide="trending-up" class="w-4 h-4 inline mr-1"></i>Risque: {{ log.risk_score }}/10</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="flex flex-col space-y-2 ml-4">
+                    <button onclick="viewLogDetails({{ log.id }})" class="btn-sm btn-outline" title="Voir détails">
+                        <i data-lucide="eye" class="w-4 h-4"></i>
+                    </button>
+                    {% if not log.resolved and log.severity in 'critical,high' %}
+                    <button onclick="resolveLog({{ log.id }})" class="btn-sm btn-primary" title="Marquer comme résolu">
+                        <i data-lucide="check" class="w-4 h-4"></i>
+                    </button>
+                    {% endif %}
+                    <button onclick="exportSingleLog({{ log.id }})" class="btn-sm btn-secondary" title="Exporter">
+                        <i data-lucide="download" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="log-entry p-8 text-center">
+            <i data-lucide="shield-check" class="w-12 h-12 text-gray-400 mx-auto mb-4"></i>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">Aucun journal trouvé</h3>
+            <p class="text-gray-500">Aucun événement de sécurité ne correspond aux critères de recherche.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if security_logs.has_other_pages %}
+    <div class="flex items-center justify-between mt-8">
+        <div class="text-sm text-gray-700">
+            Affichage de {{ security_logs.start_index }} à {{ security_logs.end_index }} sur {{ security_logs.paginator.count }} événements
+        </div>
+        <div class="flex space-x-2">
+            {% if security_logs.has_previous %}
+            <a href="?page={{ security_logs.previous_page_number }}" class="btn-outline">Précédent</a>
+            {% endif %}
+            
+            {% for num in security_logs.paginator.page_range %}
+            {% if security_logs.number == num %}
+            <span class="btn-primary">{{ num }}</span>
+            {% else %}
+            <a href="?page={{ num }}" class="btn-outline">{{ num }}</a>
+            {% endif %}
+            {% endfor %}
+            
+            {% if security_logs.has_next %}
+            <a href="?page={{ security_logs.next_page_number }}" class="btn-outline">Suivant</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Log Details Modal -->
+<div id="log-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-screen overflow-y-auto">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-bold text-gray-900">Détails de l'Événement de Sécurité</h2>
+                    <button onclick="closeLogModal()" class="text-gray-400 hover:text-gray-600">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                </div>
+                <div id="log-details-content">
+                    <!-- Content will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    lucide.createIcons();
+    
+    // Auto-refresh every 30 seconds for critical alerts
+    setInterval(function() {
+        if (document.querySelector('.alert-badge')) {
+            checkNewLogs();
+        }
+    }, 30000);
+});
+
+function viewLogDetails(logId) {
+    fetch(`/admin-dashboard/security-logs/${logId}/details/`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('log-details-content').innerHTML = data.html;
+            document.getElementById('log-modal').classList.remove('hidden');
+            lucide.createIcons();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Erreur lors du chargement des détails');
+        });
+}
+
+function closeLogModal() {
+    document.getElementById('log-modal').classList.add('hidden');
+}
+
+function resolveLog(logId) {
+    if (confirm('Marquer cet événement comme résolu ?')) {
+        fetch(`/admin-dashboard/security-logs/${logId}/resolve/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Erreur lors de la résolution: ' + data.message);
+            }
+        });
+    }
+}
+
+function applyFilters() {
+    const severity = document.getElementById('severity-filter').value;
+    const eventType = document.getElementById('event-filter').value;
+    const user = document.getElementById('user-filter').value;
+    const date = document.getElementById('date-filter').value;
+    
+    const params = new URLSearchParams();
+    if (severity) params.append('severity', severity);
+    if (eventType) params.append('event_type', eventType);
+    if (user) params.append('user', user);
+    if (date) params.append('date', date);
+    
+    window.location.href = '?' + params.toString();
+}
+
+function refreshLogs() {
+    location.reload();
+}
+
+function exportLogs() {
+    const params = new URLSearchParams(window.location.search);
+    params.append('export', 'csv');
+    window.location.href = '/admin-dashboard/security-logs/export/?' + params.toString();
+}
+
+function exportSingleLog(logId) {
+    window.location.href = `/admin-dashboard/security-logs/${logId}/export/`;
+}
+
+function checkNewLogs() {
+    fetch('/admin-dashboard/security-logs/check-new/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.has_new) {
+                // Show notification or update UI
+                console.log(`${data.count} nouveaux événements de sécurité`);
+            }
+        })
+        .catch(error => console.error('Error checking new logs:', error));
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

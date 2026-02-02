@@ -1,0 +1,474 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Chat Mission #{{ mission.id }} - LivraFaso{% endblock %}
+
+{% block extra_css %}
+<style>
+    .message-bubble {
+        max-width: 70%;
+        word-wrap: break-word;
+    }
+    
+    .message-sent {
+        background: linear-gradient(135deg, var(--primary-500), var(--secondary-500));
+        margin-left: auto;
+        color: white;
+    }
+    
+    .message-received {
+        background: white;
+        color: var(--slate-700);
+        border: 1px solid var(--slate-200);
+    }
+    
+    .typing-indicator {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 8px 12px;
+        background: white;
+        border: 1px solid var(--slate-200);
+        border-radius: 18px;
+        max-width: fit-content;
+    }
+    
+    .typing-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--slate-400);
+        animation: typing 1.4s infinite ease-in-out;
+    }
+    
+    .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+    .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+    
+    @keyframes typing {
+        0%, 60%, 100% { transform: translateY(0); }
+        30% { transform: translateY(-10px); }
+    }
+    
+    .chat-container {
+        height: calc(100vh - 200px);
+    }
+    
+    .messages-container {
+        height: calc(100% - 120px);
+        overflow-y: auto;
+        scroll-behavior: smooth;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+    <div class="page-header-content">
+        <div class="flex items-center gap-4">
+            <a href="{% if user_type == 'client' %}{% url 'public:client_dashboard' %}{% elif user_type == 'livreur' %}{% url 'public:livreur_dashboard' %}{% elif user_type == 'entreprise' %}{% url 'public:entreprise_dashboard' %}{% else %}{% url 'admin_dashboard:dashboard' %}{% endif %}" 
+               class="btn btn-ghost">
+                <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>
+                Retour
+            </a>
+            <div>
+                <h1 class="page-title">Chat Mission #{{ mission.id }}</h1>
+                <div class="flex items-center gap-3 mt-1">
+                    <span class="badge badge-{{ mission.status }}">
+                        {% if mission.status == 'pending' %}En attente
+                        {% elif mission.status == 'ready' %}Prêt
+                        {% elif mission.status == 'in_progress' %}En cours
+                        {% elif mission.status == 'delivered' %}Livré
+                        {% elif mission.status == 'cancelled' %}Annulé
+                        {% endif %}
+                    </span>
+                    <span class="body-small text-slate-500">{{ mission.created_at|date:"d/m/Y H:i" }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-6">
+            <div class="text-right">
+                <div class="body-small text-slate-500">Client</div>
+                <div class="body-medium font-medium text-slate-900">{{ mission.client.get_full_name }}</div>
+            </div>
+            {% if mission.livreur %}
+            <div class="text-right">
+                <div class="body-small text-slate-500">Livreur</div>
+                <div class="body-medium font-medium text-slate-900">{{ mission.livreur.get_full_name }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="page-content">
+
+    <!-- Chat Container -->
+    <div class="max-w-4xl mx-auto">
+        <div class="card p-6 chat-container">
+            <!-- Messages Container -->
+            <div id="messages-container" class="messages-container mb-4 space-y-4">
+                <!-- Messages will be loaded here -->
+            </div>
+            
+            <!-- Typing Indicator -->
+            <div id="typing-indicator" class="typing-indicator hidden mb-4">
+                <span id="typing-user" class="body-small text-slate-600 mr-2"></span>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+            
+            <!-- Message Input -->
+            <div class="flex gap-3 items-end">
+                <div class="flex-1">
+                    <textarea 
+                        id="message-input" 
+                        placeholder="Tapez votre message..."
+                        class="form-input resize-none"
+                        rows="2"
+                        maxlength="1000"
+                    ></textarea>
+                    <div class="flex items-center justify-between mt-2">
+                        <div class="flex gap-2">
+                            <button id="file-upload-btn" class="btn btn-ghost btn-sm">
+                                <i data-lucide="paperclip" class="w-4 h-4"></i>
+                            </button>
+                            <button id="emoji-btn" class="btn btn-ghost btn-sm">
+                                <i data-lucide="smile" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                        <span id="char-count" class="body-small text-slate-500">0/1000</span>
+                    </div>
+                </div>
+                <button 
+                    id="send-btn" 
+                    class="btn btn-primary px-6 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled
+                >
+                    <i data-lucide="send" class="w-4 h-4"></i>
+                </button>
+            </div>
+            
+            <!-- File Upload (Hidden) -->
+            <input type="file" id="file-input" class="hidden" accept="image/*,application/pdf,.doc,.docx">
+        </div>
+    </div>
+</div>
+
+<!-- Connection Status -->
+<div id="connection-status" class="fixed bottom-4 right-4 px-4 py-2 rounded-lg text-white text-sm hidden">
+    <i data-lucide="wifi" class="w-4 h-4 mr-2"></i>
+    <span id="status-text">Connexion...</span>
+</div>
+
+    <script>
+        class MissionChat {
+            constructor(missionId, userId, userType) {
+                this.missionId = missionId;
+                this.userId = userId;
+                this.userType = userType;
+                this.socket = null;
+                this.isConnected = false;
+                this.typingTimeout = null;
+                this.isTyping = false;
+                
+                this.initializeElements();
+                this.connectWebSocket();
+                this.bindEvents();
+            }
+            
+            initializeElements() {
+                this.messagesContainer = document.getElementById('messages-container');
+                this.messageInput = document.getElementById('message-input');
+                this.sendBtn = document.getElementById('send-btn');
+                this.typingIndicator = document.getElementById('typing-indicator');
+                this.typingUser = document.getElementById('typing-user');
+                this.connectionStatus = document.getElementById('connection-status');
+                this.statusText = document.getElementById('status-text');
+                this.charCount = document.getElementById('char-count');
+                this.fileInput = document.getElementById('file-input');
+                this.fileUploadBtn = document.getElementById('file-upload-btn');
+            }
+            
+            connectWebSocket() {
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const wsUrl = `${protocol}//${window.location.host}/ws/chat/mission/${this.missionId}/`;
+                
+                this.socket = new WebSocket(wsUrl);
+                
+                this.socket.onopen = (event) => {
+                    this.isConnected = true;
+                    this.showConnectionStatus('Connecté', 'success');
+                    console.log('WebSocket connecté');
+                };
+                
+                this.socket.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    this.handleMessage(data);
+                };
+                
+                this.socket.onclose = (event) => {
+                    this.isConnected = false;
+                    this.showConnectionStatus('Déconnecté', 'error');
+                    console.log('WebSocket fermé');
+                    
+                    // Reconnexion automatique après 3 secondes
+                    setTimeout(() => {
+                        this.connectWebSocket();
+                    }, 3000);
+                };
+                
+                this.socket.onerror = (error) => {
+                    this.showConnectionStatus('Erreur de connexion', 'error');
+                    console.error('Erreur WebSocket:', error);
+                };
+            }
+            
+            bindEvents() {
+                // Envoi de message
+                this.sendBtn.addEventListener('click', () => this.sendMessage());
+                this.messageInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendMessage();
+                    }
+                });
+                
+                // Indicateur de frappe
+                this.messageInput.addEventListener('input', () => {
+                    this.handleTyping();
+                    this.updateCharCount();
+                    this.updateSendButton();
+                });
+                
+                // Upload de fichier
+                this.fileUploadBtn.addEventListener('click', () => {
+                    this.fileInput.click();
+                });
+                
+                this.fileInput.addEventListener('change', (e) => {
+                    if (e.target.files.length > 0) {
+                        this.handleFileUpload(e.target.files[0]);
+                    }
+                });
+            }
+            
+            handleMessage(data) {
+                switch (data.type) {
+                    case 'message_history':
+                        this.displayMessageHistory(data.messages);
+                        break;
+                    case 'chat_message':
+                        this.displayMessage(data.message);
+                        break;
+                    case 'typing_indicator':
+                        this.handleTypingIndicator(data);
+                        break;
+                    case 'mission_update':
+                        this.handleMissionUpdate(data.update);
+                        break;
+                    case 'error':
+                        this.showError(data.error);
+                        break;
+                }
+            }
+            
+            displayMessageHistory(messages) {
+                this.messagesContainer.innerHTML = '';
+                messages.reverse().forEach(message => {
+                    this.displayMessage(message, false);
+                });
+                this.scrollToBottom();
+            }
+            
+            displayMessage(message, animate = true) {
+                const messageEl = document.createElement('div');
+                const isOwn = message.user.id === this.userId;
+                
+                messageEl.className = `flex ${isOwn ? 'justify-end' : 'justify-start'} ${animate ? 'opacity-0' : ''}`;
+                
+                const bubbleClass = isOwn ? 'message-sent text-white' : 'message-received';
+                const timestamp = new Date(message.timestamp).toLocaleTimeString('fr-FR', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                let fileContent = '';
+                if (message.file_url && message.message_type !== 'text') {
+                    if (message.message_type === 'image') {
+                        fileContent = `<img src="${message.file_url}" alt="${message.file_name || 'Image'}" class="max-w-xs rounded-lg mt-2">`;
+                    } else {
+                        fileContent = `<a href="${message.file_url}" target="_blank" class="flex items-center gap-2 mt-2 p-2 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors">
+                            <i data-lucide="file" class="w-4 h-4"></i>
+                            <span>${message.file_name || 'Fichier'}</span>
+                        </a>`;
+                    }
+                }
+                
+                messageEl.innerHTML = `
+                    <div class="message-bubble ${bubbleClass} rounded-2xl px-4 py-3 shadow-sm">
+                        ${!isOwn ? `<div class="body-small font-medium mb-1 opacity-75">${message.user.full_name}</div>` : ''}
+                        <div class="body-medium">${this.formatMessageContent(message.content)}</div>
+                        ${fileContent}
+                        <div class="body-small mt-1 opacity-75">${timestamp}</div>
+                    </div>
+                `;
+                
+                this.messagesContainer.appendChild(messageEl);
+                
+                if (animate) {
+                    setTimeout(() => {
+                        messageEl.classList.remove('opacity-0');
+                        messageEl.classList.add('transition-opacity', 'duration-300');
+                    }, 50);
+                }
+                
+                this.scrollToBottom();
+            }
+            
+            formatMessageContent(content) {
+                // Remplacer les URLs par des liens
+                const urlRegex = /(https?:\/\/[^\s]+)/g;
+                content = content.replace(urlRegex, '<a href="$1" target="_blank" class="underline">$1</a>');
+                
+                // Remplacer les retours à la ligne
+                content = content.replace(/\n/g, '<br>');
+                
+                return content;
+            }
+            
+            handleTypingIndicator(data) {
+                if (data.user.id === this.userId) return;
+                
+                if (data.is_typing) {
+                    this.typingUser.textContent = `${data.user.full_name} est en train d'écrire...`;
+                    this.typingIndicator.classList.remove('hidden');
+                } else {
+                    this.typingIndicator.classList.add('hidden');
+                }
+                
+                this.scrollToBottom();
+            }
+            
+            handleTyping() {
+                if (!this.isTyping) {
+                    this.isTyping = true;
+                    this.sendTypingIndicator(true);
+                }
+                
+                clearTimeout(this.typingTimeout);
+                this.typingTimeout = setTimeout(() => {
+                    this.isTyping = false;
+                    this.sendTypingIndicator(false);
+                }, 1000);
+            }
+            
+            sendTypingIndicator(isTyping) {
+                if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+                    this.socket.send(JSON.stringify({
+                        type: 'typing',
+                        is_typing: isTyping
+                    }));
+                }
+            }
+            
+            sendMessage() {
+                const content = this.messageInput.value.trim();
+                if (!content || !this.isConnected) return;
+                
+                this.socket.send(JSON.stringify({
+                    type: 'chat_message',
+                    message: content
+                }));
+                
+                this.messageInput.value = '';
+                this.updateCharCount();
+                this.updateSendButton();
+                this.messageInput.focus();
+            }
+            
+            handleFileUpload(file) {
+                if (file.size > 10 * 1024 * 1024) { // 10MB limit
+                    this.showError('Le fichier est trop volumineux (max 10MB)');
+                    return;
+                }
+                
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('mission_id', this.missionId);
+                
+                // Simuler l'upload (à implémenter côté serveur)
+                const fileUrl = URL.createObjectURL(file);
+                const fileType = file.type.startsWith('image/') ? 'image' : 'file';
+                
+                this.socket.send(JSON.stringify({
+                    type: 'file_upload',
+                    file_url: fileUrl,
+                    file_name: file.name,
+                    file_type: fileType
+                }));
+                
+                this.fileInput.value = '';
+            }
+            
+            updateCharCount() {
+                const count = this.messageInput.value.length;
+                this.charCount.textContent = `${count}/1000`;
+                this.charCount.className = count > 900 ? 'text-xs text-red-500' : 'text-xs text-gray-500';
+            }
+            
+            updateSendButton() {
+                const hasContent = this.messageInput.value.trim().length > 0;
+                this.sendBtn.disabled = !hasContent || !this.isConnected;
+            }
+            
+            showConnectionStatus(message, type) {
+                this.statusText.textContent = message;
+                this.connectionStatus.className = `fixed bottom-4 right-4 px-4 py-2 rounded-lg text-white text-sm ${
+                    type === 'success' ? 'bg-green-500' : 'bg-red-500'
+                }`;
+                this.connectionStatus.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    this.connectionStatus.classList.add('hidden');
+                }, 3000);
+            }
+            
+            showError(message) {
+                const errorEl = document.createElement('div');
+                errorEl.className = 'bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4';
+                errorEl.textContent = message;
+                
+                this.messagesContainer.insertBefore(errorEl, this.messagesContainer.firstChild);
+                
+                setTimeout(() => {
+                    errorEl.remove();
+                }, 5000);
+            }
+            
+            scrollToBottom() {
+                setTimeout(() => {
+                    this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+                }, 100);
+            }
+        }
+        
+        // Initialiser le chat
+        document.addEventListener('DOMContentLoaded', function() {
+            const missionId = {{ mission.id }};
+            const userId = {{ user.id }};
+            const userType = '{{ user_type }}';
+            
+            new MissionChat(missionId, userId, userType);
+        });
+    </script>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+</script>
+{% endblock %}

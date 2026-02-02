@@ -1,0 +1,501 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}LivraFaso - Livraison Rapide au Burkina Faso{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <!-- Background Elements -->
+    <div class="absolute inset-0 bg-gradient-to-br from-primary-50 via-blue-50 to-indigo-100"></div>
+    <div class="absolute top-20 left-10 w-72 h-72 bg-primary-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-float"></div>
+    <div class="absolute top-40 right-10 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-float" style="animation-delay: 2s;"></div>
+    <div class="absolute -bottom-8 left-20 w-72 h-72 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-float" style="animation-delay: 4s;"></div>
+
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div class="grid lg:grid-cols-2 gap-12 items-center">
+            <!-- Content -->
+            <div class="space-y-8" data-aos="fade-right">
+                <h1 class="text-5xl lg:text-7xl font-display font-bold">
+                    <span class="bg-gradient-to-r from-primary-600 via-blue-600 to-purple-600 bg-clip-text text-transparent">
+                        Livraison
+                    </span>
+                    <br>
+                    <span class="text-gray-800">Moderne</span>
+                </h1>
+                
+                <p class="text-xl lg:text-2xl text-gray-600 max-w-2xl mx-auto lg:mx-0">
+                    Connectez votre entreprise avec des livreurs qualifiés. 
+                    <span class="font-semibold text-primary-600">Rapide, sécurisé, traçable.</span>
+                </p>
+
+                <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                    {% if not user.is_authenticated %}
+                        <a href="{% url 'users:register' %}" class="btn-primary text-lg px-8 py-4 animate-pulse-glow">
+                            <i data-lucide="rocket" class="w-5 h-5 mr-2"></i>
+                            Commencer Maintenant
+                        </a>
+                        <a href="#services" class="btn-secondary text-lg px-8 py-4">
+                            <i data-lucide="play-circle" class="w-5 h-5 mr-2"></i>
+                            Découvrir
+                        </a>
+                    {% else %}
+                        <a href="{% url 'public:dashboard' %}" class="btn-primary text-lg px-8 py-4">
+                            <i data-lucide="layout-dashboard" class="w-5 h-5 mr-2"></i>
+                            Mon Dashboard
+                        </a>
+                        {% if user.user_type == 'entreprise' %}
+                            <a href="{% url 'missions:create' %}" class="btn-secondary text-lg px-8 py-4">
+                                <i data-lucide="plus-circle" class="w-5 h-5 mr-2"></i>
+                                Créer une Mission
+                            </a>
+                        {% elif user.user_type == 'livreur' %}
+                            <a href="{% url 'missions:disponibles' %}" class="btn-secondary text-lg px-8 py-4">
+                                <i data-lucide="search" class="w-5 h-5 mr-2"></i>
+                                Voir les Missions
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+
+                <!-- Stats -->
+                <div class="grid grid-cols-3 gap-8 pt-8 border-t border-gray-200">
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-primary-600" data-countup="1250">0</div>
+                        <div class="text-sm text-gray-500 font-medium">Livraisons</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-primary-600" data-countup="98">0</div>
+                        <div class="text-sm text-gray-500 font-medium">% Satisfaction</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-primary-600" data-countup="150">0</div>
+                        <div class="text-sm text-gray-500 font-medium">Livreurs</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hero Image -->
+            <div class="relative" data-aos="fade-left">
+                <div class="relative z-10 bg-white/10 backdrop-blur-sm rounded-3xl p-8 border border-white/20 shadow-2xl">
+                    <div class="aspect-square bg-gradient-to-br from-primary-500 to-purple-600 rounded-2xl flex items-center justify-center">
+                        <i data-lucide="truck" class="w-32 h-32 text-white animate-float"></i>
+                    </div>
+                </div>
+                <!-- Floating elements -->
+                <div class="absolute -top-4 -right-4 w-20 h-20 bg-yellow-400 rounded-full flex items-center justify-center animate-float" style="animation-delay: 1s;">
+                    <i data-lucide="zap" class="w-8 h-8 text-white"></i>
+                </div>
+                <div class="absolute -bottom-4 -left-4 w-16 h-16 bg-green-400 rounded-full flex items-center justify-center animate-float" style="animation-delay: 3s;">
+                    <i data-lucide="check" class="w-6 h-6 text-white"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Services Section -->
+<section id="services" class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16" data-aos="fade-up">
+            <h2 class="text-4xl font-display font-bold text-gray-900 mb-4">
+                Nos Services
+            </h2>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                Une plateforme complète pour tous vos besoins de livraison au Burkina Faso
+            </p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-8">
+            <!-- Service 1 -->
+            <div class="service-card group" data-aos="fade-up" data-aos-delay="100">
+                <div class="bg-gradient-to-br from-primary-500 to-blue-600 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <i data-lucide="zap" class="w-8 h-8 text-white"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Livraison Express</h3>
+                <p class="text-gray-600 mb-6">
+                    Livraisons ultra-rapides en moins de 2 heures dans Ouagadougou et les principales villes.
+                </p>
+                <ul class="space-y-2 text-sm text-gray-500">
+                    <li class="flex items-center">
+                        <i data-lucide="check" class="w-4 h-4 text-green-500 mr-2"></i>
+                        Livraison en moins de 2h
+                    </li>
+                    <li class="flex items-center">
+                        <i data-lucide="check" class="w-4 h-4 text-green-500 mr-2"></i>
+                        Suivi en temps réel
+                    </li>
+                    <li class="flex items-center">
+                        <i data-lucide="check" class="w-4 h-4 text-green-500 mr-2"></i>
+                        Notification SMS/WhatsApp
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Service 2 -->
+            <div class="service-card group" data-aos="fade-up" data-aos-delay="200">
+                <div class="bg-gradient-to-br from-green-500 to-emerald-600 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <i data-lucide="shield-check" class="w-8 h-8 text-white"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Sécurité Garantie</h3>
+                <p class="text-gray-600 mb-6">
+                    Vos colis sont assurés et nos livreurs sont vérifiés et formés pour garantir la sécurité.
+                </p>
+                <ul class="space-y-2 text-sm text-gray-500">
+                    <li class="flex items-center">
+                        <i data-lucide="check" class="w-4 h-4 text-green-500 mr-2"></i>
+                        Livreurs vérifiés
+                    </li>
+                    <li class="flex items-center">
+                        <i data-lucide="check" class="w-4 h-4 text-green-500 mr-2"></i>
+                        Assurance colis
+                    </li>
+                    <li class="flex items-center">
+                        <i data-lucide="check" class="w-4 h-4 text-green-500 mr-2"></i>
+                        Support 24/7
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Service 3 -->
+            <div class="service-card group" data-aos="fade-up" data-aos-delay="300">
+                <div class="bg-gradient-to-br from-purple-500 to-pink-600 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <i data-lucide="smartphone" class="w-8 h-8 text-white"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Technologie Avancée</h3>
+                <p class="text-gray-600 mb-6">
+                    Plateforme moderne avec géolocalisation, paiements mobiles et interface intuitive.
+                </p>
+                <ul class="space-y-2 text-sm text-gray-500">
+                    <li class="flex items-center">
+                        <i data-lucide="check" class="w-4 h-4 text-green-500 mr-2"></i>
+                        Géolocalisation GPS
+                    </li>
+                    <li class="flex items-center">
+                        <i data-lucide="check" class="w-4 h-4 text-green-500 mr-2"></i>
+                        Mobile Money
+                    </li>
+                    <li class="flex items-center">
+                        <i data-lucide="check" class="w-4 h-4 text-green-500 mr-2"></i>
+                        Interface moderne
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How it Works -->
+<section class="py-20 bg-gradient-to-br from-gray-50 to-blue-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16" data-aos="fade-up">
+            <h2 class="text-4xl font-display font-bold text-gray-900 mb-4">
+                Comment ça marche ?
+            </h2>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                Un processus simple en 3 étapes pour vos livraisons
+            </p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-8">
+            <!-- Step 1 -->
+            <div class="text-center" data-aos="fade-up" data-aos-delay="100">
+                <div class="relative mb-8">
+                    <div class="w-20 h-20 bg-gradient-to-r from-primary-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse-glow">
+                        <span class="text-2xl font-bold text-white">1</span>
+                    </div>
+                    <div class="hidden md:block absolute top-10 left-full w-full h-0.5 bg-gradient-to-r from-primary-200 to-transparent"></div>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Créez votre mission</h3>
+                <p class="text-gray-600">
+                    Remplissez les détails de votre livraison : adresses, type de colis, urgence.
+                </p>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="text-center" data-aos="fade-up" data-aos-delay="200">
+                <div class="relative mb-8">
+                    <div class="w-20 h-20 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse-glow">
+                        <span class="text-2xl font-bold text-white">2</span>
+                    </div>
+                    <div class="hidden md:block absolute top-10 left-full w-full h-0.5 bg-gradient-to-r from-green-200 to-transparent"></div>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Livreur assigné</h3>
+                <p class="text-gray-600">
+                    Un livreur qualifié accepte votre mission et vous recevez ses informations.
+                </p>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="text-center" data-aos="fade-up" data-aos-delay="300">
+                <div class="relative mb-8">
+                    <div class="w-20 h-20 bg-gradient-to-r from-purple-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse-glow">
+                        <span class="text-2xl font-bold text-white">3</span>
+                    </div>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Suivi et livraison</h3>
+                <p class="text-gray-600">
+                    Suivez votre colis en temps réel jusqu'à la livraison confirmée.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Subscription Plans -->
+<section class="py-20 bg-gradient-to-br from-gray-50 to-blue-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16" data-aos="fade-up">
+            <h2 class="text-4xl font-display font-bold text-gray-900 mb-4">
+                Nos Offres d'Abonnement
+            </h2>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                Choisissez le plan qui correspond à vos besoins de livraison
+            </p>
+        </div>
+
+        {% if subscription_plans %}
+        <div class="grid md:grid-cols-3 gap-8 mb-16">
+            {% for plan in subscription_plans %}
+            <div class="relative bg-white rounded-2xl shadow-xl overflow-hidden transform hover:scale-105 transition-all duration-300 {% if plan.plan_type == 'premium' %}ring-4 ring-blue-500 ring-opacity-50{% endif %}" data-aos="fade-up" data-aos-delay="{{ forloop.counter0|add:100 }}">
+                {% if plan.plan_type == 'premium' %}
+                <div class="absolute top-0 left-0 right-0 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-center py-2 text-sm font-semibold">
+                    ⭐ POPULAIRE
+                </div>
+                {% endif %}
+                
+                <div class="p-8 {% if plan.plan_type == 'premium' %}pt-12{% endif %}">
+                    <!-- Plan Header -->
+                    <div class="text-center mb-8">
+                        <h3 class="text-2xl font-bold text-gray-900 mb-2">{{ plan.name }}</h3>
+                        <div class="flex items-center justify-center mb-4">
+                            <span class="text-4xl font-bold text-gray-900">{{ plan.price|floatformat:0 }}</span>
+                            <span class="text-gray-600 ml-2">FCFA</span>
+                        </div>
+                        <p class="text-sm text-gray-500">{{ plan.duration }} jours</p>
+                    </div>
+
+                    <!-- Key Features -->
+                    <div class="mb-8">
+                        <ul class="space-y-3">
+                            <li class="flex items-center">
+                                <svg class="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span class="text-gray-700">{{ plan.max_missions_per_month }} missions/mois</span>
+                            </li>
+                            
+                            {% if plan.priority_support %}
+                            <li class="flex items-center">
+                                <svg class="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span class="text-gray-700">Support prioritaire 24h/7j</span>
+                            </li>
+                            {% endif %}
+                            
+                            {% if plan.advanced_analytics %}
+                            <li class="flex items-center">
+                                <svg class="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span class="text-gray-700">Analytics avancées</span>
+                            </li>
+                            {% endif %}
+                            
+                            {% if plan.multi_user_management %}
+                            <li class="flex items-center">
+                                <svg class="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span class="text-gray-700">Gestion multi-utilisateurs</span>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+
+                    <!-- CTA Button -->
+                    <div class="text-center">
+                        {% if user.is_authenticated %}
+                            <a href="{% url 'subscriptions:subscribe' plan.id %}" 
+                               class="w-full inline-block bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3 px-6 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105">
+                                Souscrire maintenant
+                            </a>
+                        {% else %}
+                            <a href="{% url 'users:login' %}?next={% url 'subscriptions:subscribe' plan.id %}" 
+                               class="w-full inline-block bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3 px-6 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105">
+                                Se connecter pour souscrire
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- View All Plans Button -->
+        <div class="text-center" data-aos="fade-up">
+            <a href="{% url 'subscriptions:plans' %}" class="inline-flex items-center bg-white text-blue-600 hover:bg-blue-50 px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg border-2 border-blue-200">
+                <i data-lucide="eye" class="w-5 h-5 mr-2"></i>
+                Voir tous les plans
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Testimonials -->
+<section class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16" data-aos="fade-up">
+            <h2 class="text-4xl font-display font-bold text-gray-900 mb-4">
+                Ce que disent nos clients
+            </h2>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                Découvrez les témoignages de nos utilisateurs satisfaits
+            </p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-8">
+            <!-- Testimonial 1 -->
+            <div class="testimonial-card" data-aos="fade-up" data-aos-delay="100">
+                <div class="flex items-center mb-4">
+                    <div class="w-12 h-12 bg-gradient-to-r from-primary-500 to-blue-600 rounded-full flex items-center justify-center">
+                        <span class="text-white font-semibold">AM</span>
+                    </div>
+                    <div class="ml-4">
+                        <h4 class="font-semibold text-gray-900">Aminata Ouédraogo</h4>
+                        <p class="text-sm text-gray-500">Directrice, Boutique Mode</p>
+                    </div>
+                </div>
+                <div class="flex mb-4">
+                    <i data-lucide="star" class="w-5 h-5 text-yellow-400 fill-current"></i>
+                    <i data-lucide="star" class="w-5 h-5 text-yellow-400 fill-current"></i>
+                    <i data-lucide="star" class="w-5 h-5 text-yellow-400 fill-current"></i>
+                    <i data-lucide="star" class="w-5 h-5 text-yellow-400 fill-current"></i>
+                    <i data-lucide="star" class="w-5 h-5 text-yellow-400 fill-current"></i>
+                </div>
+                <p class="text-gray-600 italic">
+                    "LivraFaso a révolutionné mes livraisons. Mes clients reçoivent leurs commandes rapidement et je peux suivre chaque étape. Excellent service !"
+                </p>
+            </div>
+
+            <!-- Testimonial 2 -->
+            <div class="testimonial-card" data-aos="fade-up" data-aos-delay="200">
+                <div class="flex items-center mb-4">
+                    <div class="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center">
+                        <span class="text-white font-semibold">IK</span>
+                    </div>
+                    <div class="ml-4">
+                        <h4 class="font-semibold text-gray-900">Ibrahim Kaboré</h4>
+                        <p class="text-sm text-gray-500">Livreur Partenaire</p>
+                    </div>
+                </div>
+                <div class="flex mb-4">
+                    <i data-lucide="star" class="w-5 h-5 text-yellow-400 fill-current"></i>
+                    <i data-lucide="star" class="w-5 h-5 text-yellow-400 fill-current"></i>
+                    <i data-lucide="star" class="w-5 h-5 text-yellow-400 fill-current"></i>
+                    <i data-lucide="star" class="w-5 h-5 text-yellow-400 fill-current"></i>
+                    <i data-lucide="star" class="w-5 h-5 text-yellow-400 fill-current"></i>
+                </div>
+                <p class="text-gray-600 italic">
+                    "Grâce à LivraFaso, j'ai un revenu stable et des missions régulières. L'application est facile à utiliser et le support client est réactif."
+                </p>
+            </div>
+
+            <!-- Testimonial 3 -->
+            <div class="testimonial-card" data-aos="fade-up" data-aos-delay="300">
+                <div class="flex items-center mb-4">
+                    <div class="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-600 rounded-full flex items-center justify-center">
+                        <span class="text-white font-semibold">FT</span>
+                    </div>
+                    <div class="ml-4">
+                        <h4 class="font-semibold text-gray-900">Fatou Traoré</h4>
+                        <p class="text-sm text-gray-500">Gérante, Restaurant</p>
+                    </div>
+                </div>
+                <div class="flex mb-4">
+                    <i data-lucide="star" class="w-5 h-5 text-yellow-400 fill-current"></i>
+                    <i data-lucide="star" class="w-5 h-5 text-yellow-400 fill-current"></i>
+                    <i data-lucide="star" class="w-5 h-5 text-yellow-400 fill-current"></i>
+                    <i data-lucide="star" class="w-5 h-5 text-yellow-400 fill-current"></i>
+                    <i data-lucide="star" class="w-5 h-5 text-yellow-400 fill-current"></i>
+                </div>
+                <p class="text-gray-600 italic">
+                    "Mes livraisons de repas arrivent toujours chaudes et à l'heure. LivraFaso m'a permis d'élargir ma zone de livraison sans souci."
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-20 bg-gradient-to-r from-primary-600 via-blue-600 to-purple-600 text-white relative overflow-hidden">
+    <div class="absolute inset-0 bg-black/10"></div>
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div data-aos="fade-up">
+            <h2 class="text-4xl lg:text-5xl font-display font-bold mb-6">
+                Prêt à commencer ?
+            </h2>
+            <p class="text-xl lg:text-2xl mb-8 opacity-90 max-w-3xl mx-auto">
+                Rejoignez des centaines d'entreprises et de livreurs qui font confiance à LivraFaso
+            </p>
+            
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                {% if not user.is_authenticated %}
+                    <a href="{% url 'users:register' %}" class="bg-white text-primary-600 hover:bg-gray-100 px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg">
+                        <i data-lucide="user-plus" class="w-5 h-5 mr-2 inline"></i>
+                        Créer un compte
+                    </a>
+                    <a href="{% url 'public:contact' %}" class="border-2 border-white text-white hover:bg-white hover:text-primary-600 px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105">
+                        <i data-lucide="phone" class="w-5 h-5 mr-2 inline"></i>
+                        Nous contacter
+                    </a>
+                {% else %}
+                    <a href="{% url 'public:dashboard' %}" class="bg-white text-primary-600 hover:bg-gray-100 px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg">
+                        <i data-lucide="layout-dashboard" class="w-5 h-5 mr-2 inline"></i>
+                        Accéder au Dashboard
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    // Counter animation
+    function animateCounters() {
+        const counters = document.querySelectorAll('[data-countup]');
+        counters.forEach(counter => {
+            const target = parseInt(counter.getAttribute('data-countup'));
+            const duration = 2000;
+            const step = target / (duration / 16);
+            let current = 0;
+            
+            const timer = setInterval(() => {
+                current += step;
+                if (current >= target) {
+                    current = target;
+                    clearInterval(timer);
+                }
+                counter.textContent = Math.floor(current);
+            }, 16);
+        });
+    }
+
+    // Trigger counter animation when in view
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                animateCounters();
+                observer.disconnect();
+            }
+        });
+    });
+
+    const statsSection = document.querySelector('[data-countup]')?.parentElement?.parentElement;
+    if (statsSection) {
+        observer.observe(statsSection);
+    }
+</script>
+{% endblock %}
