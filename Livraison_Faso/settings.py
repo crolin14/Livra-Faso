@@ -16,6 +16,10 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Constants
+SECONDS_PER_YEAR = 60 * 60 * 24 * 365  # 31536000 seconds
+CSRF_COOKIE_AGE_ONE_YEAR = SECONDS_PER_YEAR  # 1 year in seconds
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -52,7 +56,7 @@ CSRF_COOKIE_SECURE = os.environ.get('CSRF_COOKIE_SECURE', 'False').lower() == 't
 CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SAMESITE = 'Lax'
 CSRF_USE_SESSIONS = False
-CSRF_COOKIE_AGE = 31449600  # 1 year
+CSRF_COOKIE_AGE = CSRF_COOKIE_AGE_ONE_YEAR
 
 
 # Application definition

@@ -26,15 +26,21 @@ def run_command(cmd, description):
             django_cmd = cmd.replace('python manage.py ', '').split()
             execute_from_command_line(['manage.py'] + django_cmd)
         elif isinstance(cmd, list):
-            result = subprocess.run(cmd, capture_output=True, text=True, shell=True)
+            # Sécurisé: pas de shell=True pour les listes
+            result = subprocess.run(cmd, capture_output=True, text=True, shell=False)
             if result.returncode != 0:
                 print(f"❌ Erreur: {result.stderr}")
                 return False
             if result.stdout:
                 print(f"   {result.stdout.strip()}")
         else:
-            # Pour les autres commandes
-            result = subprocess.run(cmd, capture_output=True, text=True, shell=True)
+            # Pour les autres commandes, utiliser shlex pour sécuriser
+            import shlex
+            if isinstance(cmd, str):
+                cmd_list = shlex.split(cmd)
+                result = subprocess.run(cmd_list, capture_output=True, text=True, shell=False)
+            else:
+                result = subprocess.run(cmd, capture_output=True, text=True, shell=False)
             if result.returncode != 0:
                 print(f"❌ Erreur: {result.stderr}")
                 return False

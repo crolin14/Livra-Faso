@@ -133,7 +133,7 @@ class SecurityAuditMiddleware(MiddlewareMixin):
                     for field in sensitive_fields:
                         if field in request_data:
                             request_data[field] = '[REDACTED]'
-                except:
+                except (ValueError, UnicodeDecodeError, json.JSONDecodeError):
                     pass
             
             # AuditLog.objects.create(

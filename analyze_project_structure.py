@@ -259,7 +259,7 @@ class ProjectAnalyzer:
                 simplified = re.sub(r'\s+', ' ', content).strip()
                 if len(simplified) > 100:  # Ignorer les fichiers très petits
                     file_hashes[hash(simplified)].append(str(css_file))
-            except:
+            except (IOError, OSError, UnicodeDecodeError):
                 pass
         
         for file_hash, files in file_hashes.items():
@@ -416,7 +416,7 @@ class ProjectAnalyzer:
                 # Rechercher les registrations admin
                 register_pattern = r'admin\.site\.register\s*\(\s*(\w+)'
                 return re.findall(register_pattern, content)
-            except:
+            except (IOError, OSError, UnicodeDecodeError):
                 pass
         return []
     

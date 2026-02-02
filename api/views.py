@@ -578,7 +578,7 @@ def admin_stats(request):
                 user_type='livreur',
                 livreurprofile__is_available=True
             ).count()
-        except:
+        except Exception:
             active_livreurs = livreurs_count  # Fallback if profile doesn't exist
         
         # Revenue calculation

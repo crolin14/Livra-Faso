@@ -171,10 +171,11 @@ def create_admin_user():
     first_name = input("Prénom: ").strip() or "Admin"
     last_name = input("Nom: ").strip() or "LivraFaso"
     
-    password = input("Mot de passe (laissez vide pour 'admin123'): ").strip()
+    password = input("Mot de passe (requis): ").strip()
     if not password:
-        password = "admin123"
-        print("Utilisation du mot de passe par défaut: admin123")
+        print("❌ Erreur: Un mot de passe est requis pour des raisons de sécurité")
+        print("   Veuillez fournir un mot de passe fort (minimum 8 caractères)")
+        return False
     
     try:
         with transaction.atomic():

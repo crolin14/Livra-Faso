@@ -12,9 +12,65 @@ from datetime import datetime, timedelta
 from django.conf import settings
 from django.utils import timezone
 from typing import Dict, Any, Optional
+from urllib.parse import urlparse
 import logging
 
 logger = logging.getLogger(__name__)
+
+# Liste des domaines autorisés pour les paiements (whitelist)
+ALLOWED_PAYMENT_DOMAINS = {
+    'orange-money.com',
+    'orange.com',
+    'moov-money.com',
+    'moov.ci',
+    'wave.com',
+    'sandbox.orange-money.com',
+    'api.orange.com',
+    'api.moov.ci',
+    'api.wave.com',
+}
+
+
+def validate_payment_url(url: str) -> bool:
+    """
+    Valide une URL pour prévenir les attaques SSRF.
+    Vérifie que l'URL pointe vers un domaine autorisé.
+    """
+    if not url:
+        return False
+    
+    try:
+        parsed = urlparse(url)
+        
+        # Vérifier le schéma (seulement HTTP/HTTPS)
+        if parsed.scheme not in ('http', 'https'):
+            logger.warning(f"Schéma non autorisé: {parsed.scheme}")
+            return False
+        
+        # Vérifier que l'URL n'est pas une adresse IP privée
+        hostname = parsed.hostname
+        if not hostname:
+            return False
+        
+        # Vérifier les adresses IP privées
+        if hostname.startswith('127.') or hostname.startswith('192.168.') or \
+           hostname.startswith('10.') or hostname.startswith('172.16.') or \
+           hostname == 'localhost' or hostname == '0.0.0.0':
+            logger.warning(f"Tentative d'accès à une adresse privée: {hostname}")
+            return False
+        
+        # Vérifier que le domaine est dans la whitelist
+        domain = hostname.lower()
+        # Vérifier le domaine exact ou un sous-domaine
+        if not any(domain == allowed or domain.endswith('.' + allowed) 
+                   for allowed in ALLOWED_PAYMENT_DOMAINS):
+            logger.warning(f"Domaine non autorisé: {domain}")
+            return False
+        
+        return True
+    except Exception as e:
+        logger.error(f"Erreur de validation d'URL: {e}")
+        return False
 
 
 class PaymentGatewayError(Exception):
@@ -97,9 +153,18 @@ class OrangeMoneyGateway(BasePaymentGateway):
                     'message': 'Paiement initié avec succès (mode sandbox)'
                 }
             
+            # Valider l'URL avant la requête pour prévenir SSRF
+            api_url = f'{self.base_url}/api/v1/payment/initiate'
+            if not validate_payment_url(api_url):
+                logger.error(f"URL non autorisée pour Orange Money: {api_url}")
+                return {
+                    'success': False,
+                    'error': 'URL de paiement non autorisée'
+                }
+            
             # Requête à l'API Orange Money (URL fictive pour l'exemple)
             response = requests.post(
-                f'{self.base_url}/api/v1/payment/initiate',
+                api_url,
                 json=payment_data,
                 headers={
                     'Content-Type': 'application/json',
@@ -145,8 +210,13 @@ class OrangeMoneyGateway(BasePaymentGateway):
                     'phone_number': '22670000000'
                 }
             
+            api_url = f'{self.base_url}/api/v1/payment/status/{transaction_id}'
+            if not validate_payment_url(api_url):
+                logger.error(f"URL non autorisée pour vérification Orange Money: {api_url}")
+                return {'status': 'error', 'error': 'URL non autorisée'}
+            
             response = requests.get(
-                f'{self.base_url}/api/v1/payment/status/{transaction_id}',
+                api_url,
                 headers={'Authorization': f'Bearer {self.api_key}'},
                 timeout=30
             )
@@ -193,9 +263,18 @@ class MoovMoneyGateway(BasePaymentGateway):
                     'message': 'Paiement Moov Money initié (mode sandbox)'
                 }
             
+            # Valider l'URL avant la requête
+            api_url = f'{self.base_url}/v1/payments'
+            if not validate_payment_url(api_url):
+                logger.error(f"URL non autorisée pour Moov Money: {api_url}")
+                return {
+                    'success': False,
+                    'error': 'URL de paiement non autorisée'
+                }
+            
             # Implémentation réelle de l'API Moov Money
             response = requests.post(
-                f'{self.base_url}/v1/payments',
+                api_url,
                 json=payment_data,
                 headers={
                     'Authorization': f'Bearer {self.api_key}',
@@ -233,8 +312,13 @@ class MoovMoneyGateway(BasePaymentGateway):
             }
         
         try:
+            api_url = f'{self.base_url}/v1/payments/{transaction_id}'
+            if not validate_payment_url(api_url):
+                logger.error(f"URL non autorisée pour vérification Moov Money: {api_url}")
+                return {'status': 'error', 'error': 'URL non autorisée'}
+            
             response = requests.get(
-                f'{self.base_url}/v1/payments/{transaction_id}',
+                api_url,
                 headers={'Authorization': f'Bearer {self.api_key}'},
                 timeout=30
             )
@@ -274,8 +358,13 @@ class WaveGateway(BasePaymentGateway):
                     'message': 'Paiement Wave initié (mode sandbox)'
                 }
             
+            api_url = f'{self.base_url}/checkout/sessions'
+            if not validate_payment_url(api_url):
+                logger.error(f"URL non autorisée pour Wave: {api_url}")
+                return {'success': False, 'error': 'URL de paiement non autorisée'}
+            
             response = requests.post(
-                f'{self.base_url}/checkout/sessions',
+                api_url,
                 json=payment_data,
                 headers={
                     'Authorization': f'Bearer {self.api_key}',
@@ -310,8 +399,13 @@ class WaveGateway(BasePaymentGateway):
             }
         
         try:
+            api_url = f'{self.base_url}/checkout/sessions/{transaction_id}'
+            if not validate_payment_url(api_url):
+                logger.error(f"URL non autorisée pour vérification Wave: {api_url}")
+                return {'status': 'error', 'error': 'URL non autorisée'}
+            
             response = requests.get(
-                f'{self.base_url}/checkout/sessions/{transaction_id}',
+                api_url,
                 headers={'Authorization': f'Bearer {self.api_key}'},
                 timeout=30
             )
@@ -349,11 +443,17 @@ class CreditCardGateway(BasePaymentGateway):
                 'reference': transaction_id
             }
             
+            # Valider l'URL avant la requête
+            api_url = f'{self.base_url}/v1/charges'
+            if not validate_payment_url(api_url):
+                logger.error(f"URL non autorisée pour carte bancaire: {api_url}")
+                return {'success': False, 'error': 'URL de paiement non autorisée'}
+            
             # Chiffrement des données sensibles avant envoi
             encrypted_data = self.encrypt_card_data(payment_data)
             
             response = requests.post(
-                f'{self.base_url}/v1/charges',
+                api_url,
                 json=encrypted_data,
                 headers={
                     'Authorization': f'Bearer {self.api_key}',
