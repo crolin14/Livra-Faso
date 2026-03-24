@@ -1,0 +1,92 @@
+{% comment %}
+Frontend Plugins Modernes pour LivraFaso
+Inclure ce fichier dans base.html ou base_ultra_modern.html
+{% endcomment %}
+
+{% load static %}
+
+<!-- Alpine.js - Framework JavaScript léger pour l'interactivité -->
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js" crossorigin="anonymous"></script>
+
+<!-- Axios - Requêtes HTTP modernes -->
+<script src="https://cdn.jsdelivr.net/npm/axios@1.6.2/dist/axios.min.js" crossorigin="anonymous"></script>
+
+<!-- SweetAlert2 - Alertes et modales modernes -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" crossorigin="anonymous"></script>
+
+<!-- Toastify - Notifications toast élégantes -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.css" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.js" crossorigin="anonymous"></script>
+
+<!-- Flatpickr - Sélecteur de date moderne -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr" crossorigin="anonymous"></script>
+
+<!-- Cleave.js - Formatage automatique des inputs -->
+<script src="https://cdn.jsdelivr.net/npm/cleave.js@1.6.0/dist/cleave.min.js" crossorigin="anonymous"></script>
+
+<!-- LazyLoad - Chargement différé des images pour performance -->
+<script src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@17.8.3/dist/lazyload.min.js" crossorigin="anonymous"></script>
+
+<!-- Configuration globale des plugins -->
+<script>
+    // Configuration Axios pour Django CSRF
+    axios.defaults.xsrfCookieName = 'csrftoken';
+    axios.defaults.xsrfHeaderName = 'X-CSRFToken';
+    axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+
+    // Configuration Toastify par défaut
+    window.toastifyConfig = {
+        duration: 3000,
+        gravity: "top",
+        position: "right",
+        style: {
+            background: "linear-gradient(to right, #3b82f6, #2563eb)",
+        }
+    };
+
+    // Initialiser LazyLoad
+    if (typeof LazyLoad !== 'undefined') {
+        var lazyLoadInstance = new LazyLoad({
+            elements_selector: ".lazy"
+        });
+    }
+
+    // Helper pour les notifications
+    window.showToast = function(message, type = 'success') {
+        const colors = {
+            success: "linear-gradient(to right, #10b981, #059669)",
+            error: "linear-gradient(to right, #ef4444, #dc2626)",
+            warning: "linear-gradient(to right, #f59e0b, #d97706)",
+            info: "linear-gradient(to right, #3b82f6, #2563eb)"
+        };
+
+        Toastify({
+            text: message,
+            duration: 3000,
+            gravity: "top",
+            position: "right",
+            style: {
+                background: colors[type] || colors.info,
+            }
+        }).showToast();
+    };
+
+    // Helper pour les confirmations
+    window.confirmAction = function(message, callback) {
+        Swal.fire({
+            title: 'Êtes-vous sûr ?',
+            text: message || "Cette action est irréversible",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3b82f6',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Confirmer',
+            cancelButtonText: 'Annuler'
+        }).then((result) => {
+            if (result.isConfirmed && callback) {
+                callback();
+            }
+        });
+    };
+</script>

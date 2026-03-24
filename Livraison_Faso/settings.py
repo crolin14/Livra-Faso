@@ -26,7 +26,7 @@ CSRF_COOKIE_AGE_ONE_YEAR = SECONDS_PER_YEAR  # 1 year in seconds
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # Generate a secure key with: python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-$4r3nsiwigqe@kqke$q=gkwhof6!sz$*+#jsuzyng^ub@m9_jd')
+SECRET_KEY = os.environ.get('SECRET_KEY', '')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
@@ -137,13 +137,8 @@ WSGI_APPLICATION = 'Livraison_Faso.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME', 'livraison_faso'),
-        'USER': os.environ.get('DB_USER', 'livraison_user'),
-        # SECURITY: Set DB_PASSWORD environment variable in production
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'Bencherif1458'),
-        'HOST': os.environ.get('DB_HOST', 'localhost'),
-        'PORT': os.environ.get('DB_PORT', '5432'),
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 

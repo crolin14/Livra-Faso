@@ -19,6 +19,9 @@
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/livrafaso-modern.css' %}">
     
+    <!-- Frontend Plugins Modernes -->
+    {% include 'includes/frontend_plugins.html' %}
+    
     <!-- Tailwind Config -->
     <script>
         tailwind.config = {
@@ -215,6 +218,7 @@
     </footer>
 
     <!-- Scripts -->
+    <script src="{% static 'js/livrafaso-plugins.js' %}"></script>
     <script>
         // Initialize AOS
         AOS.init({

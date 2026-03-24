@@ -94,6 +94,9 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     
+    <!-- Frontend Plugins Modernes -->
+    {% include 'includes/frontend_plugins.html' %}
+    
     {% block extra_head %}{% endblock %}
 </head>
 
@@ -306,6 +309,7 @@
     <!-- Scripts -->
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script src="{% static 'js/livrafaso-interactions.js' %}"></script>
+    <script src="{% static 'js/livrafaso-plugins.js' %}"></script>
     
     <script>
         // Initialize AOS
